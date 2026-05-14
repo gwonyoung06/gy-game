@@ -1,0 +1,209 @@
+import { Creature } from '../entities/Creature.js';
+import { DIFFICULTY } from '../data/stages.js';
+
+export class WaveSystem {
+  /**
+   * @param {THREE.Scene} scene
+   * @param {object} stageData
+   * @param {object} settings
+   * @param {Function} onCapture
+   * @param {Function} onWaveComplete
+   * @param {Function} onStageComplete
+   * @param {Function} onStageFail
+   * @param {Function} onDamage
+   * @param {World|null} world  — 구역 기반 스폰을 위한 World 레퍼런스 (옵셔널)
+   */
+  constructor(scene, stageData, settings, onCapture, onWaveComplete, onStageComplete, onStageFail, onDamage, world = null) {
+    this.scene = scene;
+    this.stage = stageData;
+    this.settings = settings;
+    this.onCapture = onCapture;
+    this.onWaveComplete = onWaveComplete;
+    this.onStageComplete = onStageComplete;
+    this.onStageFail = onStageFail;
+    this.onDamage = onDamage || (() => {}); // 플레이어 피격 콜백
+    this.world  = world;   // 서식지 구역 스폰용 (null 허용 — 기존 랜덤 스폰으로 fallback)
+    // 매 프레임 forEach 안에서 클로저 생성 방지 → 생성자에서 한 번만 바인딩
+    this._damageCallback = dmg => this.onDamage(dmg);
+    this._frame = 0; // LOD용 프레임 카운터
+
+    const diff = DIFFICULTY[settings.difficulty] || DIFFICULTY.normal;
+    this.timeLimit = stageData.timeLimit + diff.timeBonus;
+    this.timeRemaining = this.timeLimit;
+    this.targetCount = Math.ceil(stageData.targetCount * diff.countMult);
+    this.capturedCount = 0;
+    this.currentWave = 1;
+    this.maxWaves = stageData.miniBoss ? 4 : 3;
+    this.creatures = [];
+    this.waveActive = false;
+    this.miniBossSpawned = false;
+    this.active = true;
+    this.combo = 0;
+    this.comboTimer = 0;
+    this.maxCombo = 0;
+    this._spawnWave(1);
+  }
+
+  _spawnWave(wave) {
+    this.currentWave = wave;
+    this.waveActive = true;
+    const diff = DIFFICULTY[this.settings.difficulty] || DIFFICULTY.normal;
+
+    if (wave <= 3) {
+      // 일반 웨이브 – 스폰 수 0.4 → 1.0 (맵이 비어보이지 않게)
+      const spawnMultiplier = wave === 1 ? 1.0 : wave === 2 ? 1.5 : 2.0;
+      this.stage.creatures.forEach(cfg => {
+        const count = Math.ceil(cfg.count * spawnMultiplier * diff.countMult * 1.0);
+        const speedMult = diff.speedMult * (wave === 3 ? 1.3 : 1.0);
+        for (let i = 0; i < count; i++) {
+          // 서식지 기반 스폰: World가 있으면 생물 타입의 선호 구역에 배치
+          // 없으면 기존 랜덤 스폰으로 fallback (하위 호환)
+          const hint = this.world ? this.world.getSpawnPosition(cfg.type) : null;
+          const creature = new Creature(this.scene, { ...cfg, speed: cfg.speed * speedMult }, 110, hint); // spawnArea: 플레이 반경 120m 전체 분포
+          // LOD 분산 — 같은 프레임에 몰리지 않도록 오프셋 배정
+          creature._tickOffset = this.creatures.length & 3; // 0~3 순환
+          this.creatures.push(creature);
+        }
+      });
+    } else if (wave === 4 && this.stage.miniBoss) {
+      // 미니보스는 랜드마크 주변에 등장시켜 극적 효과 강화
+      const hint = this.world ? this.world.getSpawnPosition(this.stage.miniBoss.type) : null;
+      const boss = new Creature(this.scene, this.stage.miniBoss, 110, hint);
+      this.creatures.push(boss);
+      this.miniBossSpawned = true;
+    }
+
+    if (this.onWaveComplete) {
+      this.onWaveComplete(wave, this.currentWave === 1 ? null : wave);
+    }
+  }
+
+  update(delta, playerPos, player) {
+    if (!this.active) return;
+
+    // 타이머
+    this.timeRemaining -= delta;
+    if (this.timeRemaining <= 0) {
+      this.timeRemaining = 0;
+      this.active = false;
+      this.onStageFail();
+      return;
+    }
+
+    // 콤보 타이머
+    if (this.combo > 0) {
+      this.comboTimer += delta;
+      if (this.comboTimer > 3) {
+        this.combo = 0;
+        this.comboTimer = 0;
+      }
+    }
+
+    // ── AI LOD 업데이트 ──────────────────────────────────────────
+    // 60유닛 이상 거리의 생물은 4프레임에 1번만 update
+    // _tickOffset(0~3)으로 분산 → 한 프레임에 부하 집중 방지
+    this._frame = (this._frame + 1) & 255;
+    let aliveCount = 0;
+
+    for (const c of this.creatures) {
+      if (!c.alive) continue;
+
+      const dist = c.mesh.position.distanceTo(playerPos);
+      if (dist > 60 && ((this._frame + (c._tickOffset ?? 0)) & 3) !== 0) {
+        aliveCount++; // 이번 프레임 skip — 살아있음은 유지
+        continue;
+      }
+
+      c.update(delta, playerPos, this._damageCallback);
+      if (c.alive) aliveCount++;
+    }
+
+    // 웨이브 완료 체크 — filter() 대신 카운터 사용
+    if (aliveCount === 0 && this.waveActive) {
+      this.waveActive = false;
+      const nextWave = this.currentWave + 1;
+      if (nextWave <= this.maxWaves) {
+        setTimeout(() => this._spawnWave(nextWave), 1500);
+      }
+    }
+
+    // 클리어 체크
+    if (this.capturedCount >= this.targetCount) {
+      this.active = false;
+      this.onStageComplete({
+        captured: this.capturedCount,
+        timeLeft: this.timeRemaining,
+        maxCombo: this.maxCombo,
+      });
+    }
+  }
+
+  // ── 포획 시도 (확률 기반) ─────────────────────────────────────
+  tryCapture(playerPos, playerForward, captureRange) {
+    if (!this.active) return null;
+
+    for (const creature of this.creatures) {
+      if (!creature.alive || creature.captured) continue;
+
+      const toCreature = creature.mesh.position.clone().sub(playerPos);
+      const dist = toCreature.length();
+      const adjustedRange = captureRange * (creature.isBoss ? 1.5 : 1.0);
+
+      if (dist > adjustedRange) continue;
+
+      // 플레이어가 생물을 향하고 있는가? (느슨하게 체크)
+      const dot = toCreature.normalize().dot(playerForward);
+      if (dot < (creature.isBoss ? 0.0 : 0.1)) continue;
+
+      // 종별 포획 확률 체크 (핵심: 잠자리는 뒤에서만 잡힘)
+      const chance = creature.getCaptureChance(playerPos, playerForward);
+      if (Math.random() > chance) continue; // 확률 실패 → 놓침
+
+      creature.capture();
+      this.capturedCount++;
+      this.combo++;
+      this.comboTimer = 0;
+      if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+
+      const diff = DIFFICULTY[this.settings.difficulty];
+      const weatherMult = this.settings.weather === 'rain' ? 1.2
+                        : this.settings.weather === 'fog'  ? 1.5 : 1;
+      const timeMult = this.settings.timeOfDay === 'night' ? 1.4
+                     : this.settings.timeOfDay === 'dusk'  ? 1.1 : 1;
+      const coinMult  = diff.coinMult  * weatherMult * timeMult;
+      const coins  = Math.floor(creature.config.coins * coinMult);
+      const score  = Math.floor(creature.config.score * diff.scoreMult * this._comboMult());
+
+      this.onCapture({ creature, coins, score, combo: this.combo });
+      return { creature, coins, score };
+    }
+    return null;
+  }
+
+  _comboMult() {
+    if (this.combo >= 10) return 2.0;
+    if (this.combo >= 5)  return 1.5;
+    if (this.combo >= 3)  return 1.2;
+    return 1.0;
+  }
+
+  /** 소모품 '시간 연장' 사용 시 타이머 증가 */
+  addTime(seconds) {
+    this.timeRemaining = Math.min(this.timeRemaining + seconds, this.timeLimit + 60);
+  }
+
+  getState() {
+    return {
+      timeRemaining: Math.ceil(this.timeRemaining),
+      captured: this.capturedCount,
+      target: this.targetCount,
+      wave: this.currentWave,
+      combo: this.combo,
+    };
+  }
+
+  dispose() {
+    this.creatures.forEach(c => c.dispose());
+    this.creatures = [];
+  }
+}
