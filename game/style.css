@@ -329,6 +329,8 @@ body {
 ══════════════════════════════════════════════ */
 #screen-pregame {
   background: linear-gradient(180deg, #080c14 0%, #0a1020 100%);
+  justify-content: flex-start;
+  overflow-y: auto;
   padding-top: 66px;
 }
 
@@ -338,7 +340,7 @@ body {
   gap: 24px;
   width: 100%;
   max-width: 580px;
-  padding: 28px 24px;
+  padding: 28px 24px 40px;
   align-items: center;
 }
 
