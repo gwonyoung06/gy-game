@@ -11,3 +11,5 @@ Thumbs.db
 *.png
 *.jpg
 *.jpeg
+/package.json
+/package-lock.json

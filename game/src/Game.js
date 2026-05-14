@@ -12,6 +12,7 @@ import { loadSave, addCoins, markStageCleared, updateSave } from './utils/storag
 import { SHOP_ITEMS, CONSUMABLES } from './data/shop.js';
 import { particlePool, _cachedMats, _cachedGeos } from './entities/Creature.js';
 import { audioManager } from './systems/AudioManager.js';
+import { submitScore, fetchGlobalLeaderboard } from './utils/supabase.js';
 
 // 스킬 쿨다운 테이블
 const SKILL_CD = {
@@ -849,24 +850,51 @@ export class Game {
     }
   }
 
-  _loadGlobalLeaderboard(container) {
-    // 글로벌 리더보드: Firebase 연동 전까지 빈 상태로 표시
+  async _loadGlobalLeaderboard(container) {
     container.innerHTML = `
       <div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,0.45)">
-        <div style="font-size:48px;margin-bottom:16px">🌍</div>
-        <div style="font-size:18px;font-weight:700;margin-bottom:8px">아직 등록된 기록이 없습니다</div>
-        <div style="font-size:14px">게임을 클리어하고 닉네임으로 등록해보세요!</div>
+        <div style="font-size:32px;margin-bottom:12px">⏳</div>
+        <div style="font-size:14px">불러오는 중...</div>
       </div>
     `;
+
+    const records = await fetchGlobalLeaderboard(50);
+
+    if (records.length === 0) {
+      container.innerHTML = `
+        <div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,0.45)">
+          <div style="font-size:48px;margin-bottom:16px">🌍</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px">아직 등록된 기록이 없습니다</div>
+          <div style="font-size:14px">게임을 클리어하고 닉네임으로 등록해보세요!</div>
+        </div>
+      `;
+      return;
+    }
+
+    records.forEach((rec, i) => {
+      const row = document.createElement('div');
+      row.className = 'lb-row';
+      row.innerHTML = `
+        <div class="lb-rank ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}">${i + 1}</div>
+        <div class="lb-name">${rec.nickname}</div>
+        <div class="lb-stage" style="font-size:12px;color:rgba(255,255,255,0.5);margin:0 8px">${rec.stage_name || `스테이지 ${rec.stage_id}`}</div>
+        <div class="lb-score">${rec.score.toLocaleString()}점</div>
+      `;
+      container.appendChild(row);
+    });
   }
 
-  _registerScore() {
+  async _registerScore() {
     const nickname = document.getElementById('nickname-input').value.trim();
     if (!nickname) return;
     document.getElementById('nickname-row').classList.add('hidden');
+
+    const stage = STAGES.find(s => s.id === this.selectedStage);
+    const ok = await submitScore(nickname, this.sessionScore, this.selectedStage, stage?.name ?? '');
+
     const toast = document.createElement('div');
     toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#4ecdc4;color:#fff;padding:10px 24px;border-radius:20px;font-weight:700;z-index:200;';
-    toast.textContent = `✅ ${nickname} 랭킹 등록!`;
+    toast.textContent = ok ? `✅ ${nickname} 랭킹 등록!` : '❌ 등록 실패, 다시 시도해주세요';
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 2500);
   }
