@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { STAGES, DIFFICULTY, WEATHER, TIME_OF_DAY } from './data/stages.js';
+import { STAGES } from './data/stages.js';
 import { Player } from './entities/Player.js';
 import { World } from './systems/World.js';
 import { WaveSystem } from './systems/WaveSystem.js';
@@ -47,7 +47,7 @@ export class Game {
     this.sessionCoins = 0;
     this.rafId = null;
     this.clock = new THREE.Clock();
-    this._skillCooldown = 0;
+
     this._initRenderer();
     this._initScreens();
     this._showScreen('title');
@@ -359,8 +359,6 @@ export class Game {
 
         // 무적 타이머
         if (this._invincibleTimer > 0) this._invincibleTimer -= delta;
-        // 구형 단일 스킬 쿨다운 (하위 호환)
-        if (this._skillCooldown > 0) this._skillCooldown -= delta;
         // 슬롯별 쿨다운 감소
         for (const key of ['Q', 'E', 'R']) {
           if (this._slotCDs[key] > 0) this._slotCDs[key] = Math.max(0, this._slotCDs[key] - delta);
@@ -491,71 +489,6 @@ export class Game {
     document.addEventListener('pointerlockchange', check);
     // dispose 시 제거를 위해 저장
     this._lockWatcher = check;
-  }
-
-  // ── 스킬 ──────────────────────────────────────────────────────
-  /**
-   * 보유한 스킬 중 가장 강력한 것 순서로 사용:
-   *   vortex > magnet > slow
-   * 모두 동일한 쿨다운 슬롯 1개를 공유.
-   */
-  _useSkill() {
-    if (this._skillCooldown > 0) return;
-    const save = loadSave();
-
-    // ① 회오리 — 전방 15m 내 모든 생물 즉시 포획
-    if (save.ownedItems.includes('skill_vortex')) {
-      this._skillCooldown = 60;
-      if (this.waves && this.player && this.camCtrl) {
-        const pos = this.player.position;
-        const fwd = this.player.getForward(this.camCtrl);
-        let caught = 0;
-        this.waves.creatures.forEach(c => {
-          if (!c.alive || c.captured) return;
-          const d = c.mesh.position.distanceTo(pos);
-          if (d > 15) return;
-          const toC = c.mesh.position.clone().sub(pos).normalize();
-          if (toC.dot(fwd) < 0.2) return; // 전방 약 80° 이내
-          c.capture();
-          this.waves.capturedCount++;
-          this.waves.combo++;
-          caught++;
-        });
-        if (caught > 0) this.hud.showWaveMessage(`🌀 회오리! ${caught}마리 포획!`);
-      }
-      return;
-    }
-
-    // ② 자석 — 반경 10m 내 즉시 포획
-    if (save.ownedItems.includes('skill_magnet')) {
-      this._skillCooldown = 45;
-      if (this.waves && this.player) {
-        const pos = this.player.position;
-        let caught = 0;
-        this.waves.creatures.forEach(c => {
-          if (!c.alive || c.captured) return;
-          if (c.mesh.position.distanceTo(pos) <= 10) {
-            c.capture();
-            this.waves.capturedCount++;
-            this.waves.combo++;
-            caught++;
-          }
-        });
-        if (caught > 0) this.hud.showWaveMessage(`🧲 자석! ${caught}마리 포획!`);
-      }
-      return;
-    }
-
-    // ③ 슬로우 타임 — 기본 스킬
-    if (save.ownedItems.includes('skill_slow')) {
-      this._skillCooldown = 30;
-      if (this.waves) {
-        this.waves.creatures.forEach(c => { if (c.alive) c.config.speed *= 0.5; });
-        setTimeout(() => {
-          if (this.waves) this.waves.creatures.forEach(c => { if (c.alive) c.config.speed *= 2; });
-        }, 5000);
-      }
-    }
   }
 
   // ── 스킬 슬롯 실행 (Q / E / R 각자 독립 쿨다운) ──────────────
