@@ -67,6 +67,11 @@
           <button class="opt-btn" data-value="night">🌙 밤<br><small>+40%</small></button>
         </div>
       </div>
+      <!-- 출현 생물 미리보기 -->
+      <div class="setting-group">
+        <h3>출현 생물</h3>
+        <div id="pregame-creatures" class="pregame-creatures"></div>
+      </div>
       <button class="btn btn-primary btn-large" id="btn-play">🎯 사냥 시작!</button>
     </div>
   </div>
@@ -128,7 +133,15 @@
       <div class="hud-capture-bar-wrap">
         <div class="hud-capture-bar-fill" id="hud-capture-bar"></div>
       </div>
-      <span class="hud-wave" id="hud-wave">웨이브 1</span>
+      <div class="wave-info">
+        <span class="hud-wave" id="hud-wave">웨이브 1</span>
+        <div class="wave-dots">
+          <span class="wave-dot" data-wave="1"></span>
+          <span class="wave-dot" data-wave="2"></span>
+          <span class="wave-dot" data-wave="3"></span>
+          <span class="wave-dot wave-dot--boss" data-wave="4"></span>
+        </div>
+      </div>
     </div>
 
     <!-- 콤보 -->

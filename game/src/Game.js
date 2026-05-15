@@ -438,6 +438,7 @@ export class Game {
         card.addEventListener('click', () => {
           this.selectedStage = stage.id;
           document.getElementById('pregame-title').textContent = `${stage.id}스테이지 - ${stage.name}`;
+          this._renderPregameCreatures(stage);
           this._showScreen('pregame');
         });
       }
@@ -1077,6 +1078,11 @@ export class Game {
 
     this._setResultStars(stars);
 
+    // 마지막 닉네임 자동 채우기
+    const savedNick = localStorage.getItem('gy_last_nickname') || '';
+    const nickInput = document.getElementById('nickname-input');
+    if (nickInput && savedNick) nickInput.value = savedNick;
+
     this._showScreen('result');
     this._animateResultNumbers(result.captured, result.timeLeft, result.maxCombo);
   }
@@ -1295,6 +1301,28 @@ export class Game {
       el.className = 'danger-arrow';
       el.style.cssText = `left:${cx + ex}px;top:${cy + ey}px;transform:translate(-50%,-50%) rotate(${angle - Math.PI / 2}rad);opacity:${opacity};`;
       container.appendChild(el);
+    });
+  }
+
+  // ── 프리게임 생물 미리보기 ────────────────────────────────────
+  _renderPregameCreatures(stageData) {
+    const el = document.getElementById('pregame-creatures');
+    if (!el || !stageData) return;
+    el.innerHTML = '';
+    const list = [...(stageData.creatures || [])];
+    if (stageData.miniBoss) list.push({ ...stageData.miniBoss, _boss: true });
+    list.forEach((c, i) => {
+      const chip = document.createElement('div');
+      chip.className = `creature-chip${c._boss ? ' creature-chip--boss' : ''}`;
+      chip.style.animationDelay = `${i * 40}ms`;
+      const name = document.createElement('span');
+      name.className = 'cc-name';
+      name.textContent = c.name;
+      const coins = document.createElement('span');
+      coins.className = 'cc-coins';
+      coins.textContent = `💰${c.coins}`;
+      chip.append(name, coins);
+      el.appendChild(chip);
     });
   }
 
@@ -1532,6 +1560,7 @@ export class Game {
     if (!nickname) return;
     document.getElementById('nickname-row').classList.add('hidden');
 
+    localStorage.setItem('gy_last_nickname', nickname); // 다음 번 자동 입력용
     const stage = STAGES.find(s => s.id === this.selectedStage);
     const ok = await submitScore(nickname, this.sessionScore, this.selectedStage, stage?.name ?? '');
 

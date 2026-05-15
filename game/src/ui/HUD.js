@@ -146,6 +146,15 @@ export class HUD {
     const waveName = state.wave <= 3 ? `웨이브 ${state.wave}` : '⚡ 보스!';
     this.wave.textContent = waveName;
 
+    // 웨이브 진행 도트
+    document.querySelectorAll('.wave-dot').forEach(d => {
+      const w = parseInt(d.dataset.wave);
+      const isCurrent = state.wave === w;
+      const isDone    = state.wave > w;
+      d.classList.toggle('wave-dot--active', isCurrent);
+      d.classList.toggle('wave-dot--done',   isDone && !isCurrent);
+    });
+
     const glow = document.getElementById('combo-glow');
     const multMap = { 10: '×2.0', 5: '×1.5', 3: '×1.2' };
     let multText = '', glowClass = '';
