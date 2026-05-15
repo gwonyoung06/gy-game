@@ -273,6 +273,9 @@ export class Game {
 
   // ── 게임 시작 ─────────────────────────────────────────────────
   _startGame() {
+    try { this.__startGameImpl(); } catch(e) { alert('게임 시작 오류: ' + e.message + '\n\n' + e.stack); }
+  }
+  __startGameImpl() {
     this._stopLoop();
     this._cleanup();
 
