@@ -75,6 +75,7 @@ export class Game {
 
   // ── 화면 전환 ─────────────────────────────────────────────────
   _showScreen(name) {
+    const noFade = name === 'game' || name === 'pause';
     const fade = document.getElementById('fade-overlay');
     const doSwitch = () => {
       document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -82,7 +83,7 @@ export class Game {
       if (el) el.classList.remove('hidden');
       this.currentScreen = name;
     };
-    if (!fade) { doSwitch(); return; }
+    if (!fade || noFade) { doSwitch(); return; }
     fade.classList.add('fade-out');
     clearTimeout(this._fadeTimer);
     this._fadeTimer = setTimeout(() => {
@@ -579,6 +580,10 @@ export class Game {
           const structures  = this.world?._structures ?? [];
           this.minimap.update(this.player.position, creatures, landmarks, structures);
         }
+
+        // 생물 이름표 + 타이머 긴박감
+        this._updateCreatureLabels();
+        this._updateTimerUrgency(this.waves.getState().timeRemaining);
       }
 
       this.renderer.render(this.scene, this.camera);
@@ -593,8 +598,62 @@ export class Game {
     }
   }
 
+  // ── 생물 이름표 (근거리 생물 위에 이름·코인 DOM 레이블) ────────
+  _updateCreatureLabels() {
+    if (!this.waves || !this.player || !this.camera) return;
+    let container = document.getElementById('creature-labels');
+    if (!container) return;
+
+    const W = window.innerWidth, H = window.innerHeight;
+    const playerPos = this.player.position;
+    const LABEL_RANGE = 14;
+    const _v = new THREE.Vector3();
+
+    const near = this.waves.creatures.filter(c =>
+      c.alive && !c.captured && c.mesh.position.distanceTo(playerPos) < LABEL_RANGE
+    );
+
+    // 기존 레이블 재사용 (DOM 최소화)
+    const existing = [...container.children];
+    near.forEach((c, i) => {
+      _v.copy(c.mesh.position).project(this.camera);
+      const sx = (_v.x + 1) / 2 * W;
+      const sy = (-_v.y + 1) / 2 * H - 30;
+      if (_v.z > 1) return; // 카메라 뒤
+
+      let label = existing[i];
+      if (!label) {
+        label = document.createElement('div');
+        label.className = 'creature-label';
+        container.appendChild(label);
+      }
+      const dist = Math.round(c.mesh.position.distanceTo(playerPos));
+      label.textContent = `${c.config.name || c.config.type} 💰${c.config.coins}`;
+      label.style.transform = `translate(${sx}px, ${sy}px)`;
+      label.style.opacity = Math.max(0.4, 1 - dist / LABEL_RANGE);
+    });
+
+    // 남은 기존 레이블 숨기기
+    for (let i = near.length; i < existing.length; i++) {
+      existing[i].remove();
+    }
+  }
+
+  // ── 타이머 긴박감 (10초 이하 화면 펄스) ──────────────────────
+  _updateTimerUrgency(timeRemaining) {
+    const timerEl = document.getElementById('hud-timer');
+    const urgencyEl = document.getElementById('timer-urgency');
+    if (!timerEl) return;
+    const urgent = timeRemaining <= 10 && timeRemaining > 0;
+    timerEl.classList.toggle('urgent', urgent);
+    if (urgencyEl) urgencyEl.style.opacity = urgent ? (Math.sin(Date.now() * 0.01) * 0.15 + 0.15).toString() : '0';
+  }
+
   _cleanup() {
     // 파티클 풀 즉시 회수 — 씬 파괴 전에 orphan 파티클 제거
+    // 생물 레이블 정리
+    const labels = document.getElementById('creature-labels');
+    if (labels) labels.innerHTML = '';
     particlePool.reset();
 
     this.camCtrl?.dispose();
@@ -913,14 +972,12 @@ export class Game {
       this.hud.hide();
       document.getElementById('result-emoji').textContent = '💀';
       document.getElementById('result-title').textContent = '전투 불능!';
-      document.getElementById('res-captured').textContent = this.waves?.capturedCount || 0;
-      document.getElementById('res-time').textContent = '0초';
-      document.getElementById('res-combo').textContent = this.waves?.maxCombo || 0;
-      document.getElementById('res-coins').textContent = `+${this.sessionCoins.toLocaleString()}`;
-      document.getElementById('res-score').textContent = this.sessionScore.toLocaleString();
       document.getElementById('btn-next-stage').style.display = 'none';
       document.getElementById('nickname-row').classList.add('hidden');
+      const starElHP = document.getElementById('res-stars');
+      if (starElHP) starElHP.textContent = '☆☆☆';
       this._showScreen('result');
+      this._animateResultNumbers(this.waves?.capturedCount || 0, 0, this.waves?.maxCombo || 0);
     }
   }
 
@@ -932,16 +989,21 @@ export class Game {
     audioManager.sfxStageComplete();
     this._checkAchievement('first_clear', '🎉', '첫 스테이지 클리어!');
 
+    const stageData = STAGES.find(s => s.id === this.selectedStage);
+    const timeRatio = result.timeLeft / (stageData?.timeLimit || 60);
+    const stars = timeRatio >= 0.4 ? 3 : timeRatio >= 0.15 ? 2 : 1;
+    if (stars === 3) this._checkAchievement('perfect_clear', '⭐', '완벽 클리어!');
+
     document.getElementById('result-emoji').textContent = '🎉';
     document.getElementById('result-title').textContent = `스테이지 ${this.selectedStage} 클리어!`;
-    document.getElementById('res-captured').textContent = result.captured;
-    document.getElementById('res-time').textContent = `${Math.ceil(result.timeLeft)}초`;
-    document.getElementById('res-combo').textContent = result.maxCombo;
-    document.getElementById('res-coins').textContent = `+${this.sessionCoins.toLocaleString()}`;
-    document.getElementById('res-score').textContent = this.sessionScore.toLocaleString();
     document.getElementById('btn-next-stage').style.display = this.selectedStage < STAGES.length ? '' : 'none';
     document.getElementById('nickname-row').classList.remove('hidden');
+
+    const starEl = document.getElementById('res-stars');
+    if (starEl) starEl.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+
     this._showScreen('result');
+    this._animateResultNumbers(result.captured, result.timeLeft, result.maxCombo);
   }
 
   _onStageFail() {
@@ -951,14 +1013,32 @@ export class Game {
 
     document.getElementById('result-emoji').textContent = '😢';
     document.getElementById('result-title').textContent = '시간 초과!';
-    document.getElementById('res-captured').textContent = this.waves?.capturedCount || 0;
-    document.getElementById('res-time').textContent = '0초';
-    document.getElementById('res-combo').textContent = this.waves?.maxCombo || 0;
-    document.getElementById('res-coins').textContent = `+${this.sessionCoins.toLocaleString()}`;
-    document.getElementById('res-score').textContent = this.sessionScore.toLocaleString();
     document.getElementById('btn-next-stage').style.display = 'none';
     document.getElementById('nickname-row').classList.add('hidden');
+    const starEl = document.getElementById('res-stars');
+    if (starEl) starEl.textContent = '☆☆☆';
+
     this._showScreen('result');
+    this._animateResultNumbers(this.waves?.capturedCount || 0, 0, this.waves?.maxCombo || 0);
+  }
+
+  _animateResultNumbers(captured, timeLeft, maxCombo) {
+    const coins  = this.sessionCoins;
+    const score  = this.sessionScore;
+    const dur    = 1200;
+    const start  = performance.now();
+    const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+    const tick = (now) => {
+      const t = Math.min(1, easeOut((now - start) / dur));
+      document.getElementById('res-captured').textContent = Math.round(t * captured);
+      document.getElementById('res-time').textContent     = `${Math.ceil(t * timeLeft)}초`;
+      document.getElementById('res-combo').textContent    = Math.round(t * maxCombo);
+      document.getElementById('res-coins').textContent    = `+${Math.round(t * coins).toLocaleString()}`;
+      document.getElementById('res-score').textContent    = Math.round(t * score).toLocaleString();
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
 
   // ── 상점 업그레이드 효과 적용 ─────────────────────────────────
