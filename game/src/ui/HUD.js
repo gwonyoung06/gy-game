@@ -19,6 +19,7 @@ export class HUD {
     this.target      = document.getElementById('hud-target');
     this.wave        = document.getElementById('hud-wave');
     this.stage       = document.getElementById('hud-stage');
+    this.captureBar  = document.getElementById('hud-capture-bar');
     this.comboEl     = document.getElementById('hud-combo');
     this.comboCount  = document.getElementById('combo-count');
     this.scoreEl     = document.getElementById('hud-score');
@@ -123,6 +124,14 @@ export class HUD {
     this.target.textContent = state.target;
     this.coins.textContent = totalCoins;
     if (this.scoreEl) this.scoreEl.textContent = sessionScore.toLocaleString();
+    // 포획 진행 바
+    if (this.captureBar && state.target > 0) {
+      const pct = Math.min(100, (state.captured / state.target) * 100);
+      this.captureBar.style.width = pct + '%';
+      // 색상: 청록(0%) → 금색(50%) → 주황(100%)
+      const hue = Math.round(180 - pct * 1.5);
+      this.captureBar.style.background = `hsl(${hue},90%,55%)`;
+    }
 
     const waveName = state.wave <= 3 ? `웨이브 ${state.wave}` : '⚡ 보스!';
     this.wave.textContent = waveName;
@@ -183,7 +192,24 @@ export class HUD {
     }, 800);
   }
 
-  showWaveMessage(wave) {
+  showWaveMessage(wave, isCountdown = false) {
+    // 카운트다운 문자열 (웨이브 전환 중): 작은 토스트로 표시
+    if (isCountdown || typeof wave === 'string') {
+      const cd = document.createElement('div');
+      cd.style.cssText = `
+        position:fixed;top:36%;left:50%;transform:translate(-50%,-50%) scale(0.85);
+        background:rgba(6,10,20,0.80);border:1px solid rgba(255,215,0,0.4);
+        border-radius:10px;padding:8px 24px;font-size:18px;font-weight:900;
+        color:#ffd700;letter-spacing:2px;z-index:150;pointer-events:none;
+        transition:transform 0.15s ease,opacity 0.15s ease;opacity:0;
+      `;
+      cd.textContent = wave;
+      document.body.appendChild(cd);
+      requestAnimationFrame(() => { cd.style.transform = 'translate(-50%,-50%) scale(1)'; cd.style.opacity = '1'; });
+      setTimeout(() => { cd.style.opacity = '0'; setTimeout(() => cd.remove(), 200); }, 380);
+      return;
+    }
+
     const isBoss = wave > 3;
     const msg    = isBoss ? '👑 보스 등장!' : `웨이브 ${wave}`;
     const sub    = isBoss ? '최후의 일전!' : wave === 1 ? '사냥 시작!' : wave === 2 ? '더 많은 생물이 나타났다!' : '마지막 웨이브!';

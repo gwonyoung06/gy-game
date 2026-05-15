@@ -143,6 +143,14 @@ export class WaveSystem {
       this.waveActive = false;
       const nextWave = this.currentWave + 1;
       if (nextWave <= this.maxWaves) {
+        // 카운트다운 메시지 시퀀스 (1.5초 분할: 0.5s간격으로 3→2→1)
+        const isBoss = nextWave === 4 && this.stage.miniBoss;
+        const label  = isBoss ? '👑 보스 등장' : `웨이브 ${nextWave}`;
+        [3, 2, 1].forEach((n, idx) => {
+          setTimeout(() => {
+            if (this.onWaveComplete) this.onWaveComplete(`⚡ ${label} 준비 ${n}`, true);
+          }, idx * 350);
+        });
         setTimeout(() => this._spawnWave(nextWave), 1500);
       }
     }

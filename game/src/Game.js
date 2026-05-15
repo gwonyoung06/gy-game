@@ -525,7 +525,10 @@ export class Game {
     this.waves = new WaveSystem(
       this.scene, stageData, this.settings,
       (data)   => this._onCapture(data),
-      (wave)   => { this.hud.showWaveMessage(wave); audioManager.sfxWaveComplete(); },
+      (wave, isCountdown) => {
+        this.hud.showWaveMessage(wave, isCountdown);
+        if (!isCountdown) audioManager.sfxWaveComplete();
+      },
       (result) => this._onStageComplete(result),
       ()       => this._onStageFail(),
       (dmg)    => this._onDamage(dmg),

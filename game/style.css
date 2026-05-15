@@ -595,6 +595,20 @@ body {
 
 .hud-wave { font-size: 12px; color: var(--secondary); letter-spacing: 0.5px; }
 
+/* 포획 진행 바 */
+.hud-capture-bar-wrap {
+  width: 90px; height: 6px;
+  background: rgba(255,255,255,0.10);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.hud-capture-bar-fill {
+  height: 100%; width: 0%;
+  border-radius: 4px;
+  transition: width 0.25s ease, background 0.4s ease;
+  box-shadow: 0 0 6px currentColor;
+}
+
 .combo-display {
   position: absolute;
   top: 84px; right: 20px;

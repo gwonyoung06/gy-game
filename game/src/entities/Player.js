@@ -635,6 +635,23 @@ export class Player {
     if (j.elbowL) j.elbowL.rotation.x = 0.22;
     if (j.elbowR) j.elbowR.rotation.x = 0.14;
 
+    // ── 포획 범위 링 표시기 ───────────────────────────────────────
+    // 반경 1 기준 → scale 로 captureRange 에 맞춤 (동적 변경 가능)
+    const ringGeo = new THREE.TorusGeometry(1, 0.028, 4, 52);
+    ringGeo.rotateX(Math.PI / 2);
+    this._rangeRingMat = new THREE.MeshBasicMaterial({
+      color: 0x4ecdc4,
+      transparent: true,
+      opacity: 0.22,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    this._rangeRing = new THREE.Mesh(ringGeo, this._rangeRingMat);
+    this._rangeRing.position.y = 0.08;
+    this._rangeRing.scale.setScalar(this.captureRange);
+    root.add(this._rangeRing);
+    this._swingFlash = 0;
+
     this.mesh = root;
     this.scene.add(root);
 
@@ -651,6 +668,28 @@ export class Player {
     this._updateMovement(delta, camCtrl, world);
     this._updateSwing(delta);
     this._updateAnimation(delta);
+    this._updateRangeRing(delta);
+  }
+
+  _updateRangeRing(delta) {
+    if (!this._rangeRing) return;
+    // 반경을 captureRange 에 동기화 (상점 업그레이드로 변경 가능)
+    this._rangeRing.scale.setScalar(this.captureRange);
+    // 스윙 플래시 감소
+    if (this._swingFlash > 0) {
+      this._swingFlash = Math.max(0, this._swingFlash - delta * 4);
+    }
+    // 기본 맥동 + 스윙 플래시 합산
+    const pulse = 0.18 + Math.sin(Date.now() * 0.0025) * 0.06;
+    const flash = this._swingFlash * 0.65;
+    this._rangeRingMat.opacity = Math.min(0.85, pulse + flash);
+    // 플래시 시 색상 전환 (흰색 → 청록)
+    const f = this._swingFlash;
+    this._rangeRingMat.color.setRGB(
+      THREE.MathUtils.lerp(0x4e / 255, 1.0, f),
+      THREE.MathUtils.lerp(0xcd / 255, 1.0, f),
+      THREE.MathUtils.lerp(0xc4 / 255, 1.0, f)
+    );
   }
 
   _updateMovement(delta, camCtrl, world) {
@@ -885,6 +924,7 @@ export class Player {
     if (this.isSwinging) return;
     this.isSwinging = true;
     this.swingTimer = 0;
+    this._swingFlash = 1.0; // 포획 시도 시 링 플래시
   }
 
   get position() { return this.mesh.position; }
