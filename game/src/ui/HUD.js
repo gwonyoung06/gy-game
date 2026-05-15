@@ -248,6 +248,24 @@ export class HUD {
     }, 2000);
   }
 
+  showScorePopup(score) {
+    if (!score || score <= 0) return;
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position:fixed;
+      top:${24 + Math.random() * 10}%;
+      left:${37 + (Math.random() - 0.5) * 22}%;
+      color:#44ffaa;font-size:21px;font-weight:900;
+      font-family:'Rajdhani',sans-serif;letter-spacing:1px;
+      text-shadow:0 0 14px rgba(68,255,170,0.85),0 2px 6px rgba(0,0,0,0.9);
+      z-index:201;pointer-events:none;
+      animation:scoreFloat 1.1s ease-out forwards;
+    `;
+    el.textContent = `+${score.toLocaleString()}`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1100);
+  }
+
   showDamagePopup(damage) {
     const el = document.createElement('div');
     el.style.cssText = `

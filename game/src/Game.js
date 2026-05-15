@@ -549,6 +549,7 @@ export class Game {
     this.hud.show(`스테이지 ${stageData.id} - ${stageData.name}`);
     this._showScreen('game');
     this._startLoop();
+    this._showCountdown(); // 3-2-1-GO! 오버레이
 
     this._watchLockState();
 
@@ -740,6 +741,7 @@ export class Game {
       this.sessionCoins += result.coins;
       this.totalCoins = addCoins(result.coins);
       this.hud.showCaptureEffect(result.coins);
+      this.hud.showScorePopup(result.score);
       this._triggerCaptureFlash();
       this.camCtrl?.shake(0.13);
       audioManager.sfxCaptureSuccess();
@@ -998,6 +1000,7 @@ export class Game {
     this.hud.flashDamage();
     this.hud.showDamagePopup(damage);
     audioManager.sfxDamage();
+    this.camCtrl?.shake(0.22); // 피격 카메라 흔들림
 
     if (this.playerHP <= 0) {
       // HP 0 → 스테이지 실패
@@ -1242,6 +1245,52 @@ export class Game {
       el.style.cssText = `left:${cx + ex}px;top:${cy + ey}px;transform:translate(-50%,-50%) rotate(${angle - Math.PI / 2}rad);opacity:${opacity};`;
       container.appendChild(el);
     });
+  }
+
+  // ── 게임 시작 카운트다운 3-2-1-GO! ───────────────────────────
+  _showCountdown() {
+    const steps  = ['3', '2', '1', 'GO!'];
+    const colors = ['#ff5555', '#ffbb33', '#ffdd33', '#44ffaa'];
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `
+      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+      z-index:500;pointer-events:none;
+    `;
+    document.body.appendChild(wrap);
+
+    const txt = document.createElement('div');
+    txt.style.cssText = `
+      font-family:'Rajdhani',sans-serif;font-size:128px;font-weight:900;
+      letter-spacing:-2px;user-select:none;
+      transition:transform 0.14s cubic-bezier(0.22,1,0.36,1),opacity 0.14s ease;
+      opacity:0;transform:scale(2);
+    `;
+    wrap.appendChild(txt);
+
+    let i = 0;
+    const DUR  = 580; // 표시 총 시간 (ms)
+    const FADE = 110; // 페이드 in/out (ms)
+
+    const next = () => {
+      if (i >= steps.length) { wrap.remove(); return; }
+      txt.textContent    = steps[i];
+      txt.style.color      = colors[i];
+      txt.style.textShadow = `0 0 60px ${colors[i]}cc, 0 0 120px ${colors[i]}44`;
+      txt.style.opacity    = '0';
+      txt.style.transform  = 'scale(1.85)';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        txt.style.opacity   = '1';
+        txt.style.transform = 'scale(1)';
+      }));
+      i++;
+      setTimeout(() => {
+        txt.style.opacity   = '0';
+        txt.style.transform = 'scale(0.5)';
+        setTimeout(next, FADE);
+      }, DUR - FADE);
+    };
+    next();
   }
 
   // ── 타이틀 3D 배경 씬 ────────────────────────────────────────

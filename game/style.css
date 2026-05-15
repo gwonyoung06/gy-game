@@ -516,6 +516,12 @@ body {
   0%   { opacity: 1; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(-64px) scale(1.4); }
 }
+/* 점수 팝업 */
+@keyframes scoreFloat {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  60%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-72px) scale(1.15); }
+}
 
 /* HUD 상단 */
 .hud-top {

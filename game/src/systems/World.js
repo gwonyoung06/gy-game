@@ -442,6 +442,8 @@ export class World {
     this._spawnTreeHollows(12);
     this._spawnForestSigns(10);
     this._spawnHangingLanterns(20);
+    // 숲 대기 파티클 — 반짝이는 포자·반딧불
+    this._buildAtmosphereParticles({ count: 300, spread: 110, maxY: 14, color: 0xaabb44, size: 0.068 });
   }
 
   // ── 공룡섬 (13~14) ────────────────────────────────────────────
@@ -471,6 +473,8 @@ export class World {
     this._spawnStoneCircles(4);
     this._spawnPrehistoricTrees(30);
     this._spawnDinoSkeleton(5);
+    // 화산 잔불 파티클 — 상승하는 불씨
+    this._buildAtmosphereParticles({ count: 240, spread: 115, maxY: 20, color: 0xff5511, size: 0.060 });
   }
 
   // ── 우주 (15) ─────────────────────────────────────────────────
