@@ -419,6 +419,8 @@ export class Game {
       const unlocked = stage.id === 1 || save.clearedStages.includes(stage.id - 1);
       const cleared  = save.clearedStages.includes(stage.id);
       const best     = save.highScores[stage.id] || 0;
+      const stars    = (save.stageStars || {})[stage.id] || 0;
+      const starStr  = cleared ? ('⭐'.repeat(stars) + '☆'.repeat(3 - stars)) : '';
 
       const card = document.createElement('div');
       card.className = `stage-card${unlocked ? '' : ' locked'}${cleared ? ' cleared' : ''}`;
@@ -426,7 +428,7 @@ export class Game {
         <div class="stage-num">${stage.id}</div>
         <div class="stage-theme-icon">${stage.icon}</div>
         <div class="stage-name">${stage.name}</div>
-        ${cleared  ? `<div class="stage-cleared">✅ ${best.toLocaleString()}점</div>` : ''}
+        ${cleared  ? `<div class="stage-star-row">${starStr}</div><div class="stage-cleared">${best.toLocaleString()}점</div>` : ''}
         ${!unlocked ? '<div class="stage-cleared">🔒 잠김</div>' : ''}
       `;
       if (unlocked) {
@@ -648,8 +650,12 @@ export class Game {
         label.className = 'creature-label';
         container.appendChild(label);
       }
-      const dist = Math.round(c.mesh.position.distanceTo(playerPos));
-      label.textContent = `${c.config.name || c.config.type} 💰${c.config.coins}`;
+      const dist = c.mesh.position.distanceTo(playerPos);
+      const inRange = dist <= this.player.captureRange;
+      label.className = inRange ? 'creature-label creature-label--in-range' : 'creature-label';
+      label.innerHTML = inRange
+        ? `<span>${c.config.name || c.config.type}</span> <span class="label-coins">💰${c.config.coins}</span><div class="label-hint">클릭!</div>`
+        : `${c.config.name || c.config.type} 💰${c.config.coins}`;
       label.style.transform = `translate(${sx}px, ${sy}px)`;
       label.style.opacity = Math.max(0.4, 1 - dist / LABEL_RANGE);
     });
@@ -1006,14 +1012,14 @@ export class Game {
     this._stopLoop();
     this.hud.hide();
 
-    markStageCleared(this.selectedStage, this.sessionScore);
-    audioManager.sfxStageComplete();
-    this._launchConfetti();
-    this._checkAchievement('first_clear', '🎉', '첫 스테이지 클리어!');
-
     const stageData = STAGES.find(s => s.id === this.selectedStage);
     const timeRatio = result.timeLeft / (stageData?.timeLimit || 60);
     const stars = timeRatio >= 0.4 ? 3 : timeRatio >= 0.15 ? 2 : 1;
+
+    markStageCleared(this.selectedStage, this.sessionScore, stars);
+    audioManager.sfxStageComplete();
+    this._launchConfetti();
+    this._checkAchievement('first_clear', '🎉', '첫 스테이지 클리어!');
     if (stars === 3) this._checkAchievement('perfect_clear', '⭐', '완벽 클리어!');
 
     document.getElementById('result-emoji').textContent = '🎉';

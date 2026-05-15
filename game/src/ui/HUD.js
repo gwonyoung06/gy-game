@@ -22,6 +22,7 @@ export class HUD {
     this.captureBar  = document.getElementById('hud-capture-bar');
     this.comboEl     = document.getElementById('hud-combo');
     this.comboCount  = document.getElementById('combo-count');
+    this.comboMult   = document.getElementById('combo-mult');
     this.scoreEl     = document.getElementById('hud-score');
     this.captureFx   = document.getElementById('capture-fx');
     this.captureFxCoins = document.getElementById('capture-fx-coins');
@@ -137,22 +138,25 @@ export class HUD {
     this.wave.textContent = waveName;
 
     const glow = document.getElementById('combo-glow');
+    const multMap = { 10: '×2.0', 5: '×1.5', 3: '×1.2' };
+    let multText = '', glowClass = '';
     if (state.combo >= 10) {
       this.comboEl.classList.remove('hidden');
       this.comboCount.textContent = state.combo;
-      if (glow) { glow.style.opacity='1'; glow.className='combo-glow-10'; }
+      multText = '×2.0'; glowClass = 'combo-glow-10';
     } else if (state.combo >= 5) {
       this.comboEl.classList.remove('hidden');
       this.comboCount.textContent = state.combo;
-      if (glow) { glow.style.opacity='1'; glow.className='combo-glow-5'; }
+      multText = '×1.5'; glowClass = 'combo-glow-5';
     } else if (state.combo >= 3) {
       this.comboEl.classList.remove('hidden');
       this.comboCount.textContent = state.combo;
-      if (glow) { glow.style.opacity='1'; glow.className='combo-glow-3'; }
+      multText = '×1.2'; glowClass = 'combo-glow-3';
     } else {
       this.comboEl.classList.add('hidden');
-      if (glow) { glow.style.opacity='0'; glow.className=''; }
     }
+    if (this.comboMult) this.comboMult.textContent = multText;
+    if (glow) { glow.style.opacity = glowClass ? '1' : '0'; glow.className = glowClass; }
 
     if (delta > 0) this._tickSkillCDs(delta);
   }

@@ -318,7 +318,8 @@ body {
 .stage-card .stage-num        { font-size: 22px; font-weight: 900; color: var(--primary); font-family: var(--font-en); }
 .stage-card .stage-theme-icon { font-size: 34px; margin: 8px 0; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
 .stage-card .stage-name        { font-size: 12px; color: rgba(255,255,255,0.65); font-weight: 600; }
-.stage-card .stage-cleared     { font-size: 10px; color: var(--secondary); margin-top: 5px; }
+.stage-card .stage-cleared     { font-size: 10px; color: var(--secondary); margin-top: 2px; }
+.stage-card .stage-star-row   { font-size: 13px; margin-top: 5px; letter-spacing: 1px; filter: drop-shadow(0 0 4px rgba(255,215,0,0.6)); }
 
 /* ══════════════════════════════════════════════
    게임 설정 (프리게임)
@@ -620,6 +621,20 @@ body {
   animation: comboIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: var(--glow-o);
   border: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.combo-mult {
+  font-family: var(--font-en);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--gold);
+  text-shadow: 0 0 8px rgba(255,215,0,0.6);
+  background: rgba(0,0,0,0.30);
+  border-radius: 8px;
+  padding: 1px 6px;
 }
 
 .crosshair {
@@ -1384,8 +1399,28 @@ body {
   padding: 2px 6px;
   white-space: nowrap;
   transform-origin: left top;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, background 0.2s ease, border-color 0.2s ease;
   pointer-events: none;
+  border: 1px solid transparent;
+}
+.creature-label--in-range {
+  background: rgba(20,60,50,0.85);
+  border-color: rgba(78,205,196,0.75);
+  box-shadow: 0 0 10px rgba(78,205,196,0.35);
+  color: #a8ffef;
+  animation: labelPulse 0.8s ease-in-out infinite;
+}
+.creature-label--in-range .label-coins { color: var(--gold); }
+.creature-label--in-range .label-hint  {
+  font-size: 10px;
+  color: #4ecdc4;
+  letter-spacing: 1px;
+  margin-top: 1px;
+  text-align: center;
+}
+@keyframes labelPulse {
+  0%,100% { box-shadow: 0 0 8px rgba(78,205,196,0.35); }
+  50%      { box-shadow: 0 0 16px rgba(78,205,196,0.70); }
 }
 
 /* ══════════════════════════════════════════════

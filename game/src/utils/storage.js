@@ -4,6 +4,7 @@ const defaultSave = {
   coins: 0,
   clearedStages: [],
   highScores: {},
+  stageStars: {},   // { [stageId]: 1|2|3 }
   ownedItems: [],
   equippedPet: null,
   equippedOutfit: null,
@@ -59,13 +60,17 @@ export function spendCoins(amount) {
   return true;
 }
 
-export function markStageCleared(stageId, score) {
+export function markStageCleared(stageId, score, stars = 1) {
   const save = loadSave();
   if (!save.clearedStages.includes(stageId)) {
     save.clearedStages.push(stageId);
   }
   const prev = save.highScores[stageId] || 0;
   if (score > prev) save.highScores[stageId] = score;
+  // 별 점수 최고 기록만 저장
+  if (!save.stageStars) save.stageStars = {};
+  const prevStars = save.stageStars[stageId] || 0;
+  if (stars > prevStars) save.stageStars[stageId] = stars;
   saveSave(save);
 }
 
