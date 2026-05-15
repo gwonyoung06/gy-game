@@ -331,16 +331,18 @@ body {
   background: linear-gradient(180deg, #080c14 0%, #0a1020 100%);
   justify-content: flex-start;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding-top: 66px;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
 }
 
 .pregame-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
   max-width: 580px;
-  padding: 28px 24px 40px;
+  padding: 20px 20px 60px;
   align-items: center;
 }
 
@@ -358,8 +360,8 @@ body {
 
 .opt-btn {
   flex: 1;
-  min-width: 80px;
-  padding: 12px 8px;
+  min-width: 76px;
+  padding: 9px 6px;
   background: rgba(255,255,255,0.04);
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
