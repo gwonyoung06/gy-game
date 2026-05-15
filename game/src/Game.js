@@ -415,6 +415,7 @@ export class Game {
     const grid = document.getElementById('stage-grid');
     grid.innerHTML = '';
 
+    let idx = 0;
     STAGES.forEach(stage => {
       const unlocked = stage.id === 1 || save.clearedStages.includes(stage.id - 1);
       const cleared  = save.clearedStages.includes(stage.id);
@@ -424,6 +425,8 @@ export class Game {
 
       const card = document.createElement('div');
       card.className = `stage-card${unlocked ? '' : ' locked'}${cleared ? ' cleared' : ''}`;
+      // 순차 슬라이드-인 애니메이션
+      card.style.cssText = `opacity:0;animation:slideUp 0.35s ease ${idx * 38}ms both`;
       card.innerHTML = `
         <div class="stage-num">${stage.id}</div>
         <div class="stage-theme-icon">${stage.icon}</div>
@@ -439,6 +442,7 @@ export class Game {
         });
       }
       grid.appendChild(card);
+      idx++;
     });
 
     const bonusStages = [
@@ -450,7 +454,8 @@ export class Game {
       const unlocked = bs.unlock();
       const card = document.createElement('div');
       card.className = `stage-card${unlocked ? '' : ' locked'}`;
-      if (unlocked) card.style.borderColor = '#ffd700';
+      const bColor = unlocked ? `border-color:#ffd700;` : '';
+      card.style.cssText = `${bColor}opacity:0;animation:slideUp 0.35s ease ${idx * 38}ms both`;
       card.innerHTML = `
         <div class="stage-num" style="color:#ffd700">★</div>
         <div class="stage-theme-icon">${bs.icon}</div>
@@ -458,6 +463,7 @@ export class Game {
         ${!unlocked ? '<div class="stage-cleared">🔒 잠김</div>' : ''}
       `;
       grid.appendChild(card);
+      idx++;
     });
   }
 
@@ -688,6 +694,8 @@ export class Game {
     if (dangerEl) dangerEl.innerHTML = '';
     const crosshairEl = document.getElementById('crosshair');
     if (crosshairEl) { crosshairEl.textContent = '+'; crosshairEl.className = 'crosshair'; }
+    // HP 위험 클래스 해제
+    document.body.classList.remove('hp-danger');
     particlePool.reset();
 
     this.camCtrl?.dispose();
@@ -745,6 +753,9 @@ export class Game {
       this._triggerCaptureFlash();
       this.camCtrl?.shake(0.13);
       audioManager.sfxCaptureSuccess();
+      // 콤보 버스트 (5× / 10×)
+      const combo = this.waves?.combo ?? 0;
+      if (combo === 5 || combo === 10) this._showComboBurst(combo);
       // 업적 체크
       if (this.waves) {
         const total = this.waves.capturedCount;
@@ -896,6 +907,8 @@ export class Game {
         break;
       }
     }
+    // 스킬 사용 시 화면 엣지 플래시
+    this._flashSkillActivation(skillId);
   }
 
   // ── 핫바 슬롯 사용 (1~9 키) ───────────────────────────────────
@@ -1010,8 +1023,7 @@ export class Game {
       document.getElementById('result-title').textContent = '전투 불능!';
       document.getElementById('btn-next-stage').style.display = 'none';
       document.getElementById('nickname-row').classList.add('hidden');
-      const starElHP = document.getElementById('res-stars');
-      if (starElHP) starElHP.textContent = '☆☆☆';
+      this._setResultStars(0);
       this._showScreen('result');
       this._animateResultNumbers(this.waves?.capturedCount || 0, 0, this.waves?.maxCombo || 0);
     }
@@ -1036,8 +1048,7 @@ export class Game {
     document.getElementById('btn-next-stage').style.display = this.selectedStage < STAGES.length ? '' : 'none';
     document.getElementById('nickname-row').classList.remove('hidden');
 
-    const starEl = document.getElementById('res-stars');
-    if (starEl) starEl.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+    this._setResultStars(stars);
 
     this._showScreen('result');
     this._animateResultNumbers(result.captured, result.timeLeft, result.maxCombo);
@@ -1052,8 +1063,7 @@ export class Game {
     document.getElementById('result-title').textContent = '시간 초과!';
     document.getElementById('btn-next-stage').style.display = 'none';
     document.getElementById('nickname-row').classList.add('hidden');
-    const starEl = document.getElementById('res-stars');
-    if (starEl) starEl.textContent = '☆☆☆';
+    this._setResultStars(0);
 
     this._showScreen('result');
     this._animateResultNumbers(this.waves?.capturedCount || 0, 0, this.waves?.maxCombo || 0);
@@ -1245,6 +1255,58 @@ export class Game {
       el.style.cssText = `left:${cx + ex}px;top:${cy + ey}px;transform:translate(-50%,-50%) rotate(${angle - Math.PI / 2}rad);opacity:${opacity};`;
       container.appendChild(el);
     });
+  }
+
+  // ── 결과 화면 별점 (순차 팝업) ───────────────────────────────
+  _setResultStars(stars) {
+    const el = document.getElementById('res-stars');
+    if (!el) return;
+    el.innerHTML = '';
+    for (let s = 0; s < 3; s++) {
+      const span = document.createElement('span');
+      span.className = 'res-star';
+      span.textContent = s < stars ? '⭐' : '☆';
+      span.style.animationDelay = `${s * 260}ms`;
+      el.appendChild(span);
+    }
+  }
+
+  // ── 콤보 버스트 링 (5×/10× 콤보) ────────────────────────────
+  _showComboBurst(combo) {
+    const color = combo >= 10 ? '#ffee00' : '#ff8844';
+    const rings  = combo >= 10 ? 5 : 3;
+    if (combo >= 10) this.camCtrl?.shake(0.18);
+    for (let i = 0; i < rings; i++) {
+      const r = document.createElement('div');
+      r.style.cssText = `
+        position:fixed;left:50%;top:50%;
+        width:80px;height:80px;border-radius:50%;
+        border:3px solid ${color};
+        pointer-events:none;z-index:400;
+        animation:comboBurst ${0.55 + i * 0.08}s ease-out ${i * 75}ms forwards;
+      `;
+      document.body.appendChild(r);
+      setTimeout(() => r.remove(), 700 + i * 75);
+    }
+  }
+
+  // ── 스킬 활성화 엣지 플래시 ──────────────────────────────────
+  _flashSkillActivation(skillId) {
+    const colorMap = {
+      skill_vortex: 'rgba(80,160,255,0.22)',
+      skill_magnet: 'rgba(255,180,50,0.22)',
+      skill_slow:   'rgba(80,255,200,0.22)',
+      skill_multi:  'rgba(200,80,255,0.22)',
+    };
+    const col = colorMap[skillId] || 'rgba(255,255,255,0.18)';
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position:fixed;inset:0;background:${col};
+      pointer-events:none;z-index:190;
+      animation:skillFlash 0.38s ease forwards;
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 380);
   }
 
   // ── 게임 시작 카운트다운 3-2-1-GO! ───────────────────────────

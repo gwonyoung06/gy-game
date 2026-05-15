@@ -170,6 +170,10 @@ export class HUD {
     const hue = Math.round(pct * 1.2);
     this.hpFill.style.background = `hsl(${hue}, 90%, 45%)`;
     if (this.hpText) this.hpText.textContent = `${hp}/${maxHp}`;
+    // HP 위험 상태 (30% 이하) — 펄스 + 비네트
+    const critical = pct > 0 && pct < 30;
+    this.hpFill.classList.toggle('hp-critical', critical);
+    document.body.classList.toggle('hp-danger', critical);
   }
 
   // 피격 화면 플래시

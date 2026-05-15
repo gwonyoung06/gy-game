@@ -559,6 +559,28 @@ body {
   transition: width 0.25s ease, background 0.4s ease;
   box-shadow: 0 0 8px rgba(34,204,85,0.5);
 }
+/* HP 위험 상태 */
+.hud-hp-fill.hp-critical {
+  animation: hpPulse 0.75s ease-in-out infinite;
+}
+@keyframes hpPulse {
+  0%, 100% { filter: brightness(1)   saturate(1); }
+  50%       { filter: brightness(1.7) saturate(2.5); }
+}
+/* HP 위험 화면 비네트 */
+.hp-danger::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 180;
+  box-shadow: inset 0 0 90px 50px rgba(255,20,20,0.28);
+  animation: hpVignette 0.75s ease-in-out infinite;
+}
+@keyframes hpVignette {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 1; }
+}
 .hud-hp-text {
   font-size: 12px;
   font-weight: 700;
@@ -1478,11 +1500,26 @@ body {
   letter-spacing: 4px;
   margin-top: 4px;
   filter: drop-shadow(0 0 8px rgba(255,215,0,0.7));
-  animation: starPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+/* 별 하나하나 애니 (staggered via JS inline animationDelay) */
+.res-star {
+  display: inline-block;
+  animation: starPop 0.55s cubic-bezier(0.34,1.56,0.64,1) both;
+  opacity: 0;
 }
 @keyframes starPop {
-  from { transform: scale(0.5); opacity: 0; }
-  to   { transform: scale(1);   opacity: 1; }
+  from { transform: scale(0.2) rotate(-30deg); opacity: 0; }
+  to   { transform: scale(1)   rotate(0deg);   opacity: 1; }
+}
+/* 콤보 버스트 링 */
+@keyframes comboBurst {
+  0%   { transform: translate(-50%,-50%) scale(0.5); opacity: 0.9; }
+  100% { transform: translate(-50%,-50%) scale(7);   opacity: 0; }
+}
+/* 스킬 플래시 */
+@keyframes skillFlash {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* 타이머 urgent 강화 */
