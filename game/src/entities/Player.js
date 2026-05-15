@@ -1,32 +1,42 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
+
+// Three.js r155+ made position/scale read-only getters ??can't use Object.assign.
+// Use this helper instead of _mkMesh(...), { position, scale }).
+function _mkMesh(geo, mat, props = {}) {
+  const m = new THREE.Mesh(geo, mat);
+  if (props.position) m.position.copy(props.position);
+  if (props.scale)    m.scale.copy(props.scale);
+  if (props.rotation) m.rotation.copy(props.rotation);
+  return m;
+}
 
 /**
- * Player — AAA-quality stylized explorer character
+ * Player ??AAA-quality stylized explorer character
  *
  * Skeleton hierarchy (Groups = pivot joints, all coords relative to parent):
  *
  *  root (world feet)
- *  └─ hips [y=0.90]           ← locomotion pivot, hip sway
- *      ├─ spine0 [y=0.02]     ← lower spine flex
- *      │  └─ spine1 [y=0.22]  ← upper spine twist (counter walk)
- *      │     └─ chest [y=0.06]
- *      │         ├─ neck [y=0.42] → headGroup [y=0.20] → hatGroup
- *      │         ├─ clavL  → shoulderL → upperArmL → elbowL → wristL
- *      │         ├─ clavR  → shoulderR → upperArmR → elbowR → wristR → netGroup
- *      │         └─ packGroup (backpack, no animation)
- *      ├─ thighL [x=-0.14] → kneeL → ankleL
- *      └─ thighR [x= 0.14] → kneeR → ankleR
+ *  ?붴? hips [y=0.90]           ??locomotion pivot, hip sway
+ *      ?쒋? spine0 [y=0.02]     ??lower spine flex
+ *      ?? ?붴? spine1 [y=0.22]  ??upper spine twist (counter walk)
+ *      ??    ?붴? chest [y=0.06]
+ *      ??        ?쒋? neck [y=0.42] ??headGroup [y=0.20] ??hatGroup
+ *      ??        ?쒋? clavL  ??shoulderL ??upperArmL ??elbowL ??wristL
+ *      ??        ?쒋? clavR  ??shoulderR ??upperArmR ??elbowR ??wristR ??netGroup
+ *      ??        ?붴? packGroup (backpack, no animation)
+ *      ?쒋? thighL [x=-0.14] ??kneeL ??ankleL
+ *      ?붴? thighR [x= 0.14] ??kneeR ??ankleR
  *
  * Every visual mesh is offset inside its parent group so the group
- * origin sits exactly at the anatomical joint — rotations always
+ * origin sits exactly at the anatomical joint ??rotations always
  * happen from the correct pivot.
  */
 
-// ── Module-level reuse vectors ─────────────────────────────────────
+// ?? Module-level reuse vectors ?????????????????????????????????????
 const _mv  = new THREE.Vector3();
 const _vel = new THREE.Vector3();
 
-// ── Color palette (explorer/hunter) ───────────────────────────────
+// ?? Color palette (explorer/hunter) ???????????????????????????????
 const C = {
   skin:     0xFFB082,
   skinDark: 0xE8956A,
@@ -58,7 +68,7 @@ const C = {
 const lm = (color, flat = true) =>
   new THREE.MeshLambertMaterial({ color, flatShading: flat });
 
-// ══════════════════════════════════════════════════════════════════
+// ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧
 export class Player {
   constructor(scene) {
     this.scene       = scene;
@@ -91,7 +101,7 @@ export class Player {
     this._buildMesh();
   }
 
-  // ── Geometry helpers ────────────────────────────────────────────
+  // ?? Geometry helpers ????????????????????????????????????????????
   /** Box with geometry origin at top centre (so the joint pivot sits at top) */
   _boxFromTop(w, h, d) {
     const g = new THREE.BoxGeometry(w, h, d);
@@ -105,12 +115,12 @@ export class Player {
     return g;
   }
 
-  // ══════════════════════════════════════════════════════════════
+  // ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧
   _buildMesh() {
     const j = this._j;   // joint map
     const root = new THREE.Group();
 
-    // ── HIPS ─────────────────────────────────────────────────────
+    // ?? HIPS ?????????????????????????????????????????????????????
     const hips = new THREE.Group();
     hips.position.y = 0.90;
     root.add(hips);
@@ -125,41 +135,41 @@ export class Player {
     hips.add(pelvisMesh);
 
     // Belt
-    hips.add(Object.assign(new THREE.Mesh(
+    hips.add(_mkMesh(
       new THREE.BoxGeometry(0.52, 0.055, 0.32), lm(C.belt)
-    ), { position: new THREE.Vector3(0, 0.02, 0) }));
+    , { position: new THREE.Vector3(0, 0.02, 0) }));
 
     // Belt buckle
-    hips.add(Object.assign(new THREE.Mesh(
+    hips.add(_mkMesh(
       new THREE.BoxGeometry(0.07, 0.055, 0.04), lm(C.metalSh)
-    ), { position: new THREE.Vector3(0, 0.02, -0.165) }));
+    , { position: new THREE.Vector3(0, 0.02, -0.165) }));
 
-    // ── SPINE ─────────────────────────────────────────────────────
+    // ?? SPINE ?????????????????????????????????????????????????????
     const spine0 = new THREE.Group();
     spine0.position.y = 0.04;
     hips.add(spine0);
     j.spine0 = spine0;
 
     // Abdomen
-    spine0.add(Object.assign(new THREE.Mesh(
+    spine0.add(_mkMesh(
       new THREE.BoxGeometry(0.44, 0.26, 0.28), lm(C.shirt)
-    ), { position: new THREE.Vector3(0, 0.13, 0) }));
+    , { position: new THREE.Vector3(0, 0.13, 0) }));
 
     const spine1 = new THREE.Group();
     spine1.position.y = 0.26;
     spine0.add(spine1);
     j.spine1 = spine1;
 
-    // ── CHEST ─────────────────────────────────────────────────────
+    // ?? CHEST ?????????????????????????????????????????????????????
     const chest = new THREE.Group();
     chest.position.y = 0.04;
     spine1.add(chest);
     j.chest = chest;
 
     // Jacket front panels
-    chest.add(Object.assign(new THREE.Mesh(
+    chest.add(_mkMesh(
       new THREE.BoxGeometry(0.70, 0.42, 0.34), lm(C.jacket)
-    ), { position: new THREE.Vector3(0, 0.21, 0) }));
+    , { position: new THREE.Vector3(0, 0.21, 0) }));
 
     // Jacket lapels
     for (const sx of [-1, 1]) {
@@ -172,9 +182,9 @@ export class Player {
     }
 
     // Shirt visible at neck
-    chest.add(Object.assign(new THREE.Mesh(
+    chest.add(_mkMesh(
       new THREE.BoxGeometry(0.20, 0.12, 0.05), lm(C.shirt)
-    ), { position: new THREE.Vector3(0, 0.38, -0.165) }));
+    , { position: new THREE.Vector3(0, 0.38, -0.165) }));
 
     // Chest pockets
     for (const sx of [-1, 1]) {
@@ -185,23 +195,23 @@ export class Player {
       chest.add(pocket);
     }
 
-    // ── NECK ──────────────────────────────────────────────────────
+    // ?? NECK ??????????????????????????????????????????????????????
     const neck = new THREE.Group();
     neck.position.y = 0.43;
     chest.add(neck);
     j.neck = neck;
 
-    neck.add(Object.assign(new THREE.Mesh(
+    neck.add(_mkMesh(
       new THREE.CylinderGeometry(0.095, 0.115, 0.18, 8), lm(C.skin, false)
-    ), { position: new THREE.Vector3(0, 0.09, 0) }));
+    , { position: new THREE.Vector3(0, 0.09, 0) }));
 
-    // ── HEAD ──────────────────────────────────────────────────────
+    // ?? HEAD ??????????????????????????????????????????????????????
     const headGroup = new THREE.Group();
     headGroup.position.y = 0.20;
     neck.add(headGroup);
     j.head = headGroup;
 
-    // Skull — slightly tapered
+    // Skull ??slightly tapered
     const skullMesh = new THREE.Mesh(
       new THREE.BoxGeometry(0.40, 0.44, 0.38), lm(C.skin, false)
     );
@@ -274,46 +284,46 @@ export class Player {
     mouth.position.set(0, 0.148, -0.192);
     headGroup.add(mouth);
 
-    // ── HAT ───────────────────────────────────────────────────────
+    // ?? HAT ???????????????????????????????????????????????????????
     const hatGroup = new THREE.Group();
     hatGroup.position.y = 0.44;
     headGroup.add(hatGroup);
     j.hat = hatGroup;
 
     // Brim
-    hatGroup.add(Object.assign(new THREE.Mesh(
+    hatGroup.add(_mkMesh(
       new THREE.CylinderGeometry(0.46, 0.46, 0.04, 14), lm(C.hatBrim)
-    ), { position: new THREE.Vector3(0, 0.02, 0) }));
+    , { position: new THREE.Vector3(0, 0.02, 0) }));
 
     // Crown
-    hatGroup.add(Object.assign(new THREE.Mesh(
+    hatGroup.add(_mkMesh(
       new THREE.CylinderGeometry(0.235, 0.255, 0.24, 10), lm(C.hat)
-    ), { position: new THREE.Vector3(0, 0.15, 0) }));
+    , { position: new THREE.Vector3(0, 0.15, 0) }));
 
     // Top slightly domed
-    hatGroup.add(Object.assign(new THREE.Mesh(
+    hatGroup.add(_mkMesh(
       new THREE.CylinderGeometry(0.195, 0.235, 0.04, 10), lm(C.hat)
-    ), { position: new THREE.Vector3(0, 0.26, 0) }));
+    , { position: new THREE.Vector3(0, 0.26, 0) }));
 
     // Hat band
-    hatGroup.add(Object.assign(new THREE.Mesh(
+    hatGroup.add(_mkMesh(
       new THREE.CylinderGeometry(0.257, 0.257, 0.055, 10), lm(C.hatBand)
-    ), { position: new THREE.Vector3(0, 0.065, 0) }));
+    , { position: new THREE.Vector3(0, 0.065, 0) }));
 
     // Hat pin / badge (detail)
-    hatGroup.add(Object.assign(new THREE.Mesh(
+    hatGroup.add(_mkMesh(
       new THREE.SphereGeometry(0.018, 5, 5), lm(C.metalSh, false)
-    ), { position: new THREE.Vector3(-0.12, 0.085, -0.22) }));
+    , { position: new THREE.Vector3(-0.12, 0.085, -0.22) }));
 
-    // ── BACKPACK ──────────────────────────────────────────────────
+    // ?? BACKPACK ??????????????????????????????????????????????????
     const pack = new THREE.Group();
     pack.position.set(0, 0.14, 0.215);
     chest.add(pack);
 
     // Main body
-    pack.add(Object.assign(new THREE.Mesh(
+    pack.add(_mkMesh(
       new THREE.BoxGeometry(0.36, 0.52, 0.20), lm(C.pack)
-    ), { position: new THREE.Vector3(0, 0.09, 0) }));
+    , { position: new THREE.Vector3(0, 0.09, 0) }));
 
     // Top flap
     const flap = new THREE.Mesh(
@@ -324,15 +334,15 @@ export class Player {
     pack.add(flap);
 
     // Front pocket
-    pack.add(Object.assign(new THREE.Mesh(
+    pack.add(_mkMesh(
       new THREE.BoxGeometry(0.28, 0.22, 0.06), lm(C.packDk)
-    ), { position: new THREE.Vector3(0, -0.09, -0.13) }));
+    , { position: new THREE.Vector3(0, -0.09, -0.13) }));
 
     // Side pouches
     for (const sx of [-1, 1]) {
-      pack.add(Object.assign(new THREE.Mesh(
+      pack.add(_mkMesh(
         new THREE.BoxGeometry(0.06, 0.18, 0.14), lm(C.packDk)
-      ), { position: new THREE.Vector3(sx * 0.21, 0.04, -0.03) }));
+      , { position: new THREE.Vector3(sx * 0.21, 0.04, -0.03) }));
     }
 
     // Shoulder straps
@@ -345,7 +355,7 @@ export class Player {
       pack.add(str);
     }
 
-    // ── ARMS — LEFT ───────────────────────────────────────────────
+    // ?? ARMS ??LEFT ???????????????????????????????????????????????
     // Clavicle (shoulder socket pivot)
     const clavL = new THREE.Group();
     clavL.position.set(-0.345, 0.36, 0);
@@ -353,9 +363,9 @@ export class Player {
     j.clavL = clavL;
 
     // Shoulder cap
-    clavL.add(Object.assign(new THREE.Mesh(
+    clavL.add(_mkMesh(
       new THREE.SphereGeometry(0.118, 8, 6), lm(C.jacket)
-    ), { scale: new THREE.Vector3(1, 0.82, 0.82) }));
+    , { scale: new THREE.Vector3(1, 0.82, 0.82) }));
 
     // Upper arm pivot (below shoulder)
     const uArmL = new THREE.Group();
@@ -363,9 +373,9 @@ export class Player {
     clavL.add(uArmL);
     j.uArmL = uArmL;
 
-    uArmL.add(Object.assign(new THREE.Mesh(
+    uArmL.add(_mkMesh(
       this._boxFromTop(0.185, 0.295, 0.185), lm(C.jacket)
-    ), {}));
+    , {}));
 
     // Elbow pivot
     const elbowL = new THREE.Group();
@@ -374,14 +384,14 @@ export class Player {
     j.elbowL = elbowL;
 
     // Elbow cap
-    elbowL.add(Object.assign(new THREE.Mesh(
+    elbowL.add(_mkMesh(
       new THREE.SphereGeometry(0.075, 6, 5), lm(C.jacketDk)
-    ), {}));
+    , {}));
 
     // Forearm
-    elbowL.add(Object.assign(new THREE.Mesh(
+    elbowL.add(_mkMesh(
       this._boxFromTop(0.158, 0.265, 0.158), lm(C.shirt)
-    ), {}));
+    , {}));
 
     // Wrist / hand pivot
     const wristL = new THREE.Group();
@@ -389,59 +399,59 @@ export class Player {
     elbowL.add(wristL);
     j.wristL = wristL;
 
-    wristL.add(Object.assign(new THREE.Mesh(
+    wristL.add(_mkMesh(
       new THREE.BoxGeometry(0.158, 0.115, 0.110), lm(C.skin, false)
-    ), { position: new THREE.Vector3(0, -0.058, 0) }));
+    , { position: new THREE.Vector3(0, -0.058, 0) }));
 
-    // ── ARMS — RIGHT ──────────────────────────────────────────────
+    // ?? ARMS ??RIGHT ??????????????????????????????????????????????
     const clavR = new THREE.Group();
     clavR.position.set(0.345, 0.36, 0);
     chest.add(clavR);
     j.clavR = clavR;
 
-    clavR.add(Object.assign(new THREE.Mesh(
+    clavR.add(_mkMesh(
       new THREE.SphereGeometry(0.118, 8, 6), lm(C.jacket)
-    ), { scale: new THREE.Vector3(1, 0.82, 0.82) }));
+    , { scale: new THREE.Vector3(1, 0.82, 0.82) }));
 
     const uArmR = new THREE.Group();
     uArmR.position.y = -0.118;
     clavR.add(uArmR);
     j.uArmR = uArmR;
 
-    uArmR.add(Object.assign(new THREE.Mesh(
+    uArmR.add(_mkMesh(
       this._boxFromTop(0.185, 0.295, 0.185), lm(C.jacket)
-    ), {}));
+    , {}));
 
     const elbowR = new THREE.Group();
     elbowR.position.y = -0.295;
     uArmR.add(elbowR);
     j.elbowR = elbowR;
 
-    elbowR.add(Object.assign(new THREE.Mesh(
+    elbowR.add(_mkMesh(
       new THREE.SphereGeometry(0.075, 6, 5), lm(C.jacketDk)
-    ), {}));
+    , {}));
 
-    elbowR.add(Object.assign(new THREE.Mesh(
+    elbowR.add(_mkMesh(
       this._boxFromTop(0.158, 0.265, 0.158), lm(C.shirt)
-    ), {}));
+    , {}));
 
     const wristR = new THREE.Group();
     wristR.position.y = -0.265;
     elbowR.add(wristR);
     j.wristR = wristR;
 
-    wristR.add(Object.assign(new THREE.Mesh(
+    wristR.add(_mkMesh(
       new THREE.BoxGeometry(0.158, 0.115, 0.110), lm(C.skin, false)
-    ), { position: new THREE.Vector3(0, -0.058, 0) }));
+    , { position: new THREE.Vector3(0, -0.058, 0) }));
 
-    // ── NET (bug-catching net attached to right wrist) ─────────────
+    // ?? NET (bug-catching net attached to right wrist) ?????????????
     const netGroup = new THREE.Group();
     netGroup.position.set(0.02, -0.12, -0.05);
     netGroup.rotation.x = -0.18;   // slight forward tilt at rest
     wristR.add(netGroup);
     this.netGroup = netGroup;
 
-    // Handle — bamboo/wood pole with visible segments
+    // Handle ??bamboo/wood pole with visible segments
     const handleMat = lm(C.wood);
     const handleDkMat = lm(C.woodDk);
     for (let i = 0; i < 5; i++) {
@@ -495,16 +505,16 @@ export class Player {
     netWire.rotation.x = Math.PI;
     netGroup.add(netWire);
 
-    // ── LEGS — LEFT ───────────────────────────────────────────────
+    // ?? LEGS ??LEFT ???????????????????????????????????????????????
     const thighL = new THREE.Group();
     thighL.position.set(-0.145, -0.02, 0);
     hips.add(thighL);
     j.thighL = thighL;
 
-    // Thigh — pivot at top (hip socket)
-    thighL.add(Object.assign(new THREE.Mesh(
+    // Thigh ??pivot at top (hip socket)
+    thighL.add(_mkMesh(
       this._boxFromTop(0.215, 0.385, 0.215), lm(C.pants)
-    ), {}));
+    , {}));
 
     // Knee pivot
     const kneeL = new THREE.Group();
@@ -513,14 +523,14 @@ export class Player {
     j.kneeL = kneeL;
 
     // Knee cap detail
-    kneeL.add(Object.assign(new THREE.Mesh(
+    kneeL.add(_mkMesh(
       new THREE.SphereGeometry(0.080, 6, 5), lm(C.pantsDk)
-    ), {}));
+    , {}));
 
     // Shin
-    kneeL.add(Object.assign(new THREE.Mesh(
+    kneeL.add(_mkMesh(
       this._boxFromTop(0.178, 0.355, 0.178), lm(C.pants)
-    ), {}));
+    , {}));
 
     // Ankle pivot
     const ankleL = new THREE.Group();
@@ -529,74 +539,74 @@ export class Player {
     j.ankleL = ankleL;
 
     // Boot upper
-    ankleL.add(Object.assign(new THREE.Mesh(
+    ankleL.add(_mkMesh(
       new THREE.BoxGeometry(0.205, 0.22, 0.220), lm(C.boot)
-    ), { position: new THREE.Vector3(0, 0.11, 0) }));
+    , { position: new THREE.Vector3(0, 0.11, 0) }));
 
     // Boot sole
-    ankleL.add(Object.assign(new THREE.Mesh(
+    ankleL.add(_mkMesh(
       new THREE.BoxGeometry(0.225, 0.065, 0.380), lm(C.bootSole)
-    ), { position: new THREE.Vector3(0, 0.022, -0.045) }));
+    , { position: new THREE.Vector3(0, 0.022, -0.045) }));
 
     // Toe box
-    ankleL.add(Object.assign(new THREE.Mesh(
+    ankleL.add(_mkMesh(
       new THREE.BoxGeometry(0.205, 0.125, 0.210), lm(C.boot)
-    ), { position: new THREE.Vector3(0, 0.062, -0.175) }));
+    , { position: new THREE.Vector3(0, 0.062, -0.175) }));
 
     // Boot laces (small details)
     for (let i = 0; i < 3; i++) {
-      ankleL.add(Object.assign(new THREE.Mesh(
+      ankleL.add(_mkMesh(
         new THREE.BoxGeometry(0.22, 0.014, 0.018), lm(C.rope)
-      ), { position: new THREE.Vector3(0, 0.08 + i * 0.045, -0.108) }));
+      , { position: new THREE.Vector3(0, 0.08 + i * 0.045, -0.108) }));
     }
 
-    // ── LEGS — RIGHT ──────────────────────────────────────────────
+    // ?? LEGS ??RIGHT ??????????????????????????????????????????????
     const thighR = new THREE.Group();
     thighR.position.set(0.145, -0.02, 0);
     hips.add(thighR);
     j.thighR = thighR;
 
-    thighR.add(Object.assign(new THREE.Mesh(
+    thighR.add(_mkMesh(
       this._boxFromTop(0.215, 0.385, 0.215), lm(C.pants)
-    ), {}));
+    , {}));
 
     const kneeR = new THREE.Group();
     kneeR.position.y = -0.385;
     thighR.add(kneeR);
     j.kneeR = kneeR;
 
-    kneeR.add(Object.assign(new THREE.Mesh(
+    kneeR.add(_mkMesh(
       new THREE.SphereGeometry(0.080, 6, 5), lm(C.pantsDk)
-    ), {}));
+    , {}));
 
-    kneeR.add(Object.assign(new THREE.Mesh(
+    kneeR.add(_mkMesh(
       this._boxFromTop(0.178, 0.355, 0.178), lm(C.pants)
-    ), {}));
+    , {}));
 
     const ankleR = new THREE.Group();
     ankleR.position.y = -0.355;
     kneeR.add(ankleR);
     j.ankleR = ankleR;
 
-    ankleR.add(Object.assign(new THREE.Mesh(
+    ankleR.add(_mkMesh(
       new THREE.BoxGeometry(0.205, 0.22, 0.220), lm(C.boot)
-    ), { position: new THREE.Vector3(0, 0.11, 0) }));
+    , { position: new THREE.Vector3(0, 0.11, 0) }));
 
-    ankleR.add(Object.assign(new THREE.Mesh(
+    ankleR.add(_mkMesh(
       new THREE.BoxGeometry(0.225, 0.065, 0.380), lm(C.bootSole)
-    ), { position: new THREE.Vector3(0, 0.022, -0.045) }));
+    , { position: new THREE.Vector3(0, 0.022, -0.045) }));
 
-    ankleR.add(Object.assign(new THREE.Mesh(
+    ankleR.add(_mkMesh(
       new THREE.BoxGeometry(0.205, 0.125, 0.210), lm(C.boot)
-    ), { position: new THREE.Vector3(0, 0.062, -0.175) }));
+    , { position: new THREE.Vector3(0, 0.062, -0.175) }));
 
     for (let i = 0; i < 3; i++) {
-      ankleR.add(Object.assign(new THREE.Mesh(
+      ankleR.add(_mkMesh(
         new THREE.BoxGeometry(0.22, 0.014, 0.018), lm(C.rope)
-      ), { position: new THREE.Vector3(0, 0.08 + i * 0.045, -0.108) }));
+      , { position: new THREE.Vector3(0, 0.08 + i * 0.045, -0.108) }));
     }
 
-    // ── GROUND SHADOW DISC ────────────────────────────────────────
+    // ?? GROUND SHADOW DISC ????????????????????????????????????????
     const shadow = new THREE.Mesh(
       new THREE.CircleGeometry(0.52, 14),
       new THREE.MeshBasicMaterial({
@@ -608,7 +618,7 @@ export class Player {
     root.add(shadow);
     this._shadowMesh = shadow;
 
-    // ── FINISH ────────────────────────────────────────────────────
+    // ?? FINISH ????????????????????????????????????????????????????
     root.traverse(o => {
       if (o.isMesh) {
         o.castShadow = true;
@@ -619,7 +629,7 @@ export class Player {
     if (j.ankleL) j.ankleL.rotation.x = -0.05;
     if (j.ankleR) j.ankleR.rotation.x = -0.05;
 
-    // Idle arm pose — left arm slightly bent, right arm holds net down
+    // Idle arm pose ??left arm slightly bent, right arm holds net down
     if (j.uArmL) j.uArmL.rotation.z =  0.08;
     if (j.uArmR) j.uArmR.rotation.z = -0.08;
     if (j.elbowL) j.elbowL.rotation.x = 0.22;
@@ -634,9 +644,9 @@ export class Player {
     this.legR = j.thighR;
   }
 
-  // ══════════════════════════════════════════════════════════════
+  // ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧
   // UPDATE
-  // ══════════════════════════════════════════════════════════════
+  // ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧
   update(delta, camCtrl, world) {
     this._updateMovement(delta, camCtrl, world);
     this._updateSwing(delta);
@@ -700,7 +710,7 @@ export class Player {
     this.mesh.position.y += (terrainY - this.mesh.position.y) * Math.min(1, 18 * delta);
   }
 
-  // ── SWING with anticipation + follow-through ───────────────────
+  // ?? SWING with anticipation + follow-through ???????????????????
   _updateSwing(delta) {
     if (!this.isSwinging) return;
     this.swingTimer += delta;
@@ -739,7 +749,7 @@ export class Player {
     }
   }
 
-  // ── FULL ANIMATION SYSTEM ─────────────────────────────────────
+  // ?? FULL ANIMATION SYSTEM ?????????????????????????????????????
   _updateAnimation(delta) {
     const j = this._j;
     const speed     = _vel.length();
@@ -751,18 +761,18 @@ export class Player {
     const idleW = 1 - blend;
 
     // Advance time accumulators
-    // Walk freq: 6 Hz at full speed → feels snappy but not frantic
+    // Walk freq: 6 Hz at full speed ??feels snappy but not frantic
     this._walkTime += delta * (6.0 + blend * 2.5);
     this._idleTime += delta;
     const wt = this._walkTime;
     const it = this._idleTime;
 
-    const sw  = Math.sin(wt);         // primary limb phase  (-1…1)
+    const sw  = Math.sin(wt);         // primary limb phase  (-1??)
     const sw2 = Math.sin(wt * 2);     // double frequency    (bob / hip sway)
 
-    // ────────────────────────────────────────────────────────────
+    // ????????????????????????????????????????????????????????????
     // IDLE: BREATHING + WEIGHT SHIFT
-    // ────────────────────────────────────────────────────────────
+    // ????????????????????????????????????????????????????????????
     const breath    = Math.sin(it * 1.55) * idleW;        // ~0.25 Hz breath
     const weightSh  = Math.sin(it * 0.58) * idleW;        // subtle sway
 
@@ -792,57 +802,57 @@ export class Player {
       j.head.rotation.x = breath * 0.007 * 0.5;
     }
 
-    // Hat secondary motion — slightly lags behind head
+    // Hat secondary motion ??slightly lags behind head
     if (j.hat) {
       j.hat.rotation.x = Math.sin(it * 0.55 + 0.4) * 0.006 * idleW;
       j.hat.rotation.z = Math.sin(it * 0.28) * 0.005 * idleW;
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ????????????????????????????????????????????????????????????
     // WALK / RUN CYCLE (only when moving)
-    // ────────────────────────────────────────────────────────────
+    // ????????????????????????????????????????????????????????????
     if (blend > 0.005 && !this.isSwinging) {
       const w = blend;
 
-      // THIGHS — alternating forward/back swing
+      // THIGHS ??alternating forward/back swing
       const thighAmp = THREE.MathUtils.lerp(0, 0.52, w);
       if (j.thighL) j.thighL.rotation.x =  sw * thighAmp;
       if (j.thighR) j.thighR.rotation.x = -sw * thighAmp;
 
-      // KNEES — bend on the trailing leg
+      // KNEES ??bend on the trailing leg
       //   back leg bends knee; front leg is extended
       const kBendL = Math.max(0, -sw) * THREE.MathUtils.lerp(0, 0.60, w);
       const kBendR = Math.max(0,  sw) * THREE.MathUtils.lerp(0, 0.60, w);
       if (j.kneeL) j.kneeL.rotation.x = kBendL;
       if (j.kneeR) j.kneeR.rotation.x = kBendR;
 
-      // ANKLES — dorsiflex on landing foot
+      // ANKLES ??dorsiflex on landing foot
       const ankAmpL = THREE.MathUtils.lerp(-0.05, 0.22, w);
       const ankAmpR = THREE.MathUtils.lerp(-0.05, 0.22, w);
       if (j.ankleL) j.ankleL.rotation.x = Math.max(-0.05,  sw) * ankAmpL - 0.05;
       if (j.ankleR) j.ankleR.rotation.x = Math.max(-0.05, -sw) * ankAmpR - 0.05;
 
-      // HIPS — subtle rotation + vertical bob
+      // HIPS ??subtle rotation + vertical bob
       if (j.hips) {
         j.hips.rotation.y = sw * 0.10 * w;
         j.hips.position.y = Math.abs(sw2) * -0.038 * w; // pelvis dips each step
         j.hips.position.x = sw2 * 0.022 * w;            // side-to-side
       }
 
-      // SPINE — counter-rotates against hips for natural twist
+      // SPINE ??counter-rotates against hips for natural twist
       if (j.spine0) j.spine0.rotation.y = -sw * 0.08 * w;
       if (j.spine1) j.spine1.rotation.y = -sw * 0.05 * w;
 
-      // UPPER ARMS — counter-swing to legs
+      // UPPER ARMS ??counter-swing to legs
       const armSwingAmp = THREE.MathUtils.lerp(0, 0.48, w);
       if (j.uArmL) j.uArmL.rotation.x = -sw * armSwingAmp;
       if (j.uArmR) j.uArmR.rotation.x =  sw * armSwingAmp * 0.25; // right arm minimal (holds net)
 
-      // ELBOWS — bend on back-swing
+      // ELBOWS ??bend on back-swing
       if (j.elbowL) j.elbowL.rotation.x = 0.22 + Math.max(0, -sw) * 0.28 * w;
       if (j.elbowR) j.elbowR.rotation.x = 0.14 + Math.max(0,  sw) * 0.14 * w;
 
-      // HEAD stabilisation — counter-rotate to stay level
+      // HEAD stabilisation ??counter-rotate to stay level
       if (j.neck) j.neck.rotation.y = sw * 0.035 * w;
 
     } else if (!this.isSwinging) {
@@ -870,7 +880,7 @@ export class Player {
     }
   }
 
-  // ── Public methods ─────────────────────────────────────────────
+  // ?? Public methods ?????????????????????????????????????????????
   swing() {
     if (this.isSwinging) return;
     this.isSwinging = true;
@@ -887,3 +897,5 @@ export class Player {
     window.removeEventListener('keyup',   this._keyUp);
   }
 }
+
+

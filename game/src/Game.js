@@ -273,24 +273,11 @@ export class Game {
 
   // ── 게임 시작 ─────────────────────────────────────────────────
   _startGame() {
-    try { this.__startGameImpl(); } catch(e) {
-      console.error('[HUNTERS] _startGame failed:', e);
-      const dbg = document.createElement('div');
-      dbg.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);color:#f55;font:14px monospace;padding:32px;white-space:pre-wrap;overflow:auto;';
-      dbg.textContent = '게임 시작 오류\n\n' + e.message + '\n\n' + e.stack;
-      document.body.appendChild(dbg);
-    }
-  }
-  __startGameImpl() {
     this._stopLoop();
     this._cleanup();
 
     const stageData = STAGES.find(s => s.id === this.selectedStage);
-    console.log('[DBG] selectedStage=', this.selectedStage, 'stageData=', stageData);
-    if (!stageData) {
-      console.error('[DBG] stageData not found! STAGES ids=', STAGES.map(s=>s.id));
-      return;
-    }
+    if (!stageData) return;
 
     this.sessionScore = 0;
     this.sessionCoins = 0;
