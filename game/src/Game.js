@@ -787,7 +787,8 @@ export class Game {
   // ── 일시정지 / 재개 ───────────────────────────────────────────
   _pauseGame() {
     this._stopLoop();
-    this.camCtrl?.exitLock(); // 일시정지 시 마우스 잠금 해제
+    this.camCtrl?.exitLock();
+    this._showLockHint(false);
     audioManager.setState('pause');
     this._showScreen('pause');
   }
@@ -796,7 +797,7 @@ export class Game {
     this._showScreen('game');
     this._startLoop();
     audioManager.setState('exploration');
-    // 재개 시 자동으로 잠금 요청하지 않음 — 플레이어가 클릭해서 진입
+    this._showLockHint(!this.camCtrl?.isLocked);
   }
 
   _onShopClose() {
