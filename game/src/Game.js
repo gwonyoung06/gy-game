@@ -607,6 +607,8 @@ export class Game {
         // 생물 이름표 + 타이머 긴박감
         this._updateCreatureLabels();
         this._updateTimerUrgency(this.waves.getState().timeRemaining);
+        this._updateCrosshair();
+        this._updateDangerIndicators();
       }
 
       this.renderer.render(this.scene, this.camera);
@@ -678,9 +680,13 @@ export class Game {
 
   _cleanup() {
     // 파티클 풀 즉시 회수 — 씬 파괴 전에 orphan 파티클 제거
-    // 생물 레이블 정리
+    // 생물 레이블 / 위험 지시기 정리
     const labels = document.getElementById('creature-labels');
     if (labels) labels.innerHTML = '';
+    const dangerEl = document.getElementById('danger-indicators');
+    if (dangerEl) dangerEl.innerHTML = '';
+    const crosshairEl = document.getElementById('crosshair');
+    if (crosshairEl) { crosshairEl.textContent = '+'; crosshairEl.className = 'crosshair'; }
     particlePool.reset();
 
     this.camCtrl?.dispose();
@@ -1172,6 +1178,69 @@ export class Game {
         <div class="lb-score">${rec.score.toLocaleString()}점</div>
       `;
       container.appendChild(row);
+    });
+  }
+
+  // ── 스마트 조준선 ──────────────────────────────────────────────
+  _updateCrosshair() {
+    const el = document.getElementById('crosshair');
+    if (!el || !this.waves || !this.player || !this.camCtrl) return;
+    const fwd   = this.player.getForward(this.camCtrl);
+    const pos   = this.player.position;
+    const range = this.player.captureRange;
+    const canCapture = this.waves.creatures.some(c => {
+      if (!c.alive || c.captured) return false;
+      const dx = c.mesh.position.x - pos.x;
+      const dz = c.mesh.position.z - pos.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist > range) return false;
+      return (dx / dist) * fwd.x + (dz / dist) * fwd.z >= 0.1;
+    });
+    el.classList.toggle('crosshair--target', canCapture);
+    el.textContent = canCapture ? '◎' : '+';
+  }
+
+  // ── 위험 방향 지시기 (화면 가장자리 빨간 화살표) ─────────────
+  _updateDangerIndicators() {
+    const container = document.getElementById('danger-indicators');
+    if (!container || !this.waves || !this.player || !this.camera) return;
+    container.innerHTML = '';
+
+    const W = window.innerWidth, H = window.innerHeight;
+    const cx = W / 2, cy = H / 2;
+    const _v = new THREE.Vector3();
+    const margin = 52;
+
+    this.waves.creatures.forEach(c => {
+      if (!c.alive || c.captured) return;
+      const aggro = (c.profile?.aggroRange ?? 0) > 0;
+      if (!aggro) return;
+      const dist = c.mesh.position.distanceTo(this.player.position);
+      if (dist > 40) return;
+
+      _v.copy(c.mesh.position).project(this.camera);
+      const sx = (_v.x  + 1) / 2 * W;
+      const sy = (-_v.y + 1) / 2 * H;
+      // 이미 화면 안에 있으면 표시 불필요
+      if (_v.z < 1 && sx > margin && sx < W - margin && sy > margin && sy < H - margin) return;
+
+      const angle = Math.atan2(sy - cy, sx - cx);
+      const maxX  = cx - margin, maxY = cy - margin;
+      const tan   = Math.tan(angle);
+      let ex, ey;
+      if (Math.abs(maxX * Math.sin(angle)) < Math.abs(maxY * Math.cos(angle))) {
+        ex = Math.sign(Math.cos(angle)) * maxX;
+        ey = ex * tan;
+      } else {
+        ey = Math.sign(Math.sin(angle)) * maxY;
+        ex = ey / tan;
+      }
+
+      const opacity = Math.max(0.35, 1 - dist / 40);
+      const el = document.createElement('div');
+      el.className = 'danger-arrow';
+      el.style.cssText = `left:${cx + ex}px;top:${cy + ey}px;transform:translate(-50%,-50%) rotate(${angle - Math.PI / 2}rad);opacity:${opacity};`;
+      container.appendChild(el);
     });
   }
 
