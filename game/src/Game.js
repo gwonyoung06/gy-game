@@ -273,7 +273,13 @@ export class Game {
 
   // ── 게임 시작 ─────────────────────────────────────────────────
   _startGame() {
-    try { this.__startGameImpl(); } catch(e) { alert('게임 시작 오류: ' + e.message + '\n\n' + e.stack); }
+    try { this.__startGameImpl(); } catch(e) {
+      console.error('[HUNTERS] _startGame failed:', e);
+      const dbg = document.createElement('div');
+      dbg.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);color:#f55;font:14px monospace;padding:32px;white-space:pre-wrap;overflow:auto;';
+      dbg.textContent = '게임 시작 오류\n\n' + e.message + '\n\n' + e.stack;
+      document.body.appendChild(dbg);
+    }
   }
   __startGameImpl() {
     this._stopLoop();
