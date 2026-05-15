@@ -286,7 +286,11 @@ export class Game {
     this._cleanup();
 
     const stageData = STAGES.find(s => s.id === this.selectedStage);
-    if (!stageData) return;
+    console.log('[DBG] selectedStage=', this.selectedStage, 'stageData=', stageData);
+    if (!stageData) {
+      console.error('[DBG] stageData not found! STAGES ids=', STAGES.map(s=>s.id));
+      return;
+    }
 
     this.sessionScore = 0;
     this.sessionCoins = 0;
