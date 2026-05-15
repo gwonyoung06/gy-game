@@ -1678,3 +1678,90 @@ body {
   0%, 100% { opacity: 1;   transform: scale(1);    }
   50%       { opacity: 0.8; transform: scale(1.08); }
 }
+
+/* ══════════════════════════════════════════════
+   HUD — 개인 최고 기록 (PB)
+══════════════════════════════════════════════ */
+.hud-pb {
+  position: fixed;
+  top: 68px;
+  right: 14px;
+  background: rgba(6,10,20,0.72);
+  border: 1px solid rgba(255,215,0,0.30);
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-family: var(--font-en);
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,215,0,0.75);
+  letter-spacing: 0.5px;
+  z-index: 50;
+  pointer-events: none;
+}
+.hud-pb.pb-new-record {
+  color: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 16px rgba(255,215,0,0.4);
+  animation: pbPulse 0.6s ease-in-out 3;
+}
+@keyframes pbPulse {
+  0%, 100% { transform: scale(1);    }
+  50%       { transform: scale(1.08); }
+}
+
+/* ══════════════════════════════════════════════
+   HUD — 보스 등장 경고
+══════════════════════════════════════════════ */
+.boss-warning {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-en);
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #ff3333;
+  text-shadow: 0 0 30px rgba(255,50,50,0.8), 0 3px 10px rgba(0,0,0,0.9);
+  z-index: 170;
+  pointer-events: none;
+  animation: bossWarnPulse 0.7s ease-in-out infinite;
+}
+@keyframes bossWarnPulse {
+  0%, 100% { opacity: 1;   transform: translate(-50%, -50%) scale(1);    }
+  50%       { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
+}
+
+/* ══════════════════════════════════════════════
+   스테이지 선택 — 진행 바
+══════════════════════════════════════════════ */
+.stage-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 24px 2px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.stage-prog-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.55);
+  white-space: nowrap;
+  font-family: var(--font-en);
+  letter-spacing: 0.5px;
+}
+.stage-prog-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.stage-prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ecdc4, #ffd700);
+  border-radius: 4px;
+  transition: width 0.7s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 0 8px rgba(78,205,196,0.5);
+}

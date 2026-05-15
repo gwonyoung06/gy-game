@@ -32,6 +32,10 @@
       <h2>스테이지 선택</h2>
       <div class="coin-display">💰 <span id="total-coins">0</span></div>
     </div>
+    <div class="stage-progress-wrap">
+      <span class="stage-prog-label">클리어 <span id="stage-prog-text">0 / 15</span></span>
+      <div class="stage-prog-track"><div id="stage-prog-fill" class="stage-prog-fill"></div></div>
+    </div>
     <div class="stage-grid" id="stage-grid"></div>
   </div>
 
@@ -143,6 +147,12 @@
         </div>
       </div>
     </div>
+
+    <!-- 개인 최고 기록 (PB) 표시 -->
+    <div id="hud-pb" class="hud-pb hidden">🏅 PB <span id="hud-pb-val">0</span></div>
+
+    <!-- 보스 등장 경고 -->
+    <div id="boss-warning" class="boss-warning hidden">⚠️ BOSS INCOMING!</div>
 
     <!-- 콤보 -->
     <div class="combo-display hidden" id="hud-combo">

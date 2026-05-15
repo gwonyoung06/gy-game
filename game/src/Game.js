@@ -412,6 +412,14 @@ export class Game {
     this.totalCoins = save.coins;
     document.getElementById('total-coins').textContent = save.coins;
 
+    // 스테이지 진행 바 갱신
+    const clearedCount = save.clearedStages.length;
+    const totalStages  = STAGES.length;
+    const progFill = document.getElementById('stage-prog-fill');
+    const progText = document.getElementById('stage-prog-text');
+    if (progFill) progFill.style.width = `${Math.round((clearedCount / totalStages) * 100)}%`;
+    if (progText) progText.textContent = `${clearedCount} / ${totalStages}`;
+
     const grid = document.getElementById('stage-grid');
     grid.innerHTML = '';
 
@@ -539,8 +547,11 @@ export class Game {
     this._invincibleTimer = 0;
     this._slowMoTimer = 0;
     this.totalDamageTaken = 0;
+    this._footstepTimer = 0;
     const save = loadSave();
     this.totalCoins = save.coins;
+    this._stagePB   = save.highScores[this.selectedStage] || 0;
+    this._newRecord = false;
 
     this.scene = new THREE.Scene();
     this.world  = new World(this.scene, stageData, this.settings);
@@ -574,6 +585,15 @@ export class Game {
     audioManager.init();
     audioManager.setBiome(stageData.id);
     audioManager.setState('exploration');
+
+    // PB 디스플레이 초기화
+    const pbEl    = document.getElementById('hud-pb');
+    const pbValEl = document.getElementById('hud-pb-val');
+    if (pbEl) {
+      pbEl.classList.toggle('hidden', this._stagePB === 0);
+      pbEl.classList.remove('pb-new-record');
+    }
+    if (pbValEl && this._stagePB > 0) pbValEl.textContent = this._stagePB.toLocaleString();
 
     this.hud.show(`스테이지 ${stageData.id} - ${stageData.name}`);
     this._showScreen('game');
@@ -645,6 +665,24 @@ export class Game {
         this._updateTimerUrgency(this.waves.getState().timeRemaining);
         this._updateCrosshair();
         this._updateDangerIndicators();
+
+        // 발자국 먼지 파티클 (이동 중 0.14s 마다)
+        this._footstepTimer += delta;
+        if (this.player._isMoving && this._footstepTimer > 0.14) {
+          this._footstepTimer = 0;
+          particlePool.emit(this.scene, new THREE.Vector3(
+            this.player.position.x + (Math.random() - 0.5) * 0.4,
+            0.18,
+            this.player.position.z + (Math.random() - 0.5) * 0.4
+          ), 0x9a8a72, 2);
+        }
+        // 보스 경고 업데이트
+        this._updateBossWarning(state);
+        // PB 경신 체크
+        if (this._stagePB > 0 && this.sessionScore >= this._stagePB && !this._newRecord) {
+          this._newRecord = true;
+          this._showPBFlash();
+        }
       }
 
       this.renderer.render(this.scene, this.camera);
@@ -732,6 +770,9 @@ export class Game {
     const streakEl = document.getElementById('streak-announcer');
     if (streakEl) { streakEl.classList.remove('streak-show'); streakEl.classList.add('hidden'); }
     clearTimeout(this._streakTimer);
+    // 보스 경고 / PB 숨기기
+    document.getElementById('boss-warning')?.classList.add('hidden');
+    document.getElementById('hud-pb')?.classList.add('hidden');
     particlePool.reset();
 
     this.camCtrl?.dispose();
@@ -1095,6 +1136,14 @@ export class Game {
     markStageCleared(this.selectedStage, this.sessionScore, stars);
     audioManager.sfxStageComplete();
     this._launchConfetti();
+
+    // 무결 클리어 보너스 (피해 0)
+    if (this.totalDamageTaken === 0 && result.captured > 0) {
+      const bonus = 500;
+      this.sessionCoins += bonus;
+      this.totalCoins = addCoins(bonus);
+      this._checkAchievement('no_damage', '💎', '완전 무결 클리어!');
+    }
     if (stars === 3) {
       // 퍼펙트 클리어 — 컨페티 두 번 더 터짐
       setTimeout(() => this._launchConfetti(), 500);
@@ -1415,6 +1464,30 @@ export class Game {
       el.style.opacity = '0';
       setTimeout(() => el.remove(), 420);
     }, 3000);
+  }
+
+  // ── 보스 등장 경고 (wave 3이고 miniBoss 있는 스테이지, 남은 포획 ≤ 5) ──
+  _updateBossWarning(state) {
+    const el = document.getElementById('boss-warning');
+    if (!el) return;
+    const stageData = this.waves?.stage;
+    const hasBoss = stageData?.miniBoss != null;
+    const nearEnd = hasBoss && state.wave === 3 &&
+                    (state.target - state.captured) <= 5 &&
+                    state.target > state.captured;
+    el.classList.toggle('hidden', !nearEnd);
+  }
+
+  // ── PB 경신 플래시 알림 ─────────────────────────────────────
+  _showPBFlash() {
+    const pbEl = document.getElementById('hud-pb');
+    const pbValEl = document.getElementById('hud-pb-val');
+    if (pbEl) {
+      pbEl.classList.remove('hidden');
+      pbEl.classList.add('pb-new-record');
+      pbEl.textContent = '🏆 신기록!';
+    }
+    this.hud.showWaveMessage('🏆 신기록 달성!', true);
   }
 
   // ── 콤보 버스트 링 (5×/10× 콤보) ────────────────────────────
