@@ -13,3 +13,6 @@ Thumbs.db
 *.jpeg
 /package.json
 /package-lock.json
+
+.vercel
+.env*.local

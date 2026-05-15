@@ -48,9 +48,22 @@ export class Game {
     this.rafId = null;
     this.clock = new THREE.Timer();
 
+    this._titleRafId   = null;
+    this._titleScene   = null;
+    this._titleCamera  = null;
+
     this._initRenderer();
     this._initScreens();
     this._initTouchControls();
+
+    // Wrap _showScreen to manage title 3D scene lifecycle
+    const _origShow = this._showScreen.bind(this);
+    this._showScreen = (name) => {
+      _origShow(name);
+      if (name === 'title') this._startTitleScene();
+      else                  this._stopTitleScene();
+    };
+
     this._showScreen('title');
   }
 
@@ -70,6 +83,10 @@ export class Game {
       this.renderer.setSize(window.innerWidth, window.innerHeight);
       this.camera.aspect = window.innerWidth / window.innerHeight;
       this.camera.updateProjectionMatrix();
+      if (this._titleCamera) {
+        this._titleCamera.aspect = window.innerWidth / window.innerHeight;
+        this._titleCamera.updateProjectionMatrix();
+      }
     });
   }
 
@@ -482,6 +499,7 @@ export class Game {
   }
 
   _startGameImpl() {
+    this._stopTitleScene();
     this._stopLoop();
     this._cleanup();
 
@@ -987,6 +1005,7 @@ export class Game {
 
     markStageCleared(this.selectedStage, this.sessionScore);
     audioManager.sfxStageComplete();
+    this._launchConfetti();
     this._checkAchievement('first_clear', '🎉', '첫 스테이지 클리어!');
 
     const stageData = STAGES.find(s => s.id === this.selectedStage);
@@ -1145,6 +1164,121 @@ export class Game {
       `;
       container.appendChild(row);
     });
+  }
+
+  // ── 타이틀 3D 배경 씬 ────────────────────────────────────────
+  _startTitleScene() {
+    if (this._titleRafId) return;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x06090f);
+    scene.fog = new THREE.FogExp2(0x06090f, 0.045);
+
+    const cam = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 200);
+    cam.position.set(0, 6, 22);
+    cam.lookAt(0, 2, 0);
+
+    // 바닥
+    const groundGeo = new THREE.PlaneGeometry(300, 300);
+    const groundMat = new THREE.MeshBasicMaterial({ color: 0x050c08 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    // 떠다니는 발광 구체 (생물 분위기)
+    const colors = [0x4ecdc4, 0xff6b6b, 0xffd700, 0x88ff88, 0xff88ff, 0x88aaff, 0xff9944];
+    const orbs = [];
+    for (let i = 0; i < 45; i++) {
+      const r = 0.10 + Math.random() * 0.28;
+      const geo = new THREE.SphereGeometry(r, 7, 7);
+      const col = colors[i % colors.length];
+      const mat = new THREE.MeshBasicMaterial({
+        color: col,
+        transparent: true,
+        opacity: 0.55 + Math.random() * 0.40,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(
+        (Math.random() - 0.5) * 44,
+        0.6 + Math.random() * 13,
+        (Math.random() - 0.5) * 22 - 4
+      );
+      mesh._px   = mesh.position.x;
+      mesh._py   = mesh.position.y;
+      mesh._phase = Math.random() * Math.PI * 2;
+      mesh._spd   = 0.25 + Math.random() * 0.55;
+      mesh._amp   = 0.7 + Math.random() * 1.8;
+      scene.add(mesh);
+      orbs.push(mesh);
+    }
+
+    // 큰 발광 구체 3개 (배경 포인트)
+    [[0xff6b35, -12, 4, -14], [0x4ecdc4, 12, 7, -18], [0xffd700, 0, 11, -22]].forEach(([c, x, y, z]) => {
+      const g = new THREE.SphereGeometry(1.8, 10, 10);
+      const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false });
+      const mesh = new THREE.Mesh(g, m);
+      mesh.position.set(x, y, z);
+      scene.add(mesh);
+    });
+
+    this._titleScene  = scene;
+    this._titleCamera = cam;
+
+    let t = 0;
+    const loop = (ts) => {
+      if (this.currentScreen !== 'title') { this._titleRafId = null; return; }
+      this._titleRafId = requestAnimationFrame(loop);
+      t += 0.013;
+
+      orbs.forEach(o => {
+        o.position.x = o._px + Math.cos(t * o._spd + o._phase) * o._amp;
+        o.position.y = o._py + Math.sin(t * o._spd * 0.65 + o._phase) * o._amp * 0.5;
+      });
+
+      cam.position.x = Math.sin(t * 0.08) * 2.5;
+      cam.position.y = 6 + Math.sin(t * 0.05) * 0.8;
+      cam.lookAt(0, 2, 0);
+
+      this.renderer.render(scene, cam);
+    };
+    this._titleRafId = requestAnimationFrame(loop);
+  }
+
+  _stopTitleScene() {
+    if (this._titleRafId) { cancelAnimationFrame(this._titleRafId); this._titleRafId = null; }
+    if (this._titleScene) {
+      this._titleScene.traverse(obj => {
+        if (!obj.isMesh) return;
+        obj.geometry?.dispose();
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        mats.forEach(m => m?.dispose());
+      });
+      this._titleScene  = null;
+      this._titleCamera = null;
+    }
+  }
+
+  // ── 스테이지 클리어 컨페티 ─────────────────────────────────────
+  _launchConfetti() {
+    const palette = ['#4ecdc4','#ff6b6b','#ffd700','#88ff88','#ff88ff','#88aaff','#ffffff','#ff9944'];
+    for (let i = 0; i < 90; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      const size = 5 + Math.random() * 9;
+      el.style.cssText = `
+        left: ${Math.random() * 100}%;
+        width: ${size}px;
+        height: ${size}px;
+        background: ${palette[Math.floor(Math.random() * palette.length)]};
+        border-radius: ${Math.random() > 0.45 ? '50%' : '2px'};
+        animation-duration: ${1.6 + Math.random() * 2.2}s;
+        animation-delay: ${Math.random() * 0.6}s;
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4500);
+    }
   }
 
   async _registerScore() {
