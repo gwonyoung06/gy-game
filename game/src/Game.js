@@ -46,7 +46,7 @@ export class Game {
     this.sessionScore = 0;
     this.sessionCoins = 0;
     this.rafId = null;
-    this.clock = new THREE.Clock();
+    this.clock = new THREE.Timer();
 
     this._initRenderer();
     this._initScreens();
@@ -75,10 +75,20 @@ export class Game {
 
   // ── 화면 전환 ─────────────────────────────────────────────────
   _showScreen(name) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    const el = document.getElementById(`screen-${name}`);
-    if (el) el.classList.remove('hidden');
-    this.currentScreen = name;
+    const fade = document.getElementById('fade-overlay');
+    const doSwitch = () => {
+      document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+      const el = document.getElementById(`screen-${name}`);
+      if (el) el.classList.remove('hidden');
+      this.currentScreen = name;
+    };
+    if (!fade) { doSwitch(); return; }
+    fade.classList.add('fade-out');
+    clearTimeout(this._fadeTimer);
+    this._fadeTimer = setTimeout(() => {
+      doSwitch();
+      fade.classList.remove('fade-out');
+    }, 220);
   }
 
   // ── 화면 이벤트 연결 ──────────────────────────────────────────
@@ -165,6 +175,43 @@ export class Game {
         this._tryCapture();
       }
     });
+
+    // ── 설정 패널 ────────────────────────────────────────────────
+    document.getElementById('btn-pause-settings')?.addEventListener('click', () => {
+      const panel = document.getElementById('pause-settings-panel');
+      if (panel) panel.classList.toggle('hidden');
+    });
+
+    const loadSettings = () => {
+      const s = JSON.parse(localStorage.getItem('gy_settings') || '{"sens":100,"music":70,"sfx":100}');
+      document.getElementById('setting-sens').value = s.sens;
+      document.getElementById('setting-music').value = s.music;
+      document.getElementById('setting-sfx').value = s.sfx;
+      document.getElementById('sens-val').textContent = s.sens;
+      document.getElementById('music-val').textContent = s.music;
+      document.getElementById('sfx-val').textContent = s.sfx;
+      if (this.camCtrl) this.camCtrl.sensitivity = 0.0028 * (s.sens / 100);
+      audioManager.setMusicVolume?.(s.music / 100);
+      audioManager.setSfxVolume?.(s.sfx / 100);
+    };
+
+    const saveSettings = () => {
+      const sens  = parseInt(document.getElementById('setting-sens').value);
+      const music = parseInt(document.getElementById('setting-music').value);
+      const sfx   = parseInt(document.getElementById('setting-sfx').value);
+      localStorage.setItem('gy_settings', JSON.stringify({ sens, music, sfx }));
+      document.getElementById('sens-val').textContent = sens;
+      document.getElementById('music-val').textContent = music;
+      document.getElementById('sfx-val').textContent = sfx;
+      if (this.camCtrl) this.camCtrl.sensitivity = 0.0028 * (sens / 100);
+      audioManager.setMusicVolume?.(music / 100);
+      audioManager.setSfxVolume?.(sfx / 100);
+    };
+
+    ['setting-sens', 'setting-music', 'setting-sfx'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', saveSettings);
+    });
+    loadSettings();
 
     // 키보드
     document.addEventListener('keydown', e => {
@@ -394,6 +441,30 @@ export class Game {
     });
   }
 
+  // ── 업적 시스템 ───────────────────────────────────────────────
+  _showAchievement(icon, title) {
+    const pop = document.getElementById('achievement-popup');
+    const iconEl = document.getElementById('ach-icon');
+    const titleEl = document.getElementById('ach-title');
+    if (!pop || !iconEl || !titleEl) return;
+    iconEl.textContent = icon;
+    titleEl.textContent = title;
+    pop.classList.remove('hidden');
+    clearTimeout(this._achTimer);
+    setTimeout(() => pop.classList.add('ach-show'), 10);
+    this._achTimer = setTimeout(() => {
+      pop.classList.remove('ach-show');
+      setTimeout(() => pop.classList.add('hidden'), 400);
+    }, 3000);
+  }
+
+  _checkAchievement(id, icon, title) {
+    const key = `gy_ach_${id}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, '1');
+    this._showAchievement(icon, title);
+  }
+
   // ── 게임 시작 ─────────────────────────────────────────────────
   _startGame() {
     try {
@@ -429,6 +500,8 @@ export class Game {
     this.player = new Player(this.scene);
     this._applyShopEffects();
     this.camCtrl = new CameraController(this.camera, this.renderer.domElement);
+    const _s = JSON.parse(localStorage.getItem('gy_settings') || '{"sens":100}');
+    this.camCtrl.sensitivity = 0.0028 * (_s.sens / 100);
 
     this.waves = new WaveSystem(
       this.scene, stageData, this.settings,
@@ -465,9 +538,9 @@ export class Game {
 
   // ── 게임 루프 ─────────────────────────────────────────────────
   _startLoop() {
-    this.clock.start();
-    const loop = () => {
+    const loop = (timestamp) => {
       this.rafId = requestAnimationFrame(loop);
+      this.clock.update(timestamp);
       const delta = Math.min(this.clock.getDelta(), 0.05);
 
       if (this.player && this.waves && this.camCtrl) {
@@ -510,7 +583,7 @@ export class Game {
 
       this.renderer.render(this.scene, this.camera);
     };
-    loop();
+    loop(0);
   }
 
   _stopLoop() {
@@ -578,6 +651,15 @@ export class Game {
       this._triggerCaptureFlash();
       this.camCtrl?.shake(0.13);
       audioManager.sfxCaptureSuccess();
+      // 업적 체크
+      if (this.waves) {
+        const total = this.waves.capturedCount;
+        if (total === 1)  this._checkAchievement('first_catch', '🎯', '첫 포획!');
+        if (total === 10) this._checkAchievement('10_catch',    '🏆', '10마리 포획!');
+        if (total === 50) this._checkAchievement('50_catch',    '🌟', '포획 마스터!');
+        if (this.waves.combo === 5)  this._checkAchievement('combo5',  '🔥', '5연속 콤보!');
+        if (this.waves.combo === 10) this._checkAchievement('combo10', '💥', '10연속 콤보!');
+      }
     } else {
       audioManager.sfxCaptureFail();
     }
@@ -848,6 +930,7 @@ export class Game {
 
     markStageCleared(this.selectedStage, this.sessionScore);
     audioManager.sfxStageComplete();
+    this._checkAchievement('first_clear', '🎉', '첫 스테이지 클리어!');
 
     document.getElementById('result-emoji').textContent = '🎉';
     document.getElementById('result-title').textContent = `스테이지 ${this.selectedStage} 클리어!`;

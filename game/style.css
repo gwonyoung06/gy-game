@@ -1294,3 +1294,58 @@ body {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* ══════════════════════════════════════════════
+   Feature 2: 화면 전환 페이드 오버레이
+══════════════════════════════════════════════ */
+#fade-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 500;
+  transition: opacity 0.22s ease;
+}
+#fade-overlay.fade-out { opacity: 1; pointer-events: all; }
+
+/* ══════════════════════════════════════════════
+   Feature 3: 콤보 엣지 글로우
+══════════════════════════════════════════════ */
+#combo-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 0;
+}
+.combo-glow-3  { box-shadow: inset 0 0 60px rgba(255,200,0,0.25); }
+.combo-glow-5  { box-shadow: inset 0 0 80px rgba(255,140,0,0.35); }
+.combo-glow-10 { box-shadow: inset 0 0 120px rgba(255,60,0,0.50); }
+
+/* ══════════════════════════════════════════════
+   Feature 4: 업적 팝업
+══════════════════════════════════════════════ */
+#achievement-popup {
+  position: fixed;
+  top: 80px;
+  right: -320px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(12,18,32,0.95);
+  border: 1px solid rgba(255,215,0,0.5);
+  border-radius: 14px;
+  padding: 14px 20px;
+  z-index: 300;
+  transition: right 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none;
+  min-width: 220px;
+  box-shadow: 0 8px 32px rgba(255,215,0,0.2);
+}
+#achievement-popup.ach-show { right: 16px; }
+.ach-icon { font-size: 32px; }
+.ach-label { font-size: 11px; color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.ach-title { font-size: 16px; font-weight: 700; color: #fff; }

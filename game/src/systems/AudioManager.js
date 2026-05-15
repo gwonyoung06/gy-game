@@ -864,6 +864,19 @@ export class AudioManager {
     }
   }
 
+  // ── 볼륨 제어 ────────────────────────────────────────────────────
+  setMusicVolume(v) {
+    this.musicVolume = Math.max(0, Math.min(1, v));
+    if (!this._ready || !this._musicGain) return;
+    this._musicGain.gain.linearRampToValueAtTime(this.musicVolume, this._ctx.currentTime + 0.15);
+  }
+
+  setSfxVolume(v) {
+    this.sfxVolume = Math.max(0, Math.min(1, v));
+    if (!this._ready || !this._sfxGain) return;
+    this._sfxGain.gain.linearRampToValueAtTime(this.sfxVolume, this._ctx.currentTime + 0.15);
+  }
+
   // ── 음소거 토글 ──────────────────────────────────────────────────
   toggleMute() {
     this._muted = !this._muted;

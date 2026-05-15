@@ -184,9 +184,24 @@
         <div class="pause-title">⏸ 일시정지</div>
         <button class="btn btn-primary pause-btn" id="btn-resume">▶ 계속하기</button>
         <button class="btn btn-secondary pause-btn" id="btn-pause-shop">🛒 상점 열기 (P)</button>
+        <button class="btn btn-secondary pause-btn" id="btn-pause-settings">⚙️ 설정</button>
         <button class="btn btn-secondary pause-btn" id="btn-quit-to-title">🏠 타이틀로 돌아가기</button>
       </div>
       <p class="pause-hint">ESC 또는 계속하기를 눌러 재개</p>
+    </div>
+    <div id="pause-settings-panel" class="hidden" style="background:rgba(8,12,20,0.95);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:20px 24px;margin-top:12px;min-width:280px;">
+      <div style="font-size:14px;font-weight:700;margin-bottom:14px;color:rgba(255,255,255,0.7);">⚙️ 설정</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <label style="font-size:13px;">마우스 감도 <span id="sens-val">100</span>%
+          <input type="range" id="setting-sens" min="10" max="200" value="100" style="width:100%;margin-top:4px;">
+        </label>
+        <label style="font-size:13px;">음악 볼륨 <span id="music-val">70</span>%
+          <input type="range" id="setting-music" min="0" max="100" value="70" style="width:100%;margin-top:4px;">
+        </label>
+        <label style="font-size:13px;">효과음 볼륨 <span id="sfx-val">100</span>%
+          <input type="range" id="setting-sfx" min="0" max="100" value="100" style="width:100%;margin-top:4px;">
+        </label>
+      </div>
     </div>
   </div>
 
@@ -256,6 +271,21 @@
     </div>
     <div id="btn-touch-capture">🎯</div>
     <div id="btn-touch-pause">⏸</div>
+  </div>
+
+  <!-- 화면 전환 페이드 오버레이 -->
+  <div id="fade-overlay"></div>
+
+  <!-- 콤보 엣지 글로우 -->
+  <div id="combo-glow"></div>
+
+  <!-- 업적 팝업 -->
+  <div id="achievement-popup" class="hidden">
+    <div class="ach-icon" id="ach-icon">🏆</div>
+    <div class="ach-text">
+      <div class="ach-label">업적 달성!</div>
+      <div class="ach-title" id="ach-title">첫 포획</div>
+    </div>
   </div>
 
   <script type="module" src="/src/main.js"></script>

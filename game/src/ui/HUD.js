@@ -125,11 +125,22 @@ export class HUD {
     const waveName = state.wave <= 3 ? `웨이브 ${state.wave}` : '⚡ 보스!';
     this.wave.textContent = waveName;
 
-    if (state.combo >= 3) {
+    const glow = document.getElementById('combo-glow');
+    if (state.combo >= 10) {
       this.comboEl.classList.remove('hidden');
       this.comboCount.textContent = state.combo;
+      if (glow) { glow.style.opacity='1'; glow.className='combo-glow-10'; }
+    } else if (state.combo >= 5) {
+      this.comboEl.classList.remove('hidden');
+      this.comboCount.textContent = state.combo;
+      if (glow) { glow.style.opacity='1'; glow.className='combo-glow-5'; }
+    } else if (state.combo >= 3) {
+      this.comboEl.classList.remove('hidden');
+      this.comboCount.textContent = state.combo;
+      if (glow) { glow.style.opacity='1'; glow.className='combo-glow-3'; }
     } else {
       this.comboEl.classList.add('hidden');
+      if (glow) { glow.style.opacity='0'; glow.className=''; }
     }
 
     if (delta > 0) this._tickSkillCDs(delta);
