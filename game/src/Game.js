@@ -422,6 +422,8 @@ export class Game {
       const best     = save.highScores[stage.id] || 0;
       const stars    = (save.stageStars || {})[stage.id] || 0;
       const starStr  = cleared ? ('⭐'.repeat(stars) + '☆'.repeat(3 - stars)) : '';
+      // 잠금 해제됐지만 한 번도 클리어 못한 스테이지 (1 제외) = "NEW!"
+      const isNew    = unlocked && !cleared && stage.id > 1;
 
       const card = document.createElement('div');
       card.className = `stage-card${unlocked ? '' : ' locked'}${cleared ? ' cleared' : ''}`;
@@ -433,6 +435,7 @@ export class Game {
         <div class="stage-name">${stage.name}</div>
         ${cleared  ? `<div class="stage-star-row">${starStr}</div><div class="stage-cleared">${best.toLocaleString()}점</div>` : ''}
         ${!unlocked ? '<div class="stage-cleared">🔒 잠김</div>' : ''}
+        ${isNew ? '<div class="stage-new-badge">NEW!</div>' : ''}
       `;
       if (unlocked) {
         card.addEventListener('click', () => {
@@ -440,6 +443,20 @@ export class Game {
           document.getElementById('pregame-title').textContent = `${stage.id}스테이지 - ${stage.name}`;
           this._renderPregameCreatures(stage);
           this._showScreen('pregame');
+        });
+        // 3D 틸트 호버 효과
+        card.addEventListener('mousemove', e => {
+          const r = card.getBoundingClientRect();
+          const x = (e.clientX - r.left - r.width  / 2) / (r.width  / 2);
+          const y = (e.clientY - r.top  - r.height / 2) / (r.height / 2);
+          card.style.transform = `perspective(700px) rotateY(${x * 11}deg) rotateX(${-y * 9}deg) scale(1.04) translateZ(8px)`;
+          card.style.boxShadow = `0 20px 40px rgba(0,0,0,0.45), 0 0 22px rgba(${x > 0 ? '255,140,50' : '80,200,255'},0.20)`;
+          card.style.transition = 'box-shadow 0.1s ease';
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.transform  = '';
+          card.style.boxShadow  = '';
+          card.style.transition = 'transform 0.35s ease, box-shadow 0.35s ease';
         });
       }
       grid.appendChild(card);
@@ -521,6 +538,7 @@ export class Game {
     this.playerMaxHP = 100;
     this._invincibleTimer = 0;
     this._slowMoTimer = 0;
+    this.totalDamageTaken = 0;
     const save = loadSave();
     this.totalCoins = save.coins;
 
@@ -707,6 +725,13 @@ export class Game {
     if (crosshairEl) { crosshairEl.textContent = '+'; crosshairEl.className = 'crosshair'; }
     // HP 위험 클래스 해제
     document.body.classList.remove('hp-danger');
+    // 포획 피드 초기화
+    const feedEl = document.getElementById('capture-feed');
+    if (feedEl) feedEl.innerHTML = '';
+    // 스트릭 어나운서 초기화
+    const streakEl = document.getElementById('streak-announcer');
+    if (streakEl) { streakEl.classList.remove('streak-show'); streakEl.classList.add('hidden'); }
+    clearTimeout(this._streakTimer);
     particlePool.reset();
 
     this.camCtrl?.dispose();
@@ -764,10 +789,16 @@ export class Game {
       this._triggerCaptureFlash();
       this.camCtrl?.shake(0.13);
       audioManager.sfxCaptureSuccess();
+      // 실시간 포획 피드 항목 추가
+      this._addFeedEntry(result.creature?.config?.name || result.creature?.config?.type || '생물', result.coins);
       // 콤보 처리
       const combo = this.waves?.combo ?? 0;
       // 콤보 버스트 (5× / 10×)
       if (combo === 5 || combo === 10) this._showComboBurst(combo);
+      // 스트릭 어나운서 (마일스톤 콤보)
+      if (combo === 3 || combo === 5 || combo === 8 || combo === 10 || combo === 15 || combo === 20) {
+        this._showStreakAnnouncer(combo);
+      }
       // 슬로우모션 (콤보 8+ 포획 시)
       if (combo >= 8) this._slowMoTimer = 0.45;
       // FOV 킥 — 포획 순간 시야 확대 후 복귀
@@ -1031,6 +1062,7 @@ export class Game {
   _onDamage(damage) {
     if (this._invincibleTimer > 0) return; // 무적 중
     this.playerHP = Math.max(0, this.playerHP - damage);
+    this.totalDamageTaken = (this.totalDamageTaken || 0) + damage;
     this._invincibleTimer = 1.5; // 1.5초 무적
     this.hud.updateHP(this.playerHP, this.playerMaxHP);
     this.hud.flashDamage();
@@ -1048,7 +1080,7 @@ export class Game {
       document.getElementById('nickname-row').classList.add('hidden');
       this._setResultStars(0);
       this._showScreen('result');
-      this._animateResultNumbers(this.waves?.capturedCount || 0, 0, this.waves?.maxCombo || 0);
+      this._animateResultNumbers(this.waves?.capturedCount || 0, 0, this.waves?.maxCombo || 0, this.totalDamageTaken || 0);
     }
   }
 
@@ -1084,7 +1116,7 @@ export class Game {
     if (nickInput && savedNick) nickInput.value = savedNick;
 
     this._showScreen('result');
-    this._animateResultNumbers(result.captured, result.timeLeft, result.maxCombo);
+    this._animateResultNumbers(result.captured, result.timeLeft, result.maxCombo, this.totalDamageTaken || 0);
   }
 
   _onStageFail() {
@@ -1099,10 +1131,10 @@ export class Game {
     this._setResultStars(0);
 
     this._showScreen('result');
-    this._animateResultNumbers(this.waves?.capturedCount || 0, 0, this.waves?.maxCombo || 0);
+    this._animateResultNumbers(this.waves?.capturedCount || 0, 0, this.waves?.maxCombo || 0, this.totalDamageTaken || 0);
   }
 
-  _animateResultNumbers(captured, timeLeft, maxCombo) {
+  _animateResultNumbers(captured, timeLeft, maxCombo, damage = 0) {
     const coins  = this.sessionCoins;
     const score  = this.sessionScore;
     const dur    = 1200;
@@ -1116,6 +1148,8 @@ export class Game {
       document.getElementById('res-combo').textContent    = Math.round(t * maxCombo);
       document.getElementById('res-coins').textContent    = `+${Math.round(t * coins).toLocaleString()}`;
       document.getElementById('res-score').textContent    = Math.round(t * score).toLocaleString();
+      const dmgEl = document.getElementById('res-damage');
+      if (dmgEl) dmgEl.textContent = Math.round(t * damage);
       if (t < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -1338,6 +1372,49 @@ export class Game {
       span.style.animationDelay = `${s * 260}ms`;
       el.appendChild(span);
     }
+  }
+
+  // ── 콤보 스트릭 어나운서 텍스트 (3/5/8/10/15/20 마일스톤) ──────
+  _showStreakAnnouncer(combo) {
+    const el = document.getElementById('streak-announcer');
+    if (!el) return;
+    const tiers = [
+      { at: 3,  text: '🔥 TRIPLE!',       color: '#ff8844' },
+      { at: 5,  text: '⚡ AWESOME!',       color: '#ffd700' },
+      { at: 8,  text: '🔥 ON FIRE!',       color: '#ff4422' },
+      { at: 10, text: '💥 UNSTOPPABLE!',   color: '#ff2288' },
+      { at: 15, text: '👑 LEGENDARY!',     color: '#ffe066' },
+      { at: 20, text: '✨ GOD MODE!',      color: '#ffffff' },
+    ];
+    const tier = tiers.find(t => t.at === combo);
+    if (!tier) return;
+    el.textContent = tier.text;
+    el.style.color = tier.color;
+    el.classList.remove('hidden', 'streak-show');
+    void el.offsetHeight; // reflow 강제
+    el.classList.add('streak-show');
+    clearTimeout(this._streakTimer);
+    this._streakTimer = setTimeout(() => {
+      el.classList.remove('streak-show');
+      setTimeout(() => el.classList.add('hidden'), 260);
+    }, 950);
+  }
+
+  // ── 실시간 포획 피드 항목 ────────────────────────────────────
+  _addFeedEntry(name, coins) {
+    const feed = document.getElementById('capture-feed');
+    if (!feed) return;
+    const el = document.createElement('div');
+    el.className = 'feed-entry';
+    el.textContent = `${name}  +${coins}💰`;
+    feed.prepend(el);
+    // 최대 4개 유지
+    while (feed.children.length > 4) feed.lastChild?.remove();
+    // 3초 후 페이드 아웃 → 제거
+    setTimeout(() => {
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 420);
+    }, 3000);
   }
 
   // ── 콤보 버스트 링 (5×/10× 콤보) ────────────────────────────

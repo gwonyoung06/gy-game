@@ -259,6 +259,7 @@
         <div class="stat-row"><span>포획 수</span><strong id="res-captured">0</strong></div>
         <div class="stat-row"><span>남은 시간</span><strong id="res-time">0초</strong></div>
         <div class="stat-row"><span>최고 콤보</span><strong id="res-combo">0</strong></div>
+        <div class="stat-row"><span>받은 피해</span><strong id="res-damage">0</strong></div>
         <div class="stat-row gold"><span>획득 코인</span><strong id="res-coins">+0</strong></div>
         <div class="stat-row gold"><span>점수</span><strong id="res-score">0</strong></div>
       </div>
@@ -313,6 +314,12 @@
       <div class="ach-title" id="ach-title">첫 포획</div>
     </div>
   </div>
+
+  <!-- 포획 실시간 피드 (우측) -->
+  <div id="capture-feed"></div>
+
+  <!-- 콤보 스트릭 어나운서 -->
+  <div id="streak-announcer" class="hidden"></div>
 
   <!-- 생물 이름표 컨테이너 -->
   <div id="creature-labels"></div>
