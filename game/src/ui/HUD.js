@@ -21,6 +21,7 @@ export class HUD {
     this.stage       = document.getElementById('hud-stage');
     this.comboEl     = document.getElementById('hud-combo');
     this.comboCount  = document.getElementById('combo-count');
+    this.scoreEl     = document.getElementById('hud-score');
     this.captureFx   = document.getElementById('capture-fx');
     this.captureFxCoins = document.getElementById('capture-fx-coins');
     this.hpFill      = document.getElementById('hud-hp-fill');
@@ -113,7 +114,7 @@ export class HUD {
 
   hide() { this.el.classList.add('hidden'); }
 
-  update(state, totalCoins, delta = 0) {
+  update(state, totalCoins, delta = 0, sessionScore = 0) {
     const t = state.timeRemaining;
     this.timer.textContent = t;
     this.timer.classList.toggle('urgent', t <= 10);
@@ -121,6 +122,7 @@ export class HUD {
     this.captured.textContent = state.captured;
     this.target.textContent = state.target;
     this.coins.textContent = totalCoins;
+    if (this.scoreEl) this.scoreEl.textContent = sessionScore.toLocaleString();
 
     const waveName = state.wave <= 3 ? `웨이브 ${state.wave}` : '⚡ 보스!';
     this.wave.textContent = waveName;
@@ -182,18 +184,38 @@ export class HUD {
   }
 
   showWaveMessage(wave) {
-    const msg = wave <= 3 ? `웨이브 ${wave}` : '👑 보스 등장!';
+    const isBoss = wave > 3;
+    const msg    = isBoss ? '👑 보스 등장!' : `웨이브 ${wave}`;
+    const sub    = isBoss ? '최후의 일전!' : wave === 1 ? '사냥 시작!' : wave === 2 ? '더 많은 생물이 나타났다!' : '마지막 웨이브!';
+    const color  = isBoss ? '#ff4400' : wave === 1 ? '#4ecdc4' : wave === 2 ? '#ffd700' : '#ff6b35';
+
     const toast = document.createElement('div');
     toast.style.cssText = `
-      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-      background:rgba(0,0,0,0.8);color:#fff;
-      padding:16px 32px;border-radius:12px;
-      font-size:24px;font-weight:900;z-index:100;
-      animation:fadeIn 0.3s ease;pointer-events:none;
+      position:fixed;top:42%;left:50%;transform:translate(-50%,-50%) scale(0.7);
+      background:rgba(6,10,20,0.92);
+      border:2px solid ${color};
+      border-radius:16px;
+      padding:18px 44px 14px;
+      text-align:center;
+      z-index:150;pointer-events:none;
+      box-shadow:0 0 40px ${color}55, inset 0 0 24px rgba(0,0,0,0.5);
+      transition:transform 0.22s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease;
+      opacity:0;
     `;
-    toast.textContent = msg;
+    toast.innerHTML = `
+      <div style="font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:900;color:${color};letter-spacing:3px;text-shadow:0 0 20px ${color}99">${msg}</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.65);margin-top:4px;letter-spacing:1px">${sub}</div>
+    `;
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
+    requestAnimationFrame(() => {
+      toast.style.transform = 'translate(-50%,-50%) scale(1)';
+      toast.style.opacity   = '1';
+    });
+    setTimeout(() => {
+      toast.style.opacity   = '0';
+      toast.style.transform = 'translate(-50%,-50%) scale(0.85)';
+      setTimeout(() => toast.remove(), 280);
+    }, 2000);
   }
 
   showDamagePopup(damage) {

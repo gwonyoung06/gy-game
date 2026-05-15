@@ -581,7 +581,7 @@ export class Game {
         particlePool.update(delta);
 
         const state = this.waves.getState();
-        this.hud.update(state, this.totalCoins, delta);
+        this.hud.update(state, this.totalCoins, delta, this.sessionScore);
         this.hud.updateHP(this.playerHP, this.playerMaxHP);
 
         // 무적 타이머

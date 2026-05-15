@@ -573,7 +573,9 @@ body {
 }
 .hud-timer.urgent { color: #ff4444; animation: pulse 0.5s infinite; text-shadow: 0 0 20px rgba(255,68,68,0.7); }
 
+.hud-right-info { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .hud-coins { font-size: 16px; font-weight: 700; color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.35); }
+.hud-score { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.60); letter-spacing: 0.5px; }
 
 .hud-progress {
   position: absolute;

@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { Creature } from '../entities/Creature.js';
 import { DIFFICULTY } from '../data/stages.js';
 
@@ -41,6 +42,7 @@ export class WaveSystem {
     this.combo = 0;
     this.comboTimer = 0;
     this.maxCombo = 0;
+    this._spawnRings = []; // 스폰 링 이펙트 목록
     this._spawnWave(1);
   }
 
@@ -63,6 +65,8 @@ export class WaveSystem {
           // LOD 분산 — 같은 프레임에 몰리지 않도록 오프셋 배정
           creature._tickOffset = this.creatures.length & 3; // 0~3 순환
           this.creatures.push(creature);
+          // 스폰 링 이펙트 (웨이브 2+ 만 — 웨이브1은 게임 시작 직후라 어색함)
+          if (wave > 1) this._emitSpawnRing(creature.mesh.position);
         }
       });
     } else if (wave === 4 && this.stage.miniBoss) {
@@ -71,6 +75,7 @@ export class WaveSystem {
       const boss = new Creature(this.scene, this.stage.miniBoss, 110, hint);
       this.creatures.push(boss);
       this.miniBossSpawned = true;
+      this._emitSpawnRing(boss.mesh.position, true); // 보스 링 (빨간색, 크고 오래)
     }
 
     if (this.onWaveComplete) {
@@ -96,6 +101,21 @@ export class WaveSystem {
       if (this.comboTimer > 3) {
         this.combo = 0;
         this.comboTimer = 0;
+      }
+    }
+
+    // ── 스폰 링 이펙트 업데이트 ─────────────────────────────────
+    for (let i = this._spawnRings.length - 1; i >= 0; i--) {
+      const r = this._spawnRings[i];
+      r.t += delta;
+      const p = r.t / r.maxT; // 0 → 1
+      r.ring.scale.setScalar(1 + p * 5);
+      r.mat.opacity = Math.max(0, (1 - p) * 0.95);
+      if (r.t >= r.maxT) {
+        this.scene.remove(r.ring);
+        r.geo.dispose();
+        r.mat.dispose();
+        this._spawnRings.splice(i, 1);
       }
     }
 
@@ -136,6 +156,20 @@ export class WaveSystem {
         maxCombo: this.maxCombo,
       });
     }
+  }
+
+  // ── 스폰 링 이펙트 ────────────────────────────────────────────
+  _emitSpawnRing(pos, isBoss = false) {
+    const color  = isBoss ? 0xff4400 : 0x4ecdc4;
+    const radius = isBoss ? 1.2 : 0.6;
+    const geo = new THREE.TorusGeometry(radius, 0.06, 4, 20);
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false });
+    const ring = new THREE.Mesh(geo, mat);
+    ring.position.copy(pos);
+    ring.position.y = 0.08;
+    ring.rotation.x = Math.PI / 2;
+    this.scene.add(ring);
+    this._spawnRings.push({ ring, geo, mat, t: 0, maxT: isBoss ? 0.7 : 0.45 });
   }
 
   // ── 포획 시도 (확률 기반) ─────────────────────────────────────
@@ -205,5 +239,12 @@ export class WaveSystem {
   dispose() {
     this.creatures.forEach(c => c.dispose());
     this.creatures = [];
+    // 남은 스폰 링 정리
+    this._spawnRings.forEach(r => {
+      this.scene.remove(r.ring);
+      r.geo.dispose();
+      r.mat.dispose();
+    });
+    this._spawnRings = [];
   }
 }
