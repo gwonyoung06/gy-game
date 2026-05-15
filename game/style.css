@@ -516,6 +516,18 @@ body {
   0%   { opacity: 1; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(-64px) scale(1.4); }
 }
+/* HUD 포획 수 바운스 */
+@keyframes hudBounce {
+  0%   { transform: scale(1);    color: inherit; }
+  30%  { transform: scale(1.55); color: #44ffaa; }
+  65%  { transform: scale(0.88); color: #44ffaa; }
+  100% { transform: scale(1);    color: inherit; }
+}
+.hud-bounce {
+  animation: hudBounce 0.42s cubic-bezier(0.34,1.56,0.64,1) !important;
+  display: inline-block;
+}
+
 /* 점수 팝업 */
 @keyframes scoreFloat {
   0%   { opacity: 1; transform: translateY(0) scale(1); }

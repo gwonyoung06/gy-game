@@ -30,6 +30,7 @@ export class HUD {
     this.hpText      = document.getElementById('hud-hp-text');
     this._fxTimeout  = null;
     this._dmgFlashTimeout = null;
+    this._prevCaptured = -1;
 
     // 스킬 쿨다운 상태 { Q, E, R } → { cd, maxCd }
     this._skillCDs   = { Q: 0, E: 0, R: 0 };
@@ -121,6 +122,14 @@ export class HUD {
     this.timer.textContent = t;
     this.timer.classList.toggle('urgent', t <= 10);
 
+    // 포획 수 증가 시 바운스 애니메이션
+    if (state.captured !== this._prevCaptured) {
+      this._prevCaptured = state.captured;
+      this.captured.classList.remove('hud-bounce');
+      void this.captured.offsetHeight; // reflow
+      this.captured.classList.add('hud-bounce');
+      setTimeout(() => this.captured.classList.remove('hud-bounce'), 420);
+    }
     this.captured.textContent = state.captured;
     this.target.textContent = state.target;
     this.coins.textContent = totalCoins;

@@ -519,6 +519,7 @@ export class Game {
     this.playerHP = 100;
     this.playerMaxHP = 100;
     this._invincibleTimer = 0;
+    this._slowMoTimer = 0;
     const save = loadSave();
     this.totalCoins = save.coins;
 
@@ -535,7 +536,10 @@ export class Game {
       (data)   => this._onCapture(data),
       (wave, isCountdown) => {
         this.hud.showWaveMessage(wave, isCountdown);
-        if (!isCountdown) audioManager.sfxWaveComplete();
+        if (!isCountdown) {
+          audioManager.sfxWaveComplete();
+          if (wave > 3) this._bossFlash(); // 보스 웨이브 드라마틱 연출
+        }
       },
       (result) => this._onStageComplete(result),
       ()       => this._onStageFail(),
@@ -572,7 +576,13 @@ export class Game {
     const loop = (timestamp) => {
       this.rafId = requestAnimationFrame(loop);
       this.clock.update(timestamp);
-      const delta = Math.min(this.clock.getDelta(), 0.05);
+      const rawDelta = Math.min(this.clock.getDelta(), 0.05);
+
+      // 슬로우모션 (콤보 8+ 포획 시 0.3배속)
+      if (this._slowMoTimer > 0) {
+        this._slowMoTimer -= rawDelta;
+      }
+      const delta = rawDelta * (this._slowMoTimer > 0 ? 0.3 : 1.0);
 
       if (this.player && this.waves && this.camCtrl) {
         // 모바일 조이스틱 → Player.keys 매핑
@@ -753,9 +763,21 @@ export class Game {
       this._triggerCaptureFlash();
       this.camCtrl?.shake(0.13);
       audioManager.sfxCaptureSuccess();
-      // 콤보 버스트 (5× / 10×)
+      // 콤보 처리
       const combo = this.waves?.combo ?? 0;
+      // 콤보 버스트 (5× / 10×)
       if (combo === 5 || combo === 10) this._showComboBurst(combo);
+      // 슬로우모션 (콤보 8+ 포획 시)
+      if (combo >= 8) this._slowMoTimer = 0.45;
+      // FOV 킥 — 포획 순간 시야 확대 후 복귀
+      if (this.camera) {
+        this.camera.fov = 83;
+        this.camera.updateProjectionMatrix();
+        clearTimeout(this._fovKickTimer);
+        this._fovKickTimer = setTimeout(() => {
+          if (this.camera) { this.camera.fov = 75; this.camera.updateProjectionMatrix(); }
+        }, 180);
+      }
       // 업적 체크
       if (this.waves) {
         const total = this.waves.capturedCount;
@@ -1040,6 +1062,11 @@ export class Game {
     markStageCleared(this.selectedStage, this.sessionScore, stars);
     audioManager.sfxStageComplete();
     this._launchConfetti();
+    if (stars === 3) {
+      // 퍼펙트 클리어 — 컨페티 두 번 더 터짐
+      setTimeout(() => this._launchConfetti(), 500);
+      setTimeout(() => this._launchConfetti(), 1050);
+    }
     this._checkAchievement('first_clear', '🎉', '첫 스테이지 클리어!');
     if (stars === 3) this._checkAchievement('perfect_clear', '⭐', '완벽 클리어!');
 
@@ -1302,6 +1329,20 @@ export class Game {
       document.body.appendChild(r);
       setTimeout(() => r.remove(), 700 + i * 75);
     }
+  }
+
+  // ── 보스 웨이브 레드 플래시 ──────────────────────────────────
+  _bossFlash() {
+    this.camCtrl?.shake(0.42);
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position:fixed;inset:0;
+      background:radial-gradient(ellipse at center, rgba(180,0,0,0.5) 0%, rgba(255,0,0,0.15) 60%, transparent 100%);
+      pointer-events:none;z-index:300;
+      animation:skillFlash 0.7s ease forwards;
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 700);
   }
 
   // ── 스킬 활성화 엣지 플래시 ──────────────────────────────────
