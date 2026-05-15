@@ -273,6 +273,20 @@ export class Game {
 
   // ── 게임 시작 ─────────────────────────────────────────────────
   _startGame() {
+    try {
+      this._startGameImpl();
+    } catch (err) {
+      console.error('[_startGame] crash:', err);
+      this._showScreen('title');
+      const msg = document.createElement('div');
+      msg.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:#c00;color:#fff;padding:12px;font-size:13px;z-index:9999;white-space:pre-wrap;word-break:break-all;';
+      msg.textContent = '게임 시작 오류:\n' + (err?.stack || err);
+      document.body.appendChild(msg);
+      setTimeout(() => msg.remove(), 20000);
+    }
+  }
+
+  _startGameImpl() {
     this._stopLoop();
     this._cleanup();
 
@@ -283,14 +297,14 @@ export class Game {
     this.sessionCoins = 0;
     this.playerHP = 100;
     this.playerMaxHP = 100;
-    this._invincibleTimer = 0; // 무적 시간 (피격 후 1.5초)
+    this._invincibleTimer = 0;
     const save = loadSave();
     this.totalCoins = save.coins;
 
     this.scene = new THREE.Scene();
     this.world  = new World(this.scene, stageData, this.settings);
     this.player = new Player(this.scene);
-    this._applyShopEffects(); // 구매한 업그레이드 스탯 반영
+    this._applyShopEffects();
     this.camCtrl = new CameraController(this.camera, this.renderer.domElement);
 
     this.waves = new WaveSystem(
@@ -300,16 +314,14 @@ export class Game {
       (result) => this._onStageComplete(result),
       ()       => this._onStageFail(),
       (dmg)    => this._onDamage(dmg),
-      this.world  // 서식지 구역 스폰 연동
+      this.world
     );
 
-    // 미니맵 초기화 — 월드 존 정보로 바이옴 링 배경 빌드
     const minimapCanvas = document.getElementById('minimap-canvas');
     if (minimapCanvas) {
-      this.minimap = new Minimap(minimapCanvas, stageData.id, this.world._zones, 130); // worldView=130m (플레이 반경 120m 커버)
+      this.minimap = new Minimap(minimapCanvas, stageData.id, this.world._zones, 130);
     }
 
-    // 오디오 초기화 및 바이옴 음악 시작 (버튼 클릭이라 유저 제스처 조건 만족)
     audioManager.init();
     audioManager.setBiome(stageData.id);
     audioManager.setState('exploration');
@@ -318,10 +330,8 @@ export class Game {
     this._showScreen('game');
     this._startLoop();
 
-    // 포인터락 상태 감시 시작
     this._watchLockState();
 
-    // 첫 플레이면 튜토리얼, 아니면 포인터락 힌트
     const seen = localStorage.getItem('gy_tutorial_seen');
     if (!seen) {
       this._showTutorial();
