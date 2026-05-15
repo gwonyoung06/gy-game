@@ -1182,14 +1182,28 @@ export class Game {
     }
 
     records.forEach((rec, i) => {
+      // ── XSS 방어: innerHTML 대신 DOM 메서드 + textContent 사용 ──
       const row = document.createElement('div');
       row.className = 'lb-row';
-      row.innerHTML = `
-        <div class="lb-rank ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}">${i + 1}</div>
-        <div class="lb-name">${rec.nickname}</div>
-        <div class="lb-stage" style="font-size:12px;color:rgba(255,255,255,0.5);margin:0 8px">${rec.stage_name || `스테이지 ${rec.stage_id}`}</div>
-        <div class="lb-score">${rec.score.toLocaleString()}점</div>
-      `;
+
+      const rankDiv = document.createElement('div');
+      rankDiv.className = `lb-rank${i === 0 ? ' gold' : i === 1 ? ' silver' : i === 2 ? ' bronze' : ''}`;
+      rankDiv.textContent = String(i + 1);
+
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'lb-name';
+      nameDiv.textContent = String(rec.nickname ?? '');
+
+      const stageDiv = document.createElement('div');
+      stageDiv.className = 'lb-stage';
+      stageDiv.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.5);margin:0 8px';
+      stageDiv.textContent = String(rec.stage_name || `스테이지 ${rec.stage_id}`);
+
+      const scoreDiv = document.createElement('div');
+      scoreDiv.className = 'lb-score';
+      scoreDiv.textContent = `${Number(rec.score || 0).toLocaleString()}점`;
+
+      row.append(rankDiv, nameDiv, stageDiv, scoreDiv);
       container.appendChild(row);
     });
   }
@@ -1471,7 +1485,9 @@ export class Game {
   }
 
   async _registerScore() {
-    const nickname = document.getElementById('nickname-input').value.trim();
+    const raw = document.getElementById('nickname-input').value;
+    // 제어문자 제거, 공백 트림, 최대 12자
+    const nickname = raw.replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 12);
     if (!nickname) return;
     document.getElementById('nickname-row').classList.add('hidden');
 
