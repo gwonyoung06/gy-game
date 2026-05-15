@@ -1220,3 +1220,77 @@ body {
   .hud-timer   { font-size: 30px; }
   .title-content h1 { letter-spacing: 6px; }
 }
+
+/* ══════════════════════════════════════════════
+   모바일 터치 컨트롤
+══════════════════════════════════════════════ */
+#touch-controls {
+  display: none;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+@media (pointer: coarse) {
+  #touch-controls { display: block; }
+}
+
+/* 왼쪽 조이스틱 */
+#joystick-zone {
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 50%; height: 55%;
+  pointer-events: all;
+}
+#joystick-base {
+  position: absolute;
+  left: 28px; bottom: 34px;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.10);
+  border: 2px solid rgba(255,255,255,0.22);
+  display: flex; align-items: center; justify-content: center;
+}
+#joystick-knob {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: rgba(255,107,53,0.75);
+  border: 2px solid rgba(255,107,53,1);
+  transform: translate(0,0);
+  transition: transform 0s;
+  pointer-events: none;
+}
+
+/* 오른쪽 포획 버튼 */
+#btn-touch-capture {
+  position: absolute;
+  right: 28px; bottom: 34px;
+  width: 76px; height: 76px;
+  border-radius: 50%;
+  background: rgba(255,107,53,0.80);
+  border: 3px solid rgba(255,140,66,0.9);
+  font-size: 28px;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: all;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(255,107,53,0.5);
+  user-select: none;
+  -webkit-user-select: none;
+}
+#btn-touch-capture:active { background: rgba(255,140,66,1); transform: scale(0.93); }
+
+/* 터치 일시정지 버튼 */
+#btn-touch-pause {
+  position: absolute;
+  right: 12px; top: 12px;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.45);
+  border: 1.5px solid rgba(255,255,255,0.20);
+  font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: all;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}

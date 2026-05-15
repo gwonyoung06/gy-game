@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { STAGES } from './data/stages.js';
+import { STAGES, DIFFICULTY } from './data/stages.js';
 import { Player } from './entities/Player.js';
 import { World } from './systems/World.js';
 import { WaveSystem } from './systems/WaveSystem.js';
@@ -50,6 +50,7 @@ export class Game {
 
     this._initRenderer();
     this._initScreens();
+    this._initTouchControls();
     this._showScreen('title');
   }
 
@@ -208,6 +209,128 @@ export class Game {
     });
   }
 
+  // ── 모바일 터치 컨트롤 ────────────────────────────────────────
+  _initTouchControls() {
+    const panel    = document.getElementById('touch-controls');
+    const jZone    = document.getElementById('joystick-zone');
+    const jBase    = document.getElementById('joystick-base');
+    const jKnob    = document.getElementById('joystick-knob');
+    const btnCap   = document.getElementById('btn-touch-capture');
+    const btnPause = document.getElementById('btn-touch-pause');
+    if (!panel) return;
+
+    const MAX_R = 32; // 조이스틱 최대 반경 px
+    let jTouchId = null, lookTouchId = null;
+    let lookPrevX = 0, lookPrevY = 0;
+    let jx = 0, jy = 0; // 정규화된 조이스틱 입력 (-1~1)
+
+    const showPanel = (show) => {
+      panel.classList.toggle('hidden', !show);
+    };
+
+    // 게임 화면 전환 시 터치 패널 표시/숨김
+    const origShow = this._showScreen.bind(this);
+    this._showScreen = (name) => {
+      origShow(name);
+      showPanel(name === 'game');
+    };
+
+    // 조이스틱 터치
+    jZone.addEventListener('touchstart', e => {
+      e.preventDefault();
+      for (const t of e.changedTouches) {
+        if (jTouchId === null) {
+          jTouchId = t.identifier;
+          jx = 0; jy = 0;
+        }
+      }
+    }, { passive: false });
+
+    jZone.addEventListener('touchmove', e => {
+      e.preventDefault();
+      for (const t of e.changedTouches) {
+        if (t.identifier !== jTouchId) continue;
+        const rect = jBase.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top  + rect.height / 2;
+        const dx = t.clientX - cx;
+        const dy = t.clientY - cy;
+        const dist = Math.hypot(dx, dy);
+        const clamp = Math.min(dist, MAX_R);
+        const angle = Math.atan2(dy, dx);
+        jx = Math.cos(angle) * (clamp / MAX_R);
+        jy = Math.sin(angle) * (clamp / MAX_R);
+        jKnob.style.transform = `translate(${Math.cos(angle)*clamp}px, ${Math.sin(angle)*clamp}px)`;
+      }
+    }, { passive: false });
+
+    const jEnd = (e) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === jTouchId) {
+          jTouchId = null; jx = 0; jy = 0;
+          jKnob.style.transform = 'translate(0,0)';
+        }
+      }
+    };
+    jZone.addEventListener('touchend',    jEnd, { passive: false });
+    jZone.addEventListener('touchcancel', jEnd, { passive: false });
+
+    // 오른쪽 드래그 → 카메라 룩
+    const canvas = this.renderer.domElement;
+    canvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      for (const t of e.changedTouches) {
+        const isLeft = t.clientX < window.innerWidth * 0.5;
+        if (!isLeft && lookTouchId === null) {
+          lookTouchId = t.identifier;
+          lookPrevX = t.clientX;
+          lookPrevY = t.clientY;
+        }
+      }
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      for (const t of e.changedTouches) {
+        if (t.identifier !== lookTouchId) continue;
+        const dx = t.clientX - lookPrevX;
+        const dy = t.clientY - lookPrevY;
+        lookPrevX = t.clientX;
+        lookPrevY = t.clientY;
+        this.camCtrl?.applyTouchLook(dx, dy);
+      }
+    }, { passive: false });
+
+    const lookEnd = (e) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === lookTouchId) lookTouchId = null;
+      }
+    };
+    canvas.addEventListener('touchend',    lookEnd, { passive: false });
+    canvas.addEventListener('touchcancel', lookEnd, { passive: false });
+
+    // 포획 버튼
+    btnCap.addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (this.currentScreen === 'game') this._tryCapture();
+    }, { passive: false });
+
+    // 일시정지 버튼
+    btnPause.addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (this.currentScreen === 'game') this._pauseGame();
+    }, { passive: false });
+
+    // 게임 루프에서 조이스틱 입력을 Player.keys에 매핑
+    this._touchJoystick = () => {
+      if (!this.player) return;
+      this.player.keys['KeyW'] = jy < -0.3;
+      this.player.keys['KeyS'] = jy >  0.3;
+      this.player.keys['KeyA'] = jx < -0.3;
+      this.player.keys['KeyD'] = jx >  0.3;
+    };
+  }
+
   _initOptionGroup(groupId, onChange) {
     document.getElementById(groupId).addEventListener('click', e => {
       const btn = e.target.closest('.opt-btn');
@@ -348,6 +471,8 @@ export class Game {
       const delta = Math.min(this.clock.getDelta(), 0.05);
 
       if (this.player && this.waves && this.camCtrl) {
+        // 모바일 조이스틱 → Player.keys 매핑
+        this._touchJoystick?.();
         // 1. 플레이어 이동 (카메라 방향 기준)
         this.player.update(delta, this.camCtrl, this.world);
         // 2. 카메라를 플레이어 뒤로 배치 (이동 여부·방향 전달 → 자동 추적 + sway)
@@ -501,6 +626,29 @@ export class Game {
     this._lockWatcher = check;
   }
 
+  // 스킬로 생물 포획 시 코인/점수 처리
+  _applySkillCapture(creature) {
+    const diff = DIFFICULTY[this.settings.difficulty] || DIFFICULTY.normal;
+    const weatherMult = this.settings.weather === 'rain' ? 1.2
+                      : this.settings.weather === 'fog'  ? 1.5 : 1;
+    const timeMult = this.settings.timeOfDay === 'night' ? 1.4
+                   : this.settings.timeOfDay === 'dusk'  ? 1.1 : 1;
+    const comboMult = this.waves ? (
+      this.waves.combo >= 10 ? 2.0 :
+      this.waves.combo >= 5  ? 1.5 :
+      this.waves.combo >= 3  ? 1.2 : 1.0
+    ) : 1.0;
+    const coins = Math.floor(creature.config.coins * diff.coinMult * weatherMult * timeMult);
+    const score = Math.floor(creature.config.score * diff.scoreMult * comboMult);
+    this.sessionScore += score;
+    this.sessionCoins += coins;
+    this.totalCoins = addCoins(coins);
+    this.hud.showCaptureEffect(coins);
+    if (this.waves && this.waves.combo > this.waves.maxCombo) {
+      this.waves.maxCombo = this.waves.combo;
+    }
+  }
+
   // ── 스킬 슬롯 실행 (Q / E / R 각자 독립 쿨다운) ──────────────
   _useSkillSlot(key) {
     if (this._slotCDs[key] > 0) return; // 쿨다운 중
@@ -528,7 +676,11 @@ export class Game {
           if (c.mesh.position.distanceTo(pos) > 15) return;
           const toC = c.mesh.position.clone().sub(pos).normalize();
           if (toC.dot(fwd) < 0.2) return;
-          c.capture(); this.waves.capturedCount++; this.waves.combo++; caught++;
+          c.capture();
+          this.waves.capturedCount++;
+          this.waves.combo++;
+          this._applySkillCapture(c);
+          caught++;
         });
         if (caught > 0) this.hud.showWaveMessage(`🌀 회오리! ${caught}마리 포획!`);
         break;
@@ -540,7 +692,11 @@ export class Game {
         this.waves.creatures.forEach(c => {
           if (!c.alive || c.captured) return;
           if (c.mesh.position.distanceTo(pos) <= 10) {
-            c.capture(); this.waves.capturedCount++; this.waves.combo++; caught++;
+            c.capture();
+            this.waves.capturedCount++;
+            this.waves.combo++;
+            this._applySkillCapture(c);
+            caught++;
           }
         });
         if (caught > 0) this.hud.showWaveMessage(`🧲 자석! ${caught}마리 포획!`);

@@ -136,6 +136,13 @@ export class CameraController {
     if (targetPos) targetPos._yaw = this.yaw;
   }
 
+  /** 터치 드래그로 yaw/pitch 직접 조작 (포인터락 불필요) */
+  applyTouchLook(dx, dy) {
+    this.yaw  -= dx * this.sensitivity * 0.8;
+    this.pitch = Math.max(this.minPitch, Math.min(this.maxPitch,
+      this.pitch + dy * this.sensitivity * 0.8));
+  }
+
   getForwardXZ() {
     return new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw)).normalize();
   }
