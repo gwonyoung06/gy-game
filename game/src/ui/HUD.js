@@ -205,6 +205,23 @@ export class HUD {
     }, 350);
   }
 
+  /** 피격 데미지 수치 팝업 — 화면 중앙 하단에 빨간 숫자 */
+  showDamagePopup(damage) {
+    if (!damage || damage <= 0) return;
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position:fixed;left:50%;top:58%;
+      transform:translate(-50%,-50%);
+      font-size:28px;font-weight:900;
+      color:#ff4444;text-shadow:0 2px 12px rgba(255,0,0,0.6);
+      pointer-events:none;z-index:160;
+      animation:scoreFloat 0.7s ease-out forwards;
+    `;
+    el.textContent = `-${damage}`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 750);
+  }
+
   showCaptureEffect(coins) {
     this.captureFxCoins.textContent = coins;
     this.captureFx.classList.remove('hidden');
@@ -216,91 +233,90 @@ export class HUD {
     this._fxTimeout = setTimeout(() => {
       this.captureFx.classList.add('hidden');
     }, 800);
+
+    // 코인 버스트 파티클
+    this.spawnCoinBurst(Math.min(coins, 12));
   }
 
-  showWaveMessage(wave, isCountdown = false) {
-    // 카운트다운 문자열 (웨이브 전환 중): 작은 토스트로 표시
-    if (isCountdown || typeof wave === 'string') {
-      const cd = document.createElement('div');
-      cd.style.cssText = `
-        position:fixed;top:36%;left:50%;transform:translate(-50%,-50%) scale(0.85);
-        background:rgba(6,10,20,0.80);border:1px solid rgba(255,215,0,0.4);
-        border-radius:10px;padding:8px 24px;font-size:18px;font-weight:900;
-        color:#ffd700;letter-spacing:2px;z-index:150;pointer-events:none;
-        transition:transform 0.15s ease,opacity 0.15s ease;opacity:0;
-      `;
-      cd.textContent = wave;
-      document.body.appendChild(cd);
-      requestAnimationFrame(() => { cd.style.transform = 'translate(-50%,-50%) scale(1)'; cd.style.opacity = '1'; });
-      setTimeout(() => { cd.style.opacity = '0'; setTimeout(() => cd.remove(), 200); }, 380);
-      return;
+  /**
+   * 화면 중앙(포획 지점)에서 코인 파티클을 흩뿌리고
+   * HUD 코인 카운터 방향으로 호 포물선을 그리며 수렴한다.
+   * @param {number} count  방출 파티클 수 (1~12)
+   */
+  spawnCoinBurst(count = 6) {
+    if (count <= 0) return;
+    // 동시 파티클 상한: DOM 폭탄 방지
+    const MAX_LIVE = 48;
+    const live = document.querySelectorAll('.coin-burst-particle').length;
+    if (live >= MAX_LIVE) return;
+    count = Math.min(count, MAX_LIVE - live);
+
+    const cx = window.innerWidth  / 2;
+    const cy = window.innerHeight / 2;
+
+    // HUD 코인 위치 (상단 우측)
+    const hudCoin = this.coins;
+    let tx = window.innerWidth  - 90;
+    let ty = 36;
+    if (hudCoin) {
+      const r = hudCoin.getBoundingClientRect();
+      tx = r.left + r.width  / 2;
+      ty = r.top  + r.height / 2;
     }
 
-    const isBoss = wave > 3;
-    const msg    = isBoss ? '👑 보스 등장!' : `웨이브 ${wave}`;
-    const sub    = isBoss ? '최후의 일전!' : wave === 1 ? '사냥 시작!' : wave === 2 ? '더 많은 생물이 나타났다!' : '마지막 웨이브!';
-    const color  = isBoss ? '#ff4400' : wave === 1 ? '#4ecdc4' : wave === 2 ? '#ffd700' : '#ff6b35';
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'coin-burst-particle';
+      el.textContent = '💰';
+      el.style.cssText = `
+        position:fixed;
+        left:${cx}px;top:${cy}px;
+        font-size:${14 + Math.random() * 8}px;
+        z-index:200;
+        pointer-events:none;
+        will-change:transform,opacity;
+        transform:translate(-50%,-50%);
+        user-select:none;
+      `;
+      document.body.appendChild(el);
 
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-      position:fixed;top:42%;left:50%;transform:translate(-50%,-50%) scale(0.7);
-      background:rgba(6,10,20,0.92);
-      border:2px solid ${color};
-      border-radius:16px;
-      padding:18px 44px 14px;
-      text-align:center;
-      z-index:150;pointer-events:none;
-      box-shadow:0 0 40px ${color}55, inset 0 0 24px rgba(0,0,0,0.5);
-      transition:transform 0.22s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease;
-      opacity:0;
-    `;
-    toast.innerHTML = `
-      <div style="font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:900;color:${color};letter-spacing:3px;text-shadow:0 0 20px ${color}99">${msg}</div>
-      <div style="font-size:13px;color:rgba(255,255,255,0.65);margin-top:4px;letter-spacing:1px">${sub}</div>
-    `;
-    document.body.appendChild(toast);
-    requestAnimationFrame(() => {
-      toast.style.transform = 'translate(-50%,-50%) scale(1)';
-      toast.style.opacity   = '1';
-    });
-    setTimeout(() => {
-      toast.style.opacity   = '0';
-      toast.style.transform = 'translate(-50%,-50%) scale(0.85)';
-      setTimeout(() => toast.remove(), 280);
-    }, 2000);
+      // 랜덤 초기 폭발 벡터
+      const angle   = (Math.random() * Math.PI * 2);
+      const spread  = 60 + Math.random() * 80;
+      const bx      = Math.cos(angle) * spread;
+      const by      = Math.sin(angle) * spread - 40; // 위쪽 편향
+      const delay   = i * 35;                        // 시차
+
+      // CSS custom property로 키프레임에 값 주입
+      el.style.setProperty('--bx', `${bx}px`);
+      el.style.setProperty('--by', `${by}px`);
+      el.style.setProperty('--tx', `${tx - cx}px`);
+      el.style.setProperty('--ty', `${ty - cy}px`);
+
+      el.style.animationName      = 'coinBurst';
+      el.style.animationDuration  = `${600 + Math.random() * 250}ms`;
+      el.style.animationDelay     = `${delay}ms`;
+      el.style.animationTimingFunction = 'ease-in';
+      el.style.animationFillMode  = 'forwards';
+
+      el.addEventListener('animationend', () => el.remove());
+      // 안전망: 최대 1.2초 후 강제 제거
+      setTimeout(() => el.remove(), delay + 1200);
+    }
   }
 
-  showScorePopup(score) {
-    if (!score || score <= 0) return;
+  /** 포획 실패 팝업 — 화면 중앙에 짧게 "MISS" */
+  showMissPopup() {
+    // 너무 자주 나오면 방해됨 — 0.3s 쿨다운
+    const now = Date.now();
+    if (this._lastMiss && now - this._lastMiss < 300) return;
+    this._lastMiss = now;
     const el = document.createElement('div');
     el.style.cssText = `
-      position:fixed;
-      top:${24 + Math.random() * 10}%;
-      left:${37 + (Math.random() - 0.5) * 22}%;
-      color:#44ffaa;font-size:21px;font-weight:900;
-      font-family:'Rajdhani',sans-serif;letter-spacing:1px;
-      text-shadow:0 0 14px rgba(68,255,170,0.85),0 2px 6px rgba(0,0,0,0.9);
-      z-index:201;pointer-events:none;
-      animation:scoreFloat 1.1s ease-out forwards;
-    `;
-    el.textContent = `+${score.toLocaleString()}`;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1100);
-  }
-
-  showDamagePopup(damage) {
-    const el = document.createElement('div');
-    el.style.cssText = `
-      position:fixed;
-      top:${35 + Math.random() * 10}%;
-      left:${45 + (Math.random()-0.5)*20}%;
-      color:#ff4444;font-size:28px;font-weight:900;
-      text-shadow:0 2px 8px rgba(0,0,0,0.8);
-      z-index:200;pointer-events:none;
-      animation:dmgFloat 0.9s ease forwards;
-    `;
-    el.textContent = `-${damage}`;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 900);
-  }
-}
+      position:fixed;left:50%;top:46%;
+      transform:translate(-50%,-50%);
+      font-size:18px;font-weight:700;
+      color:rgba(255,255,255,0.55);
+      text-shadow:0 1px 6px rgba(0,0,0,0.5);
+      pointer-events:none;z-index:155;
+      animation:scoreFloat 0.55s ease

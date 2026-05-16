@@ -8,7 +8,7 @@ import { HUD } from './ui/HUD.js';
 import { Shop } from './ui/Shop.js';
 import { Inventory } from './ui/Inventory.js';
 import { Minimap } from './ui/Minimap.js';
-import { loadSave, addCoins, markStageCleared, updateSave } from './utils/storage.js';
+import { loadSave, addCoins, markStageCleared, updateSave, recordCapturedType } from './utils/storage.js';
 import { SHOP_ITEMS, CONSUMABLES } from './data/shop.js';
 import { particlePool, _cachedMats, _cachedGeos } from './entities/Creature.js';
 import { audioManager } from './systems/AudioManager.js';
@@ -127,6 +127,10 @@ export class Game {
       this._showScreen('leaderboard');
       this._renderLeaderboard('global');
     });
+    document.getElementById('btn-dex').addEventListener('click', () => {
+      this._showScreen('dex');
+      this._renderDex();
+    });
 
     // 스테이지 선택
     document.getElementById('btn-back-from-stage').addEventListener('click', () => this._showScreen('title'));
@@ -144,6 +148,10 @@ export class Game {
       this._showScreen('shop');
       this.shop.open(this.selectedStage);
     });
+    document.getElementById('btn-to-dex').addEventListener('click', () => {
+      this._showScreen('dex');
+      this._renderDex();
+    });
     document.getElementById('btn-retry').addEventListener('click', () => this._startGame());
     document.getElementById('btn-quit-result').addEventListener('click', () => {
       this._cleanup();
@@ -154,6 +162,9 @@ export class Game {
       this._startGame();
     });
     document.getElementById('btn-register').addEventListener('click', () => this._registerScore());
+
+    // 도감
+    document.getElementById('btn-back-from-dex').addEventListener('click', () => this._showScreen('title'));
 
     // 리더보드
     document.getElementById('btn-back-from-lb').addEventListener('click', () => this._showScreen('title'));
@@ -201,32 +212,45 @@ export class Game {
     });
 
     const loadSettings = () => {
-      const s = JSON.parse(localStorage.getItem('gy_settings') || '{"sens":100,"music":70,"sfx":100}');
-      document.getElementById('setting-sens').value = s.sens;
-      document.getElementById('setting-music').value = s.music;
-      document.getElementById('setting-sfx').value = s.sfx;
-      document.getElementById('sens-val').textContent = s.sens;
-      document.getElementById('music-val').textContent = s.music;
-      document.getElementById('sfx-val').textContent = s.sfx;
+      const defaults = { sens: 100, master: 100, music: 70, amb: 43, sfx: 100 };
+      const s = Object.assign({}, defaults, JSON.parse(localStorage.getItem('gy_settings') || '{}'));
+      document.getElementById('setting-sens').value   = s.sens;
+      document.getElementById('setting-master').value = s.master;
+      document.getElementById('setting-music').value  = s.music;
+      document.getElementById('setting-amb').value    = s.amb;
+      document.getElementById('setting-sfx').value    = s.sfx;
+      document.getElementById('sens-val').textContent   = s.sens;
+      document.getElementById('master-val').textContent = s.master;
+      document.getElementById('music-val').textContent  = s.music;
+      document.getElementById('amb-val').textContent    = s.amb;
+      document.getElementById('sfx-val').textContent    = s.sfx;
       if (this.camCtrl) this.camCtrl.sensitivity = 0.0028 * (s.sens / 100);
+      audioManager.setMasterVolume?.(s.master / 100);
       audioManager.setMusicVolume?.(s.music / 100);
+      audioManager.setAmbientVolume?.(s.amb / 100);
       audioManager.setSfxVolume?.(s.sfx / 100);
     };
 
     const saveSettings = () => {
-      const sens  = parseInt(document.getElementById('setting-sens').value);
-      const music = parseInt(document.getElementById('setting-music').value);
-      const sfx   = parseInt(document.getElementById('setting-sfx').value);
-      localStorage.setItem('gy_settings', JSON.stringify({ sens, music, sfx }));
-      document.getElementById('sens-val').textContent = sens;
-      document.getElementById('music-val').textContent = music;
-      document.getElementById('sfx-val').textContent = sfx;
+      const sens   = parseInt(document.getElementById('setting-sens').value);
+      const master = parseInt(document.getElementById('setting-master').value);
+      const music  = parseInt(document.getElementById('setting-music').value);
+      const amb    = parseInt(document.getElementById('setting-amb').value);
+      const sfx    = parseInt(document.getElementById('setting-sfx').value);
+      localStorage.setItem('gy_settings', JSON.stringify({ sens, master, music, amb, sfx }));
+      document.getElementById('sens-val').textContent   = sens;
+      document.getElementById('master-val').textContent = master;
+      document.getElementById('music-val').textContent  = music;
+      document.getElementById('amb-val').textContent    = amb;
+      document.getElementById('sfx-val').textContent    = sfx;
       if (this.camCtrl) this.camCtrl.sensitivity = 0.0028 * (sens / 100);
+      audioManager.setMasterVolume?.(master / 100);
       audioManager.setMusicVolume?.(music / 100);
+      audioManager.setAmbientVolume?.(amb / 100);
       audioManager.setSfxVolume?.(sfx / 100);
     };
 
-    ['setting-sens', 'setting-music', 'setting-sfx'].forEach(id => {
+    ['setting-sens', 'setting-master', 'setting-music', 'setting-amb', 'setting-sfx'].forEach(id => {
       document.getElementById(id)?.addEventListener('input', saveSettings);
     });
     loadSettings();
@@ -284,10 +308,12 @@ export class Game {
     const btnPause = document.getElementById('btn-touch-pause');
     if (!panel) return;
 
-    const MAX_R = 32; // 조이스틱 최대 반경 px
-    let jTouchId = null, lookTouchId = null;
+    const MAX_R   = 50;  // 조이스틱 최대 반경 px (업그레이드)
+    const DEAD    = 0.18; // 데드존 (0~1)
+    let jTouchId  = null, lookTouchId = null;
     let lookPrevX = 0, lookPrevY = 0;
-    let jx = 0, jy = 0; // 정규화된 조이스틱 입력 (-1~1)
+    let jx = 0, jy = 0;     // 정규화 (-1~1)
+    let jOriginX = 0, jOriginY = 0; // 플로팅 베이스 원점
 
     const showPanel = (show) => {
       panel.classList.toggle('hidden', !show);
@@ -300,13 +326,24 @@ export class Game {
       showPanel(name === 'game');
     };
 
-    // 조이스틱 터치
+    // 플로팅 베이스 위치 업데이트
+    const moveJBase = (cx, cy) => {
+      jOriginX = cx; jOriginY = cy;
+      const zRect = jZone.getBoundingClientRect();
+      jBase.style.left = `${cx - zRect.left - 55}px`;
+      jBase.style.top  = `${cy - zRect.top  - 55}px`;
+      jBase.style.opacity = '1';
+    };
+
+    // 조이스틱 터치 (플로팅)
     jZone.addEventListener('touchstart', e => {
       e.preventDefault();
       for (const t of e.changedTouches) {
         if (jTouchId === null) {
           jTouchId = t.identifier;
           jx = 0; jy = 0;
+          moveJBase(t.clientX, t.clientY);
+          jBase.style.transform = 'scale(1.08)';
         }
       }
     }, { passive: false });
@@ -315,16 +352,15 @@ export class Game {
       e.preventDefault();
       for (const t of e.changedTouches) {
         if (t.identifier !== jTouchId) continue;
-        const rect = jBase.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top  + rect.height / 2;
-        const dx = t.clientX - cx;
-        const dy = t.clientY - cy;
-        const dist = Math.hypot(dx, dy);
+        const dx    = t.clientX - jOriginX;
+        const dy    = t.clientY - jOriginY;
+        const dist  = Math.hypot(dx, dy);
         const clamp = Math.min(dist, MAX_R);
         const angle = Math.atan2(dy, dx);
-        jx = Math.cos(angle) * (clamp / MAX_R);
-        jy = Math.sin(angle) * (clamp / MAX_R);
+        const ratio = clamp / MAX_R;
+        // 데드존 적용
+        jx = ratio > DEAD ? Math.cos(angle) * ratio : 0;
+        jy = ratio > DEAD ? Math.sin(angle) * ratio : 0;
         jKnob.style.transform = `translate(${Math.cos(angle)*clamp}px, ${Math.sin(angle)*clamp}px)`;
       }
     }, { passive: false });
@@ -334,6 +370,8 @@ export class Game {
         if (t.identifier === jTouchId) {
           jTouchId = null; jx = 0; jy = 0;
           jKnob.style.transform = 'translate(0,0)';
+          jBase.style.opacity   = '0.45';
+          jBase.style.transform = 'scale(1)';
         }
       }
     };
@@ -386,13 +424,16 @@ export class Game {
       if (this.currentScreen === 'game') this._pauseGame();
     }, { passive: false });
 
-    // 게임 루프에서 조이스틱 입력을 Player.keys에 매핑
+    // 게임 루프에서 조이스틱 입력 → Player.keys + 아날로그 속도 스케일
     this._touchJoystick = () => {
       if (!this.player) return;
-      this.player.keys['KeyW'] = jy < -0.3;
-      this.player.keys['KeyS'] = jy >  0.3;
-      this.player.keys['KeyA'] = jx < -0.3;
-      this.player.keys['KeyD'] = jx >  0.3;
+      // 키보드 on/off 매핑 (기존 이동 시스템과 호환)
+      this.player.keys['KeyW'] = jy < -DEAD;
+      this.player.keys['KeyS'] = jy >  DEAD;
+      this.player.keys['KeyA'] = jx < -DEAD;
+      this.player.keys['KeyD'] = jx >  DEAD;
+      // 아날로그 속도 스케일 (1.0 = 최대 속도, 작은 값 = 느린 속도)
+      this.player._touchSpeedScale = Math.max(Math.abs(jx), Math.abs(jy));
     };
   }
 
@@ -597,6 +638,7 @@ export class Game {
 
     this.hud.show(`스테이지 ${stageData.id} - ${stageData.name}`);
     this._showScreen('game');
+    this._applyWeatherOverlay(this.settings.weather);
     this._startLoop();
     this._showCountdown(); // 3-2-1-GO! 오버레이
 
@@ -612,10 +654,44 @@ export class Game {
 
   // ── 게임 루프 ─────────────────────────────────────────────────
   _startLoop() {
+    // FPS 기반 LOD 자동조정 상태
+    let _fpsSamples = [];         // 최근 60프레임 delta 샘플
+    let _lodLevel   = 0;          // 0=High 1=Mid 2=Low
+    let _lodCooldown = 0;         // 변경 후 쿨다운(초) — 진동 방지
+    const isMobile  = window.matchMedia('(pointer: coarse)').matches;
+
+    const applyLOD = (level) => {
+      if (_lodLevel === level) return;
+      _lodLevel = level;
+      const pr = level === 0 ? Math.min(window.devicePixelRatio, 2)
+               : level === 1 ? 1.0
+               :               0.75;
+      this.renderer.setPixelRatio(pr);
+      // WaveSystem 크리처 AI 틱 간격 조정 (LOD 2에서 격프레임)
+      if (this.waves) this.waves._lodSkip = level >= 2 ? 2 : 1;
+    };
+
     const loop = (timestamp) => {
       this.rafId = requestAnimationFrame(loop);
       this.clock.update(timestamp);
       const rawDelta = Math.min(this.clock.getDelta(), 0.05);
+
+      // ── FPS 자동 LOD (모바일 한정) ──────────────────────────
+      if (isMobile) {
+        _fpsSamples.push(rawDelta);
+        if (_fpsSamples.length > 60) _fpsSamples.shift();
+        if (_fpsSamples.length === 60) {
+          const avgDelta = _fpsSamples.reduce((a, b) => a + b, 0) / 60;
+          const avgFPS   = 1 / avgDelta;
+          if (_lodCooldown > 0) {
+            _lodCooldown -= rawDelta;
+          } else if (avgFPS < 28 && _lodLevel < 2) {
+            applyLOD(_lodLevel + 1); _lodCooldown = 3.0; // 3초 쿨다운
+          } else if (avgFPS > 50 && _lodLevel > 0) {
+            applyLOD(_lodLevel - 1); _lodCooldown = 5.0;
+          }
+        }
+      }
 
       // 슬로우모션 (콤보 8+ 포획 시 0.3배속)
       if (this._slowMoTimer > 0) {
@@ -761,6 +837,8 @@ export class Game {
     if (dangerEl) dangerEl.innerHTML = '';
     const crosshairEl = document.getElementById('crosshair');
     if (crosshairEl) { crosshairEl.textContent = '+'; crosshairEl.className = 'crosshair'; }
+    // 날씨 오버레이 제거
+    document.getElementById('weather-overlay')?.remove();
     // HP 위험 클래스 해제
     document.body.classList.remove('hp-danger');
     // 포획 피드 초기화
@@ -830,6 +908,8 @@ export class Game {
       this._triggerCaptureFlash();
       this.camCtrl?.shake(0.13);
       audioManager.sfxCaptureSuccess();
+      // 도감 기록
+      recordCapturedType(result.creature?.config?.type);
       // 실시간 포획 피드 항목 추가
       this._addFeedEntry(result.creature?.config?.name || result.creature?.config?.type || '생물', result.coins);
       // 콤보 처리
@@ -862,6 +942,7 @@ export class Game {
       }
     } else {
       audioManager.sfxCaptureFail();
+      this.hud.showMissPopup?.();
     }
   }
 
@@ -926,6 +1007,13 @@ export class Game {
     this.sessionCoins += coins;
     this.totalCoins = addCoins(coins);
     this.hud.showCaptureEffect(coins);
+    // 스킬 포획도 일반 포획과 동일하게 점수 팝업 + 캡처 피드에 표시
+    this.hud.showScorePopup?.(score);
+    recordCapturedType(creature?.config?.type);
+    this._addFeedEntry(
+      creature?.config?.name || creature?.config?.type || '생물',
+      coins
+    );
     if (this.waves && this.waves.combo > this.waves.maxCombo) {
       this.waves.maxCombo = this.waves.combo;
     }
@@ -961,6 +1049,8 @@ export class Game {
           c.capture();
           this.waves.capturedCount++;
           this.waves.combo++;
+          this.waves.comboTimer = 0;
+          if (this.waves.combo > this.waves.maxCombo) this.waves.maxCombo = this.waves.combo;
           this._applySkillCapture(c);
           caught++;
         });
@@ -977,6 +1067,8 @@ export class Game {
             c.capture();
             this.waves.capturedCount++;
             this.waves.combo++;
+            this.waves.comboTimer = 0;
+            if (this.waves.combo > this.waves.maxCombo) this.waves.maxCombo = this.waves.combo;
             this._applySkillCapture(c);
             caught++;
           }
@@ -1130,8 +1222,21 @@ export class Game {
     this.hud.hide();
 
     const stageData = STAGES.find(s => s.id === this.selectedStage);
-    const timeRatio = result.timeLeft / (stageData?.timeLimit || 60);
-    const stars = timeRatio >= 0.4 ? 3 : timeRatio >= 0.15 ? 2 : 1;
+
+    // ── 별점 계산 (4인수 가중 합산, 0~100점) ──────────────────────
+    // ① 시간 효율: 남은 시간 비율 × 30점
+    const timeRatio    = result.timeLeft / (stageData?.timeLimit || 60);
+    // ② 포획 초과: 목표 초과분 / 목표치 (최대 1.0) × 25점
+    const target       = stageData?.targetCount || 1;
+    const captureBonus = Math.min(Math.max(result.captured - target, 0) / target, 1.0);
+    // ③ 콤보 성과: 최고 콤보 / 10 (최대 1.0) × 20점
+    const comboScore   = Math.min((result.maxCombo || 0) / 10, 1.0);
+    // ④ 생존력: 무피해 25점 / 피격 1회당 -2.5점 (최소 0)
+    const dmg          = this.totalDamageTaken || 0;
+    const surviveScore = dmg === 0 ? 25 : Math.max(0, 10 - dmg * 2.5);
+
+    const starScore = timeRatio * 30 + captureBonus * 25 + comboScore * 20 + surviveScore;
+    const stars = starScore >= 65 ? 3 : starScore >= 33 ? 2 : 1;
 
     markStageCleared(this.selectedStage, this.sessionScore, stars);
     audioManager.sfxStageComplete();
@@ -1156,6 +1261,17 @@ export class Game {
     document.getElementById('result-title').textContent = `스테이지 ${this.selectedStage} 클리어!`;
     document.getElementById('btn-next-stage').style.display = this.selectedStage < STAGES.length ? '' : 'none';
     document.getElementById('nickname-row').classList.remove('hidden');
+
+    // 별점 상세 힌트
+    const hintEl = document.getElementById('star-score-hint');
+    if (hintEl) {
+      const t = Math.round(timeRatio * 100);
+      const c = Math.round(captureBonus * 100);
+      const k = Math.round(comboScore * 100);
+      const s = Math.round(surviveScore / 25 * 100);
+      hintEl.textContent =
+        `⏱ 시간 ${t}%  🎯 포획 +${c}%  🔥 콤보 ${k}%  💚 생존 ${s}%  → 종합 ${Math.round(starScore)}점`;
+    }
 
     this._setResultStars(stars);
 
@@ -1571,153 +1687,4 @@ export class Game {
       if (i >= steps.length) { wrap.remove(); return; }
       txt.textContent    = steps[i];
       txt.style.color      = colors[i];
-      txt.style.textShadow = `0 0 60px ${colors[i]}cc, 0 0 120px ${colors[i]}44`;
-      txt.style.opacity    = '0';
-      txt.style.transform  = 'scale(1.85)';
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        txt.style.opacity   = '1';
-        txt.style.transform = 'scale(1)';
-      }));
-      i++;
-      setTimeout(() => {
-        txt.style.opacity   = '0';
-        txt.style.transform = 'scale(0.5)';
-        setTimeout(next, FADE);
-      }, DUR - FADE);
-    };
-    next();
-  }
-
-  // ── 타이틀 3D 배경 씬 ────────────────────────────────────────
-  _startTitleScene() {
-    if (this._titleRafId) return;
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x06090f);
-    scene.fog = new THREE.FogExp2(0x06090f, 0.045);
-
-    const cam = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 200);
-    cam.position.set(0, 6, 22);
-    cam.lookAt(0, 2, 0);
-
-    // 바닥
-    const groundGeo = new THREE.PlaneGeometry(300, 300);
-    const groundMat = new THREE.MeshBasicMaterial({ color: 0x050c08 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    scene.add(ground);
-
-    // 떠다니는 발광 구체 (생물 분위기)
-    const colors = [0x4ecdc4, 0xff6b6b, 0xffd700, 0x88ff88, 0xff88ff, 0x88aaff, 0xff9944];
-    const orbs = [];
-    for (let i = 0; i < 45; i++) {
-      const r = 0.10 + Math.random() * 0.28;
-      const geo = new THREE.SphereGeometry(r, 7, 7);
-      const col = colors[i % colors.length];
-      const mat = new THREE.MeshBasicMaterial({
-        color: col,
-        transparent: true,
-        opacity: 0.55 + Math.random() * 0.40,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(
-        (Math.random() - 0.5) * 44,
-        0.6 + Math.random() * 13,
-        (Math.random() - 0.5) * 22 - 4
-      );
-      mesh._px   = mesh.position.x;
-      mesh._py   = mesh.position.y;
-      mesh._phase = Math.random() * Math.PI * 2;
-      mesh._spd   = 0.25 + Math.random() * 0.55;
-      mesh._amp   = 0.7 + Math.random() * 1.8;
-      scene.add(mesh);
-      orbs.push(mesh);
-    }
-
-    // 큰 발광 구체 3개 (배경 포인트)
-    [[0xff6b35, -12, 4, -14], [0x4ecdc4, 12, 7, -18], [0xffd700, 0, 11, -22]].forEach(([c, x, y, z]) => {
-      const g = new THREE.SphereGeometry(1.8, 10, 10);
-      const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false });
-      const mesh = new THREE.Mesh(g, m);
-      mesh.position.set(x, y, z);
-      scene.add(mesh);
-    });
-
-    this._titleScene  = scene;
-    this._titleCamera = cam;
-
-    let t = 0;
-    const loop = (ts) => {
-      if (this.currentScreen !== 'title') { this._titleRafId = null; return; }
-      this._titleRafId = requestAnimationFrame(loop);
-      t += 0.013;
-
-      orbs.forEach(o => {
-        o.position.x = o._px + Math.cos(t * o._spd + o._phase) * o._amp;
-        o.position.y = o._py + Math.sin(t * o._spd * 0.65 + o._phase) * o._amp * 0.5;
-      });
-
-      cam.position.x = Math.sin(t * 0.08) * 2.5;
-      cam.position.y = 6 + Math.sin(t * 0.05) * 0.8;
-      cam.lookAt(0, 2, 0);
-
-      this.renderer.render(scene, cam);
-    };
-    this._titleRafId = requestAnimationFrame(loop);
-  }
-
-  _stopTitleScene() {
-    if (this._titleRafId) { cancelAnimationFrame(this._titleRafId); this._titleRafId = null; }
-    if (this._titleScene) {
-      this._titleScene.traverse(obj => {
-        if (!obj.isMesh) return;
-        obj.geometry?.dispose();
-        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-        mats.forEach(m => m?.dispose());
-      });
-      this._titleScene  = null;
-      this._titleCamera = null;
-    }
-  }
-
-  // ── 스테이지 클리어 컨페티 ─────────────────────────────────────
-  _launchConfetti() {
-    const palette = ['#4ecdc4','#ff6b6b','#ffd700','#88ff88','#ff88ff','#88aaff','#ffffff','#ff9944'];
-    for (let i = 0; i < 90; i++) {
-      const el = document.createElement('div');
-      el.className = 'confetti-piece';
-      const size = 5 + Math.random() * 9;
-      el.style.cssText = `
-        left: ${Math.random() * 100}%;
-        width: ${size}px;
-        height: ${size}px;
-        background: ${palette[Math.floor(Math.random() * palette.length)]};
-        border-radius: ${Math.random() > 0.45 ? '50%' : '2px'};
-        animation-duration: ${1.6 + Math.random() * 2.2}s;
-        animation-delay: ${Math.random() * 0.6}s;
-      `;
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 4500);
-    }
-  }
-
-  async _registerScore() {
-    const raw = document.getElementById('nickname-input').value;
-    // 제어문자 제거, 공백 트림, 최대 12자
-    const nickname = raw.replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 12);
-    if (!nickname) return;
-    document.getElementById('nickname-row').classList.add('hidden');
-
-    localStorage.setItem('gy_last_nickname', nickname); // 다음 번 자동 입력용
-    const stage = STAGES.find(s => s.id === this.selectedStage);
-    const ok = await submitScore(nickname, this.sessionScore, this.selectedStage, stage?.name ?? '');
-
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#4ecdc4;color:#fff;padding:10px 24px;border-radius:20px;font-weight:700;z-index:200;';
-    toast.textContent = ok ? `✅ ${nickname} 랭킹 등록!` : '❌ 등록 실패, 다시 시도해주세요';
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2500);
-  }
-}
+      txt.style.textShadow = `0 0 60px ${colors[i]}cc, 0 0 120px ${colors[i]}44

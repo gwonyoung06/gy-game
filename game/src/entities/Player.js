@@ -747,7 +747,8 @@ export class Player {
       }
     }
 
-    const terrainY = world ? world.getHeight(this.mesh.position.x, this.mesh.position.z) : 0;
+    // getHeight 는 오목 지역에서 살짝 음수를 반환할 수 있음 → 0 이상으로 클램프
+    const terrainY = Math.max(0, world ? world.getHeight(this.mesh.position.x, this.mesh.position.z) : 0);
     if (this.mesh.position.y < terrainY) {
       // 지형 아래로 클리핑 절대 금지 — 즉시 스냅
       this.mesh.position.y = terrainY;
@@ -927,6 +928,4 @@ export class Player {
     }
   }
 
-  // ?? Public methods ?????????????????????????????????????????????
-  swing() {
-    if (this.isSwinging) retur
+  // ?? Public methods ???????????????????

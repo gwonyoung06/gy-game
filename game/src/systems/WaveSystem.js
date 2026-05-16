@@ -2,10 +2,13 @@ import * as THREE from 'three';
 import { Creature } from '../entities/Creature.js';
 import { DIFFICULTY } from '../data/stages.js';
 
-// 지상 생물 terrain 스냅에서 제외할 비행 스타일 목록
+// terrain Y 스냅에서 제외할 스타일:
+//  - 비행형: 공중에서 자체 Y 제어
+//  - 수중형: 수면(y=0.4) 고정 자체 제어
 const _FLYING_STYLES_WS = new Set([
   'erratic_hover', 'flap_drift', 'buzz_hover',
   'soar_circle', 'ufo_hover', 'pulse_drift',
+  'swim_curve', 'sidewalk', // 수중·수면 생물 — y 자체 관리
 ]);
 
 export class WaveSystem {
@@ -145,9 +148,9 @@ export class WaveSystem {
       }
 
       c.update(delta, playerPos, this._damageCallback);
-      // 지상 생물 지형 클리핑 방지 — 비행 스타일 제외하고 terrain Y에 스냅
+      // 지상 생물 지형 클리핑 방지 — 비행·수중 스타일 제외하고 terrain Y에 스냅
       if (c.alive && this.world && !_FLYING_STYLES_WS.has(c.profile?.style)) {
-        const ty = this.world.getHeight(c.mesh.position.x, c.mesh.position.z);
+        const ty = Math.max(0, this.world.getHeight(c.mesh.position.x, c.mesh.position.z));
         if (c.mesh.position.y < ty + 0.05) c.mesh.position.y = ty + 0.05;
       }
       if (c.alive) aliveCount++;
@@ -231,12 +234,4 @@ export class WaveSystem {
       const coins  = Math.floor(creature.config.coins * coinMult);
       const score  = Math.floor(creature.config.score * diff.scoreMult * this._comboMult());
 
-      this.onCapture({ creature, coins, score, combo: this.combo });
-      return { creature, coins, score };
-    }
-    return null;
-  }
-
-  _comboMult() {
-    if (this.combo >= 10) return 2.0;
-    if (thi
+      this.onCapture({ creature, coin
