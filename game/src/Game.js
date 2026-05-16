@@ -896,6 +896,150 @@ export class Game {
     this.scene = null;
   }
 
+  // ── 타이틀 3D 씬 (배경 플로팅 오브 애니메이션) ───────────────────
+  _startTitleScene() {
+    if (this._titleRafId) return;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0f1e);
+    scene.fog = new THREE.Fog(0x0a0f1e, 30, 80);
+    this._titleScene = scene;
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 8, 30);
+    camera.lookAt(0, 0, 0);
+    this._titleCamera = camera;
+    const colors = [0x4ecdc4, 0xffd700, 0xff6b35, 0x4488ff, 0xff88ff, 0xaaffaa];
+    const orbs = [];
+    for (let i = 0; i < 28; i++) {
+      const geo = new THREE.SphereGeometry(0.25 + Math.random() * 0.55, 8, 8);
+      const mat = new THREE.MeshBasicMaterial({
+        color: colors[i % colors.length], transparent: true, opacity: 0.55 + Math.random() * 0.3
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(
+        (Math.random() - 0.5) * 56, (Math.random() - 0.5) * 28, (Math.random() - 0.5) * 36 - 8
+      );
+      mesh.userData.vx = (Math.random() - 0.5) * 0.018;
+      mesh.userData.vy = (Math.random() - 0.5) * 0.012;
+      mesh.userData.phase = Math.random() * Math.PI * 2;
+      scene.add(mesh);
+      orbs.push(mesh);
+    }
+    let t = 0;
+    const loop = () => {
+      this._titleRafId = requestAnimationFrame(loop);
+      t += 0.016;
+      orbs.forEach(o => {
+        o.position.x += o.userData.vx;
+        o.position.y += o.userData.vy + Math.sin(t * 0.6 + o.userData.phase) * 0.003;
+        if (o.position.x > 32)  o.position.x = -32;
+        if (o.position.x < -32) o.position.x = 32;
+        if (o.position.y > 18)  o.position.y = -18;
+        if (o.position.y < -18) o.position.y = 18;
+        o.rotation.y += 0.012;
+      });
+      camera.position.x = Math.sin(t * 0.04) * 4;
+      camera.lookAt(0, 0, 0);
+      this.renderer.render(scene, camera);
+    };
+    loop();
+  }
+
+  _stopTitleScene() {
+    if (this._titleRafId) { cancelAnimationFrame(this._titleRafId); this._titleRafId = null; }
+    if (this._titleScene) {
+      this._titleScene.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) { obj.material.map?.dispose(); obj.material.dispose(); }
+      });
+      this._titleScene = null; this._titleCamera = null;
+    }
+  }
+
+  // ── 3-2-1-GO! 카운트다운 ────────────────────────────────────
+  _showCountdown() {
+    if (!document.getElementById('_countAnimStyle')) {
+      const s = document.createElement('style'); s.id = '_countAnimStyle';
+      s.textContent = '@keyframes countPop{0%{transform:scale(1.8);opacity:0}18%{transform:scale(1);opacity:1}72%{transform:scale(1);opacity:1}100%{transform:scale(0.4);opacity:0}}';
+      document.head.appendChild(s);
+    }
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:500;';
+    document.body.appendChild(wrap);
+    const nums = ['3','2','1','GO!'];
+    let i = 0;
+    const next = () => {
+      const isGo = nums[i] === 'GO!';
+      const span = document.createElement('span');
+      span.textContent = nums[i];
+      span.style.cssText = `font-size:${isGo?88:120}px;font-weight:900;font-family:'Rajdhani',sans-serif;color:${isGo?'#4ecdc4':'#fff'};text-shadow:0 0 40px ${isGo?'rgba(78,205,196,0.9)':'rgba(255,255,255,0.8)'},0 4px 20px rgba(0,0,0,0.9);animation:countPop 0.82s ease-out forwards;position:absolute;`;
+      wrap.innerHTML = ''; wrap.appendChild(span);
+      i++;
+      if (i < nums.length) setTimeout(next, 820);
+      else setTimeout(() => wrap.remove(), 820);
+    };
+    next();
+  }
+
+  // ── 날씨 오버레이 ─────────────────────────────────────────────
+  _applyWeatherOverlay(weather) {
+    document.getElementById('weather-overlay')?.remove();
+    if (!weather || weather === 'sunny') return;
+    const el = document.createElement('div');
+    el.id = 'weather-overlay';
+    el.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:5;';
+    if (weather === 'rain') {
+      el.style.background = 'repeating-linear-gradient(-60deg,transparent,transparent 2px,rgba(174,214,241,0.12) 2px,rgba(174,214,241,0.12) 3px)';
+      el.style.backgroundSize = '6px 18px';
+      el.style.animation = 'rainStreaks 0.18s linear infinite';
+    } else if (weather === 'fog') {
+      el.style.background = 'radial-gradient(ellipse at 20% 50%,rgba(200,210,220,0.18) 0%,transparent 60%),radial-gradient(ellipse at 80% 30%,rgba(180,200,215,0.14) 0%,transparent 55%)';
+      el.style.animation = 'fogDrift 8s ease-in-out infinite alternate';
+    }
+    document.body.appendChild(el);
+  }
+
+  // ── 컨페티 이펙트 ─────────────────────────────────────────────
+  _launchConfetti() {
+    const MAX = 60;
+    if (document.querySelectorAll('.confetti-p').length >= MAX) return;
+    if (!document.getElementById('_confettiStyle')) {
+      const s = document.createElement('style'); s.id = '_confettiStyle';
+      s.textContent = '@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+      document.head.appendChild(s);
+    }
+    const colors = ['#ffd700','#ff6b35','#4ecdc4','#ff88ff','#4488ff','#fff','#aaff88'];
+    const count = Math.min(22, MAX - document.querySelectorAll('.confetti-p').length);
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div'); el.className = 'confetti-p';
+      const sz = 6 + Math.random() * 9;
+      const dur = 1300 + Math.random() * 900;
+      const del = Math.random() * 350;
+      el.style.cssText = `position:fixed;left:${15+Math.random()*70}%;top:-12px;width:${sz}px;height:${sz}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};pointer-events:none;z-index:600;animation:confettiFall ${dur}ms ${del}ms ease-in forwards;`;
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+      setTimeout(() => el.remove(), dur + del + 200);
+    }
+  }
+
+  // ── 점수 등록 ─────────────────────────────────────────────────
+  async _registerScore() {
+    const nickInput = document.getElementById('nickname-input');
+    const btn = document.getElementById('btn-register');
+    if (!nickInput || !btn) return;
+    const nick = nickInput.value.trim();
+    if (!nick) { nickInput.placeholder = '닉네임을 입력해주세요'; nickInput.focus(); return; }
+    btn.disabled = true; btn.textContent = '등록 중...';
+    const stage = STAGES.find(s => s.id === this.selectedStage);
+    const ok = await submitScore(nick, this.sessionScore, this.selectedStage, stage?.name || `스테이지 ${this.selectedStage}`);
+    if (ok) {
+      localStorage.setItem('gy_last_nickname', nick);
+      btn.textContent = '\u2713 등록 완료!'; btn.style.background = 'rgba(78,205,196,0.25)';
+      document.getElementById('nickname-row')?.classList.add('hidden');
+    } else {
+      btn.disabled = false; btn.textContent = '재시도'; btn.style.color = '#ff6666';
+    }
+  }
+
   // ── 포획 ──────────────────────────────────────────────────────
   _tryCapture() {
     if (!this.player || !this.waves || !this.camCtrl) return;
