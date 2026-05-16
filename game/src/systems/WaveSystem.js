@@ -235,3 +235,43 @@ export class WaveSystem {
       const score  = Math.floor(creature.config.score * diff.scoreMult * this._comboMult());
 
       this.onCapture({ creature, coin
+      this.onCapture({ creature, coins, score, combo: this.combo });
+      return { creature, coins, score };
+    }
+    return null;
+  }
+
+  _comboMult() {
+    if (this.combo >= 10) return 2.0;
+    if (this.combo >= 5)  return 1.5;
+    if (this.combo >= 3)  return 1.2;
+    return 1.0;
+  }
+
+  /** 소모품 '시간 연장' 사용 시 타이머 증가 */
+  addTime(seconds) {
+    this.timeRemaining = Math.min(this.timeRemaining + seconds, this.timeLimit + 60);
+  }
+
+  getState() {
+    return {
+      timeRemaining: Math.ceil(this.timeRemaining),
+      captured: this.capturedCount,
+      target: this.targetCount,
+      wave: this.currentWave,
+      combo: this.combo,
+    };
+  }
+
+  dispose() {
+    this.creatures.forEach(c => c.dispose());
+    this.creatures = [];
+    // 남은 스폰 링 정리
+    this._spawnRings.forEach(r => {
+      this.scene.remove(r.ring);
+      r.geo.dispose();
+      r.mat.dispose();
+    });
+    this._spawnRings = [];
+  }
+}

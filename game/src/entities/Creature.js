@@ -1514,6 +1514,17 @@ export class Creature {
     // ── 상태 전환 결정 ───────────────────────────────────────
     this._updateState(distToPlayer, playerPos, speed);
 
+    // ── 미끼 유인 — _baitTimer 동안 _baitTarget 쪽으로 WANDER ──
+    // 공격/도주 중이 아닐 때만 적용 (전투 AI 우선)
+    if (this._baitTimer > 0) {
+      this._baitTimer -= delta;
+      if (this._state !== 'ATTACK' && this._state !== 'AGGRO') {
+        this._targetPos.copy(this._baitTarget);
+        this._state = 'WANDER';
+        this._wanderTimer = 0;
+      }
+    }
+
     // ── 이동 스타일별 처리 ───────────────────────────────────
     switch (style) {
       case 'erratic_hover':   this._moveErraticHover(delta, playerPos, distToPlayer, speed); break;
@@ -2167,16 +2178,4 @@ export class Creature {
     this.mesh.traverse(child => {
       if (!child.isMesh) return;
       if (child.geometry && !_cachedGeos.has(child.geometry)) {
-        child.geometry.dispose();
-      }
-      // 캐시된 재질은 공유 중 → dispose 하지 않음
-      // 런타임 변경 재질(UFO 빔 등)은 Game._cleanup() 씬 순회에서 처리
-    });
-
-    // 보스 레이블 — CanvasTexture는 캐시 외 개별 인스턴스 → 즉시 해제
-    if (this.label?.material) {
-      this.label.material.map?.dispose();
-      this.label.material.dispose();
-    }
-  }
-}
+        child.g

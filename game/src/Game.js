@@ -1100,8 +1100,9 @@ export class Game {
         break;
       }
     }
-    // 스킬 사용 시 화면 엣지 플래시
+    // 스킬 사용 시 화면 엣지 플래시 + 음향 피드백
     this._flashSkillActivation(skillId);
+    audioManager.sfxCombo?.(Math.max(1, this.waves?.combo || 1));
   }
 
   // ── 핫바 슬롯 사용 (1~9 키) ───────────────────────────────────
@@ -1134,12 +1135,20 @@ export class Game {
         this.hud.showWaveMessage('📡 레이더 온!');
         break;
       case 'super_bait':
-        // 희귀 생물 스폰 — WaveSystem에 플래그
-        if (this.waves) this.waves._rareBuff = 10; // 다음 10초간 희귀율 2배
-        this.hud.showWaveMessage('💫 슈퍼 미끼!');
+        // 전 생물 플레이어 쪽으로 8초간 강제 유인 (일반 미끼보다 넓은 범위·긴 지속)
+        if (this.waves && this.player) {
+          const pos = this.player.position;
+          this.waves.creatures.forEach(c => {
+            if (!c.alive || c.captured) return;
+            c._baitTarget = pos.clone();
+            c._baitTimer  = 8;
+          });
+        }
+        this.hud.showWaveMessage('💫 슈퍼 미끼! 전 생물 유인!');
         break;
     }
 
+    audioManager.sfxUIClick?.();
     // 수량 감소 후 저장
     entry.count -= 1;
     const newHotbar = [...save.hotbar];
@@ -1466,15 +1475,20 @@ export class Game {
   }
 
   // ── 위험 방향 지시기 (화면 가장자리 빨간 화살표) ─────────────
+  // DOM 풀링 — 매 프레임 innerHTML = '' + createElement 대신
+  // 기존 엘리먼트 재사용 → GC 압력 제로
   _updateDangerIndicators() {
     const container = document.getElementById('danger-indicators');
     if (!container || !this.waves || !this.player || !this.camera) return;
-    container.innerHTML = '';
 
     const W = window.innerWidth, H = window.innerHeight;
     const cx = W / 2, cy = H / 2;
     const _v = new THREE.Vector3();
     const margin = 52;
+
+    // 풀: 기존 자식 엘리먼트 수집 → 재사용 우선
+    const pool = container.children;
+    let poolIdx = 0;
 
     this.waves.creatures.forEach(c => {
       if (!c.alive || c.captured) return;
@@ -1502,11 +1516,23 @@ export class Game {
       }
 
       const opacity = Math.max(0.35, 1 - dist / 40);
-      const el = document.createElement('div');
-      el.className = 'danger-arrow';
+      // 풀에 여유 엘리먼트 있으면 재사용, 없으면 신규 생성
+      let el;
+      if (poolIdx < pool.length) {
+        el = pool[poolIdx];
+      } else {
+        el = document.createElement('div');
+        el.className = 'danger-arrow';
+        container.appendChild(el);
+      }
       el.style.cssText = `left:${cx + ex}px;top:${cy + ey}px;transform:translate(-50%,-50%) rotate(${angle - Math.PI / 2}rad);opacity:${opacity};`;
-      container.appendChild(el);
+      poolIdx++;
     });
+
+    // 사용하지 않은 풀 엘리먼트 뒤에서부터 제거
+    while (container.children.length > poolIdx) {
+      container.removeChild(container.lastChild);
+    }
   }
 
   // ── 프리게임 생물 미리보기 ────────────────────────────────────
@@ -1657,30 +1683,4 @@ export class Game {
     const el = document.createElement('div');
     el.style.cssText = `
       position:fixed;inset:0;background:${col};
-      pointer-events:none;z-index:190;
-      animation:skillFlash 0.38s ease forwards;
-    `;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 380);
-  }
-
-  // ── 게임 시작 카운트다운 3-2-1-GO! ───────────────────────────
-  _showCountdown() {
-    const steps  = ['3', '2', '1', 'GO!'];
-    const colors = ['#ff5555', '#ffbb33', '#ffdd33', '#44ffaa'];
-
-    const wrap = document.createElement('div');
-    wrap.style.cssText = `
-      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-      z-index:500;pointer-events:none;
-    `;
-    document.body.appendChild(wrap);
-
-    const txt = document.createElement('div');
-    txt.style.cssText = `
-      font-family:'Rajdhani',sans-serif;font-size:128px;font-weight:900;
-      letter-spacing:-2px;user-select:none;
-      transition:transform 0.14s cubic-bezier(0.22,1,0.36,1),opacity 0.14s ease;
-      opacity:0;transform:scale(2);
-    `;
-    wrap.append
+      pointer-events:none;z-index
