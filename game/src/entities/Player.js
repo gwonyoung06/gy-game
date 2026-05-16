@@ -711,13 +711,13 @@ export class Player {
       const analogScale = this._touchSpeedScale ?? 1.0;
       _vel.lerp(_mv.clone().multiplyScalar(this.speed * Math.max(0.25, analogScale)), Math.min(1, 10 * delta));
     } else {
-      _vel.lerp(new THREE.Vector3(0, 0, 0), Math.min(1, 13 * delta));
+      _vel.lerp(_mv.set(0, 0, 0), Math.min(1, 13 * delta));
     }
 
     const moveLen = _vel.length();
     if (moveLen > 0.05) {
       this.mesh.position.addScaledVector(_vel, delta);
-      const vn = _vel.clone().normalize();
+      const vn = _mv.copy(_vel).normalize();
       const targetAngle = Math.atan2(vn.x, vn.z) + Math.PI;
       let diff = targetAngle - this.mesh.rotation.y;
       while (diff >  Math.PI) diff -= Math.PI * 2;
