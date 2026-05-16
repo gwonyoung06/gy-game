@@ -20,6 +20,9 @@ const SKILL_CD = {
   skill_multi: 40, skill_vortex: 60,
 };
 
+// ── 재사용 가능한 모듈 레벨 벡터 (per-frame 할당 방지) ──────────
+const _gv = new THREE.Vector3(); // creature label / danger indicator 공유
+
 export class Game {
   constructor() {
     this.renderer = null;
@@ -178,6 +181,14 @@ export class Game {
 
     // ── 일시정지 메뉴 버튼 ────────────────────────────────────
     document.getElementById('btn-resume').addEventListener('click', () => this._resumeGame());
+
+    document.getElementById('btn-pause-inventory')?.addEventListener('click', () => {
+      this._stopLoop();
+      this.hud.hide();
+      document.exitPointerLock();
+      this._showScreen('inventory');
+      this.inventory.open(this.player?.mesh ?? null);
+    });
 
     document.getElementById('btn-pause-shop').addEventListener('click', () => {
       this.hud.hide();
@@ -782,7 +793,7 @@ export class Game {
     const W = window.innerWidth, H = window.innerHeight;
     const playerPos = this.player.position;
     const LABEL_RANGE = 14;
-    const _v = new THREE.Vector3();
+    const _v = _gv;
 
     const near = this.waves.creatures.filter(c =>
       c.alive && !c.captured && c.mesh.position.distanceTo(playerPos) < LABEL_RANGE
@@ -1702,7 +1713,7 @@ export class Game {
 
     const W = window.innerWidth, H = window.innerHeight;
     const cx = W / 2, cy = H / 2;
-    const _v = new THREE.Vector3();
+    const _v = _gv;
     const margin = 52;
 
     // 풀: 기존 자식 엘리먼트 수집 → 재사용 우선
