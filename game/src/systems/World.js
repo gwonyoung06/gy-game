@@ -1541,6 +1541,7 @@ export class World {
       g.position.set(x, y, z);
       g.rotation.y = this._rng() * Math.PI;
       this.scene.add(g); this.objects.push(g);
+      this._obstacles.push({ x, z, r: 3.8 }); // 정자 바닥 반경
     }
   }
 
@@ -1563,6 +1564,9 @@ export class World {
     g.add(sign);
     g.position.set(x, y, z);
     this.scene.add(g); this.objects.push(g);
+    // 게이트 기둥 2개 충돌
+    this._obstacles.push({ x: x - 6, z, r: 0.9 });
+    this._obstacles.push({ x: x + 6, z, r: 0.9 });
   }
 
   _spawnPlayground() {
@@ -1664,6 +1668,7 @@ export class World {
     g.add(roof);
     g.position.set(x, y, z);
     this.scene.add(g); this.objects.push(g);
+    this._obstacles.push({ x, z, r: 5.5 }); // 밴드스탠드 기둥 외경
   }
 
   _spawnStatues(count) {
@@ -2133,6 +2138,7 @@ export class World {
     g.add(this._cyl(2.6, 2.6, 0.4, 12, new THREE.MeshLambertMaterial({ color: 0x666666 }), 0, 27.5, 0));
     g.position.set(x, y, z);
     this.scene.add(g); this.objects.push(g);
+    this._obstacles.push({ x, z, r: 2.6 }); // 등대 기단 반경
   }
 
   _spawnShipwrecks(count) {
@@ -3304,6 +3310,8 @@ export class World {
     g.position.set(x, y, z);
     this.scene.add(g); this.objects.push(g);
     this._zones.landmarks.push({ x, z });
+    this._obstacles.push({ x, z, r: 14.5 }); // 분수 기반 외벽 반경 (14m base)
+    this._structures.push({ x, z, r: 14.5 }); // 미니맵 표시
     return { x, z };
   }
 
@@ -3352,12 +3360,4 @@ export class World {
     const x = cx ?? 0, z = cz ?? 0;
     const y = this.getHeight(x, z);
     const g = new THREE.Group();
-    const barkMat  = new THREE.MeshLambertMaterial({ color: 0x2a1a0a, flatShading: true });
-    const mossMat  = new THREE.MeshLambertMaterial({ color: 0x2a5c2a, flatShading: true });
-    const leaf1Mat = new THREE.MeshLambertMaterial({ color: 0x0e3c0e, flatShading: true });
-    const leaf2Mat = new THREE.MeshLambertMaterial({ color: 0x1a5c1a, flatShading: true });
-    // 굵은 줄기
-    g.add(this._cyl(2.8, 3.5, 20, 8, barkMat.clone(), 0, 10, 0));
-    g.add(this._cyl(1.8, 2.8, 12, 7, barkMat.clone(), 0, 26, 0));
-    // 이끼 고리
-    for (let m = 0; m < 5;
+    const barkMat  = new THREE.MeshLambertMaterial({ color: 0x
