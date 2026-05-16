@@ -707,7 +707,9 @@ export class Player {
 
     if (hasInput) {
       _mv.normalize();
-      _vel.lerp(_mv.clone().multiplyScalar(this.speed), Math.min(1, 10 * delta));
+      // 터치 조이스틱 아날로그 스케일 (키보드는 항상 1.0)
+      const analogScale = this._touchSpeedScale ?? 1.0;
+      _vel.lerp(_mv.clone().multiplyScalar(this.speed * Math.max(0.25, analogScale)), Math.min(1, 10 * delta));
     } else {
       _vel.lerp(new THREE.Vector3(0, 0, 0), Math.min(1, 13 * delta));
     }
@@ -746,7 +748,13 @@ export class Player {
     }
 
     const terrainY = world ? world.getHeight(this.mesh.position.x, this.mesh.position.z) : 0;
-    this.mesh.position.y += (terrainY - this.mesh.position.y) * Math.min(1, 18 * delta);
+    if (this.mesh.position.y < terrainY) {
+      // 지형 아래로 클리핑 절대 금지 — 즉시 스냅
+      this.mesh.position.y = terrainY;
+    } else {
+      // 경사 위를 걸을 때 부드러운 정착 (중력감)
+      this.mesh.position.y += (terrainY - this.mesh.position.y) * Math.min(1, 14 * delta);
+    }
   }
 
   // ?? SWING with anticipation + follow-through ???????????????????
@@ -921,21 +929,4 @@ export class Player {
 
   // ?? Public methods ?????????????????????????????????????????????
   swing() {
-    if (this.isSwinging) return;
-    this.isSwinging = true;
-    this.swingTimer = 0;
-    this._swingFlash = 1.0; // 포획 시도 시 링 플래시
-  }
-
-  get position() { return this.mesh.position; }
-
-  getForward(camCtrl) { return camCtrl.getForwardXZ(); }
-
-  dispose() {
-    this.scene.remove(this.mesh);
-    window.removeEventListener('keydown', this._keyDown);
-    window.removeEventListener('keyup',   this._keyUp);
-  }
-}
-
-
+    if (this.isSwinging) retur

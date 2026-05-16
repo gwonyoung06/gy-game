@@ -2,6 +2,12 @@ import * as THREE from 'three';
 import { Creature } from '../entities/Creature.js';
 import { DIFFICULTY } from '../data/stages.js';
 
+// 지상 생물 terrain 스냅에서 제외할 비행 스타일 목록
+const _FLYING_STYLES_WS = new Set([
+  'erratic_hover', 'flap_drift', 'buzz_hover',
+  'soar_circle', 'ufo_hover', 'pulse_drift',
+]);
+
 export class WaveSystem {
   /**
    * @param {THREE.Scene} scene
@@ -120,21 +126,30 @@ export class WaveSystem {
     }
 
     // ── AI LOD 업데이트 ──────────────────────────────────────────
-    // 60유닛 이상 거리의 생물은 4프레임에 1번만 update
-    // _tickOffset(0~3)으로 분산 → 한 프레임에 부하 집중 방지
+    // 기본: 60유닛 이상은 4프레임에 1번 update
+    // _lodSkip >= 2(저사양 모드): 30유닛 이상도 격프레임 처리
     this._frame = (this._frame + 1) & 255;
+    const lodSkip = this._lodSkip ?? 1; // 1=정상, 2=절전
     let aliveCount = 0;
 
     for (const c of this.creatures) {
       if (!c.alive) continue;
 
       const dist = c.mesh.position.distanceTo(playerPos);
-      if (dist > 60 && ((this._frame + (c._tickOffset ?? 0)) & 3) !== 0) {
-        aliveCount++; // 이번 프레임 skip — 살아있음은 유지
+      // 거리 기반 스킵 임계치: 정상=60, 절전=30
+      const skipThresh = lodSkip >= 2 ? 30 : 60;
+      const skipMask   = lodSkip >= 2 ? 1  : 3;  // 절전: 2프레임에 1번
+      if (dist > skipThresh && ((this._frame + (c._tickOffset ?? 0)) & skipMask) !== 0) {
+        aliveCount++;
         continue;
       }
 
       c.update(delta, playerPos, this._damageCallback);
+      // 지상 생물 지형 클리핑 방지 — 비행 스타일 제외하고 terrain Y에 스냅
+      if (c.alive && this.world && !_FLYING_STYLES_WS.has(c.profile?.style)) {
+        const ty = this.world.getHeight(c.mesh.position.x, c.mesh.position.z);
+        if (c.mesh.position.y < ty + 0.05) c.mesh.position.y = ty + 0.05;
+      }
       if (c.alive) aliveCount++;
     }
 
@@ -224,35 +239,4 @@ export class WaveSystem {
 
   _comboMult() {
     if (this.combo >= 10) return 2.0;
-    if (this.combo >= 5)  return 1.5;
-    if (this.combo >= 3)  return 1.2;
-    return 1.0;
-  }
-
-  /** 소모품 '시간 연장' 사용 시 타이머 증가 */
-  addTime(seconds) {
-    this.timeRemaining = Math.min(this.timeRemaining + seconds, this.timeLimit + 60);
-  }
-
-  getState() {
-    return {
-      timeRemaining: Math.ceil(this.timeRemaining),
-      captured: this.capturedCount,
-      target: this.targetCount,
-      wave: this.currentWave,
-      combo: this.combo,
-    };
-  }
-
-  dispose() {
-    this.creatures.forEach(c => c.dispose());
-    this.creatures = [];
-    // 남은 스폰 링 정리
-    this._spawnRings.forEach(r => {
-      this.scene.remove(r.ring);
-      r.geo.dispose();
-      r.mat.dispose();
-    });
-    this._spawnRings = [];
-  }
-}
+    if (thi

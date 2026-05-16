@@ -55,24 +55,24 @@ function ringSpawn(cx, cz, radius, count, jitter, rng) {
 }
 
 // ── 지형 높이 파라미터 (스테이지별) ──────────────────────────────
-// Nintendo 스타일: 고저차 과장 → 공간감 2배
+// 자연스러운 기복 — 과도한 굴곡 제거, 스테이지 특성에 맞게 조정
 const TERRAIN_SCALE = [
   0,     // unused
-  0.85,  // 1-3  공원  (0.35 → 0.85)
+  0.20,  // 1-3  공원  — 완만한 잔디 언덕 (인공 공원 느낌)
+  0.20,
+  0.20,
+  0.10,  // 4-5  연못  — 거의 평평, 수면 기준
+  0.10,
+  0.06,  // 6-8  해양  — 해저 평탄, 파도는 비주얼 전용
+  0.06,
+  0.06,
+  0.45,  // 9-10 사바나 — 완만한 대평원 기복
+  0.45,
+  0.85,  // 11-12 숲   — 굴곡 있는 숲 지형
   0.85,
-  0.85,
-  0.38,  // 4-5  연못  (0.12 → 0.38)
-  0.38,
-  0.14,  // 6-8  해양  (0.05 → 0.14)
-  0.14,
-  0.14,
-  0.70,  // 9-10 사바나 (0.22 → 0.70)
-  0.70,
-  1.60,  // 11-12 숲   (0.55 → 1.60)
-  1.60,
-  2.60,  // 13-14 공룡섬 (1.15 → 2.60)
-  2.60,
-  0.04,  // 15   우주
+  1.40,  // 13-14 공룡섬 — 드라마틱한 지형
+  1.40,
+  0.02,  // 15   우주  — 거의 평탄 (달 표면)
 ];
 
 export class World {
@@ -106,7 +106,13 @@ export class World {
     + Math.sin(x * 0.032 + 1.4) * Math.cos(z * 0.027 + 0.9) * 5 * s
     + Math.cos(x * 0.058 - z * 0.043) * 2.5 * s
     + Math.sin(x * 0.008 + z * 0.006) * 7 * s;
-    return Math.max(h, 0);
+    // 부드러운 최솟값 — Math.max(h,0) 대신 완만한 블렌드로 자연스러운 완만한 평지 유지
+    // h<0 인 구역은 극히 얕은 오목면(h*0.08)이 되어 갑작스러운 평탄 절벽 제거
+    const soft = h >= 0 ? h : h * 0.08;
+    // 스폰 원점 근처(반경 18m)는 평탄하게 — 시작점 자연스러움 보장
+    const d = Math.sqrt(x * x + z * z);
+    const fade = d < 12 ? 0 : d < 25 ? (d - 12) / 13 : 1;
+    return soft * fade;
   }
 
   _build() {
@@ -237,9 +243,9 @@ export class World {
     for (let i = 0; i < pos.count; i++) {
       const lx = pos.getX(i);
       const ly = pos.getY(i);   // local Y = -worldZ after rotation
-      // 스폰 주변(±14) 평탄하게 — 첫 발을 딛는 공간
+      // getHeight() 내부에서 이미 원점 주변 평탄화 처리함
       const d = Math.sqrt(lx * lx + ly * ly);
-      const h = d > 14 ? this.getHeight(lx, -ly) : this.getHeight(lx, -ly) * (d / 14);
+      const h = this.getHeight(lx, -ly);
       pos.setZ(i, h);
 
       // 거리 기반 색상 그라디언트
@@ -758,6 +764,8 @@ export class World {
         const rx = cx + ox, rz = cz + oz;
         const ry = this.getHeight(rx, rz);
         dummy.position.set(rx, ry + r * 0.52, rz);
+        // 큰 바위만 충돌 콜라이더 등록 (r > 1.2m)
+        if (r > 1.2) this._obstacles.push({ x: rx, z: rz, r: r * 0.75 });
         dummy.scale.set(r * (0.9 + rng()*0.2), r * (0.7 + rng()*0.35), r * (0.9 + rng()*0.2));
         dummy.rotation.set(rng() * 3.14, rng() * 6.28, rng() * 3.14);
         dummy.updateMatrix();
@@ -814,6 +822,7 @@ export class World {
     this.scene.add(g);
     this.objects.push(g);
     this._structures.push({ x: bx, z: bz, r: 1.2 });
+    this._obstacles.push({ x: bx, z: bz, r: 1.1 }); // 벤치 충돌 콜라이더
     return g;
   }
 
@@ -974,6 +983,7 @@ export class World {
       g.position.set(x, y, z);
       this.scene.add(g);
       this.objects.push(g);
+      this._obstacles.push({ x, z, r: 0.18 }); // 가로등 기둥 충돌 콜라이더
     }
   }
 
@@ -992,6 +1002,7 @@ export class World {
     g.position.set(x, y, z);
     this.scene.add(g);
     this.objects.push(g);
+    this._obstacles.push({ x, z, r: 3.0 }); // 분수 외벽 충돌 콜라이더
   }
 
   _spawnPath() {
@@ -2981,18 +2992,27 @@ export class World {
 
   // ── 날씨 ──────────────────────────────────────────────────────
   _buildRain() {
-    const count = 3000;
-    const pos   = new Float32Array(count * 3);
+    const count  = 6000;
+    const pos    = new Float32Array(count * 3);
+    // 개별 속도 변이 (빗줄기마다 다른 낙하 속도)
+    this._rainSpeeds = new Float32Array(count);
     for (let i = 0; i < count; i++) {
-      pos[i * 3]     = (this._rng() - 0.5) * 200;
-      pos[i * 3 + 1] = this._rng() * 60;
-      pos[i * 3 + 2] = (this._rng() - 0.5) * 200;
+      pos[i * 3]     = (this._rng() - 0.5) * 220;
+      pos[i * 3 + 1] = this._rng() * 65;
+      pos[i * 3 + 2] = (this._rng() - 0.5) * 220;
+      this._rainSpeeds[i] = 22 + this._rng() * 16; // 22~38 m/s 랜덤
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    this.rain = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x8899cc, size: 0.15, transparent: true, opacity: 0.6 }));
+    this.rain = new THREE.Points(geo, new THREE.PointsMaterial({
+      color: 0x9ab0d8, size: 0.18, transparent: true, opacity: 0.55,
+    }));
     this.scene.add(this.rain);
     this.objects.push(this.rain);
+
+    // 번개 주기 타이머
+    this._lightningTimer = 4 + this._rng() * 6; // 4~10초마다 첫 번개
+    this._lightningFlash = null; // 번개 조명 노드
   }
 
   _buildSnow() {
@@ -3010,17 +3030,60 @@ export class World {
     this.objects.push(this.snow);
   }
 
+  /** 번개 플래시: 강한 흰색 PointLight + HUD 화면 플래시 */
+  _triggerLightning() {
+    if (!this.scene) return;
+    // 3D 번개 조명 (하늘 위 랜덤 위치)
+    const light = new THREE.PointLight(0xddeeff, 80, 800);
+    light.position.set(
+      (Math.random() - 0.5) * 200,
+      120 + Math.random() * 80,
+      (Math.random() - 0.5) * 200
+    );
+    this.scene.add(light);
+    // 2단 플래시: 밝게 → 잠깐 어둡게 → 다시 밝게 → 소멸
+    setTimeout(() => { light.intensity = 20;  }, 60);
+    setTimeout(() => { light.intensity = 60;  }, 100);
+    setTimeout(() => { light.intensity = 0; this.scene?.remove(light); light.dispose?.(); }, 220);
+
+    // 화면 HUD 플래시 (CSS)
+    const flash = document.createElement('div');
+    flash.style.cssText = 'position:fixed;inset:0;background:rgba(200,220,255,0.22);pointer-events:none;z-index:25;';
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 180);
+  }
+
   // ── 게임 루프 업데이트 ────────────────────────────────────────
   update(delta) {
-    // ── 비 ─────────────────────────────────────────────────
+    // ── 비 (풍향 드리프트 + 번개) ──────────────────────────
     if (this.rain) {
-      const pos = this.rain.geometry.attributes.position;
-      for (let i = 0; i < pos.count; i++) {
-        let y = pos.getY(i) - 28 * delta;
-        if (y < 0) y = 60;
-        pos.setY(i, y);
+      const pos    = this.rain.geometry.attributes.position;
+      const speeds = this._rainSpeeds;
+      const WIND_X = -6;   // 바람 방향 (x축 드리프트)
+      const WIND_Z =  3;
+      const n = pos.count;
+      for (let i = 0; i < n; i++) {
+        const spd = speeds ? speeds[i] : 28;
+        let y = pos.getY(i) - spd * delta;
+        let x = pos.getX(i) + WIND_X * delta;
+        let z = pos.getZ(i) + WIND_Z * delta;
+        if (y < 0)    { y = 65; }
+        if (x < -110) { x = 110; }
+        if (x >  110) { x = -110; }
+        if (z < -110) { z = 110; }
+        if (z >  110) { z = -110; }
+        pos.setXYZ(i, x, y, z);
       }
       pos.needsUpdate = true;
+
+      // 번개 타이머
+      if (this._lightningTimer !== undefined) {
+        this._lightningTimer -= delta;
+        if (this._lightningTimer <= 0) {
+          this._triggerLightning();
+          this._lightningTimer = 6 + this._rng() * 10; // 6~16초 후 다음 번개
+        }
+      }
     }
     // ── 눈 ─────────────────────────────────────────────────
     if (this.snow) {
@@ -3029,9 +3092,10 @@ export class World {
       const pos = this.snow.geometry.attributes.position;
       for (let i = 0; i < pos.count; i++) {
         let y = pos.getY(i) - 3.5 * delta;
-        let x = pos.getX(i) + Math.sin(t + i) * 0.04;
+        let x = pos.getX(i) + Math.sin(t * 0.8 + i * 0.37) * 0.05;
+        let z = pos.getZ(i) + Math.cos(t * 0.6 + i * 0.19) * 0.03;
         if (y < 0) y = 40;
-        pos.setX(i, x); pos.setY(i, y);
+        pos.setXYZ(i, x, y, z);
       }
       pos.needsUpdate = true;
     }
@@ -3296,77 +3360,4 @@ export class World {
     g.add(this._cyl(2.8, 3.5, 20, 8, barkMat.clone(), 0, 10, 0));
     g.add(this._cyl(1.8, 2.8, 12, 7, barkMat.clone(), 0, 26, 0));
     // 이끼 고리
-    for (let m = 0; m < 5; m++) {
-      const mr = new THREE.Mesh(new THREE.TorusGeometry(3.2 - m * 0.2, 0.35, 4, 10), mossMat.clone());
-      mr.rotation.x = Math.PI / 2;
-      mr.position.y = 3 + m * 4;
-      g.add(mr);
-    }
-    // 원뿔 4단 (크고 풍성하게)
-    const cones = [[5.5, 5, 14], [4.5, 4.5, 20], [3.5, 4, 26], [2.2, 3.5, 31]];
-    cones.forEach(([r, h, cy]) => {
-      const cone = new THREE.Mesh(new THREE.ConeGeometry(r, h, 8), cy < 24 ? leaf1Mat.clone() : leaf2Mat.clone());
-      cone.position.y = cy;
-      g.add(cone);
-    });
-    // 드리우는 뿌리 혹 (3개)
-    for (let r = 0; r < 3; r++) {
-      const a = (r / 3) * Math.PI * 2;
-      const root = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1.0, 3.5, 6), barkMat.clone());
-      root.position.set(Math.cos(a) * 2.8, 1.75, Math.sin(a) * 2.8);
-      root.rotation.z = Math.cos(a) * 0.35;
-      root.rotation.x = Math.sin(a) * 0.35;
-      g.add(root);
-    }
-    g.position.set(x, y, z);
-    g.scale.setScalar(1.8);
-    this.scene.add(g); this.objects.push(g);
-    this._zones.landmarks.push({ x, z });
-    return { x, z };
-  }
-
-  /** 바다 등대 — 높이 28, 원경에서도 보이는 수직 앵커 */
-  _spawnHeroLighthouse(cx, cz) {
-    const rng = this._rng;
-    const x = cx ?? (rng()-0.5)*120, z = cz ?? (rng()-0.5)*120;
-    const y = this.getHeight(x, z);
-    const g = new THREE.Group();
-    const stoneMat  = new THREE.MeshLambertMaterial({ color: 0xccbbaa, flatShading: true });
-    const redMat    = new THREE.MeshLambertMaterial({ color: 0xdd2222, flatShading: true });
-    const glassMat  = new THREE.MeshLambertMaterial({ color: 0xffffaa, emissive: 0xffff44, emissiveIntensity: 0.9, transparent: true, opacity: 0.85 });
-    // 기단 계단
-    g.add(this._cyl(5.5, 5, 1.2, 8, stoneMat.clone(), 0, 0.6, 0));
-    g.add(this._cyl(4.0, 4.5, 1.0, 8, stoneMat.clone(), 0, 1.7, 0));
-    // 탑 몸체 (빨강-하양 줄무늬)
-    for (let s = 0; s < 5; s++) {
-      const segMat = s % 2 === 0 ? stoneMat.clone() : redMat.clone();
-      g.add(this._cyl(2.2 - s*0.12, 2.4 - s*0.12, 4.5, 10, segMat, 0, 4.5 + s*4.5, 0));
-    }
-    // 등불실
-    g.add(this._cyl(2.8, 2.5, 2.0, 10, stoneMat.clone(), 0, 27.5, 0));
-    const lamp = new THREE.Mesh(new THREE.SphereGeometry(1.4, 8, 6), glassMat);
-    lamp.position.y = 29.5;
-    g.add(lamp);
-    // 원뿔 지붕
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(2.2, 3.5, 8), redMat.clone());
-    roof.position.y = 32;
-    g.add(roof);
-    g.position.set(x, y, z);
-    this.scene.add(g); this.objects.push(g);
-    this._zones.landmarks.push({ x, z });
-    return { x, z };
-  }
-
-  // ── 내부 헬퍼 ─────────────────────────────────────────────────
-  _box(w, h, d, mat, x, y, z) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-    m.position.set(x, y, z);
-    return m;
-  }
-
-  _cyl(rt, rb, h, seg, mat, x, y, z) {
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
-    m.position.set(x, y, z);
-    return m;
-  }
-}
+    for (let m = 0; m < 5;
