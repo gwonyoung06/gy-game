@@ -323,4 +323,47 @@
       </div>
       <div class="nickname-row" id="nickname-row">
         <input type="text" id="nickname-input" placeholder="닉네임으로 랭킹 등록" maxlength="12" />
-        <button class="btn btn-seconda
+        <button class="btn btn-seconda        <button class="btn btn-secondary btn-sm" id="btn-register">등록</button>
+      </div>
+      <div class="result-btns">
+        <button class="btn btn-secondary" id="btn-to-shop">🛒 상점</button>
+        <button class="btn btn-secondary" id="btn-to-dex">📖 도감</button>
+        <button class="btn btn-primary" id="btn-retry">🔄 재도전</button>
+        <button class="btn btn-secondary" id="btn-next-stage">다음 →</button>
+        <button class="btn btn-back" id="btn-quit-result">🏠 나가기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 도감 -->
+  <div id="screen-dex" class="screen hidden">
+    <div class="screen-header">
+      <button class="btn btn-back" id="btn-back-from-dex">← 뒤로</button>
+      <h2>📖 크리처 도감</h2>
+      <div class="dex-progress-wrap">
+        <span id="dex-count">0 / 0</span>
+        <span id="dex-pct" style="color:var(--gold);font-weight:700;margin-left:8px;">0%</span>
+      </div>
+    </div>
+    <div class="dex-bar-outer">
+      <div class="dex-bar-fill" id="dex-bar-fill"></div>
+    </div>
+    <div id="dex-content" class="dex-content"></div>
+  </div>
+
+  <!-- 리더보드 -->
+  <div id="screen-leaderboard" class="screen hidden">
+    <div class="screen-header">
+      <button class="btn btn-back" id="btn-back-from-lb">← 뒤로</button>
+      <h2>🏆 리더보드</h2>
+    </div>
+    <div class="lb-tabs">
+      <button class="tab-btn active" data-tab="global">🌍 글로벌 TOP 100</button>
+      <button class="tab-btn" data-tab="personal">👤 내 기록</button>
+    </div>
+    <div class="lb-list" id="lb-content"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
