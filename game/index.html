@@ -9,6 +9,9 @@
 <body>
   <canvas id="game-canvas"></canvas>
 
+  <!-- 화면 전환 페이드 오버레이 -->
+  <div id="fade-overlay"></div>
+
   <!-- 타이틀 화면 -->
   <div id="screen-title" class="screen">
     <div class="title-content">
@@ -20,6 +23,7 @@
       <div class="title-buttons">
         <button class="btn btn-primary" id="btn-start">🎮 게임 시작</button>
         <button class="btn btn-secondary" id="btn-leaderboard">🏆 리더보드</button>
+        <button class="btn btn-secondary" id="btn-dex">📖 도감</button>
       </div>
       <p class="title-footer">WASD 이동 &nbsp;|&nbsp; 마우스 시점 &nbsp;|&nbsp; 클릭 포획</p>
     </div>
@@ -209,6 +213,41 @@
   <!-- 포획 이펙트 -->
   <div id="capture-fx" class="capture-fx hidden">+<span id="capture-fx-coins">10</span> 💰</div>
 
+  <!-- 생물 이름표 컨테이너 (게임 중 근거리 생물 위에 표시) -->
+  <div id="creature-labels"></div>
+
+  <!-- 타이머 긴박감 오버레이 (10초 이하 빨간 비네트) -->
+  <div id="timer-urgency"></div>
+
+  <!-- 콤보 엣지 글로우 (연속 포획 시 화면 테두리 빛) -->
+  <div id="combo-glow"></div>
+
+  <!-- 포획 피드 (우상단 실시간 포획 알림) -->
+  <div id="capture-feed"></div>
+
+  <!-- 콤보 스트릭 어나운서 (3×/5×/10× 마일스톤 텍스트) -->
+  <div id="streak-announcer" class="hidden"></div>
+
+  <!-- 업적 팝업 (우상단 슬라이드인) -->
+  <div id="achievement-popup">
+    <span class="ach-icon" id="ach-icon">🏆</span>
+    <div>
+      <div class="ach-label">업적 달성!</div>
+      <div class="ach-title" id="ach-title">첫 포획!</div>
+    </div>
+  </div>
+
+  <!-- 모바일 터치 컨트롤 (pointer:coarse 기기에서만 표시) -->
+  <div id="touch-controls" class="hidden">
+    <div id="joystick-zone">
+      <div id="joystick-base">
+        <div id="joystick-knob"></div>
+      </div>
+    </div>
+    <button id="btn-touch-capture">🎯</button>
+    <button id="btn-touch-pause">⏸</button>
+  </div>
+
   <!-- 인벤토리 화면 -->
   <div id="screen-inventory" class="screen hidden"></div>
 
@@ -230,8 +269,16 @@
         <label style="font-size:13px;">마우스 감도 <span id="sens-val">100</span>%
           <input type="range" id="setting-sens" min="10" max="200" value="100" style="width:100%;margin-top:4px;">
         </label>
+        <div style="height:1px;background:rgba(255,255,255,0.08);margin:2px 0;"></div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.05em;">🔊 오디오</div>
+        <label style="font-size:13px;">전체 볼륨 <span id="master-val">100</span>%
+          <input type="range" id="setting-master" min="0" max="100" value="100" style="width:100%;margin-top:4px;">
+        </label>
         <label style="font-size:13px;">음악 볼륨 <span id="music-val">70</span>%
           <input type="range" id="setting-music" min="0" max="100" value="70" style="width:100%;margin-top:4px;">
+        </label>
+        <label style="font-size:13px;">앰비언트 볼륨 <span id="amb-val">43</span>%
+          <input type="range" id="setting-amb" min="0" max="100" value="43" style="width:100%;margin-top:4px;">
         </label>
         <label style="font-size:13px;">효과음 볼륨 <span id="sfx-val">100</span>%
           <input type="range" id="setting-sfx" min="0" max="100" value="100" style="width:100%;margin-top:4px;">
@@ -264,6 +311,7 @@
         <div class="result-emoji" id="result-emoji">🎉</div>
         <h2 id="result-title">스테이지 클리어!</h2>
         <div id="res-stars" class="result-stars">☆☆☆</div>
+        <div id="star-score-hint" style="font-size:10px;color:rgba(255,255,255,0.38);margin-top:4px;letter-spacing:0.3px;"></div>
       </div>
       <div class="result-stats">
         <div class="stat-row"><span>포획 수</span><strong id="res-captured">0</strong></div>
@@ -275,68 +323,4 @@
       </div>
       <div class="nickname-row" id="nickname-row">
         <input type="text" id="nickname-input" placeholder="닉네임으로 랭킹 등록" maxlength="12" />
-        <button class="btn btn-secondary btn-sm" id="btn-register">등록</button>
-      </div>
-      <div class="result-btns">
-        <button class="btn btn-secondary" id="btn-to-shop">🛒 상점</button>
-        <button class="btn btn-primary" id="btn-retry">🔄 재도전</button>
-        <button class="btn btn-secondary" id="btn-next-stage">다음 →</button>
-        <button class="btn btn-back" id="btn-quit-result">🏠 나가기</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 리더보드 -->
-  <div id="screen-leaderboard" class="screen hidden">
-    <div class="screen-header">
-      <button class="btn btn-back" id="btn-back-from-lb">← 뒤로</button>
-      <h2>🏆 리더보드</h2>
-    </div>
-    <div class="lb-tabs">
-      <button class="tab-btn active" data-tab="global">🌍 글로벌 TOP 100</button>
-      <button class="tab-btn" data-tab="personal">👤 내 기록</button>
-    </div>
-    <div class="lb-list" id="lb-content"></div>
-  </div>
-
-  <!-- 모바일 터치 컨트롤 (pointer:coarse 기기에서만 CSS로 표시) -->
-  <div id="touch-controls" class="hidden">
-    <div id="joystick-zone">
-      <div id="joystick-base">
-        <div id="joystick-knob"></div>
-      </div>
-    </div>
-    <div id="btn-touch-capture">🎯</div>
-    <div id="btn-touch-pause">⏸</div>
-  </div>
-
-  <!-- 화면 전환 페이드 오버레이 -->
-  <div id="fade-overlay"></div>
-
-  <!-- 콤보 엣지 글로우 -->
-  <div id="combo-glow"></div>
-
-  <!-- 업적 팝업 -->
-  <div id="achievement-popup" class="hidden">
-    <div class="ach-icon" id="ach-icon">🏆</div>
-    <div class="ach-text">
-      <div class="ach-label">업적 달성!</div>
-      <div class="ach-title" id="ach-title">첫 포획</div>
-    </div>
-  </div>
-
-  <!-- 포획 실시간 피드 (우측) -->
-  <div id="capture-feed"></div>
-
-  <!-- 콤보 스트릭 어나운서 -->
-  <div id="streak-announcer" class="hidden"></div>
-
-  <!-- 생물 이름표 컨테이너 -->
-  <div id="creature-labels"></div>
-
-  <!-- 타이머 긴박감 붉은 빛 오버레이 -->
-  <div id="timer-urgency"></div>
-
-  <script type="module" src="/src/main.js"></script>
-</body>
-</html>
+        <button class="btn btn-seconda

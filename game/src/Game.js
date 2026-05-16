@@ -841,6 +841,9 @@ export class Game {
     document.getElementById('weather-overlay')?.remove();
     // HP 위험 클래스 해제
     document.body.classList.remove('hp-danger');
+    // 콤보 글로우 리셋 (body-level 요소 — hud.hide()로 안 숨겨짐)
+    const glowEl = document.getElementById('combo-glow');
+    if (glowEl) { glowEl.style.opacity = '0'; glowEl.className = ''; }
     // 포획 피드 초기화
     const feedEl = document.getElementById('capture-feed');
     if (feedEl) feedEl.innerHTML = '';
@@ -848,6 +851,9 @@ export class Game {
     const streakEl = document.getElementById('streak-announcer');
     if (streakEl) { streakEl.classList.remove('streak-show'); streakEl.classList.add('hidden'); }
     clearTimeout(this._streakTimer);
+    // 타이머 긴박감 오버레이 리셋
+    const urgEl = document.getElementById('timer-urgency');
+    if (urgEl) urgEl.style.opacity = '0';
     // 보스 경고 / PB 숨기기
     document.getElementById('boss-warning')?.classList.add('hidden');
     document.getElementById('hud-pb')?.classList.add('hidden');
@@ -1677,14 +1683,4 @@ export class Game {
       transition:transform 0.14s cubic-bezier(0.22,1,0.36,1),opacity 0.14s ease;
       opacity:0;transform:scale(2);
     `;
-    wrap.appendChild(txt);
-
-    let i = 0;
-    const DUR  = 580; // 표시 총 시간 (ms)
-    const FADE = 110; // 페이드 in/out (ms)
-
-    const next = () => {
-      if (i >= steps.length) { wrap.remove(); return; }
-      txt.textContent    = steps[i];
-      txt.style.color      = colors[i];
-      txt.style.textShadow = `0 0 60px ${colors[i]}cc, 0 0 120px ${colors[i]}44
+    wrap.append
