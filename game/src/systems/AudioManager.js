@@ -877,6 +877,19 @@ export class AudioManager {
     this._sfxGain.gain.linearRampToValueAtTime(this.sfxVolume, this._ctx.currentTime + 0.15);
   }
 
+
+  setMasterVolume(v) {
+    if (!this._ready || !this._master) return;
+    this._master.gain.linearRampToValueAtTime(
+      Math.max(0, Math.min(1, v)), this._ctx.currentTime + 0.15);
+  }
+
+  setAmbientVolume(v) {
+    this.ambientVolume = Math.max(0, Math.min(1, v));
+    if (!this._ready || !this._ambGain) return;
+    this._ambGain.gain.linearRampToValueAtTime(this.ambientVolume, this._ctx.currentTime + 0.15);
+  }
+
   // ── 음소거 토글 ──────────────────────────────────────────────────
   toggleMute() {
     this._muted = !this._muted;
