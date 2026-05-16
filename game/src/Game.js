@@ -1889,17 +1889,4 @@ export class Game {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 700);
   }
-
-  // ── 스킬 활성화 엣지 플래시 ──────────────────────────────────
-  _flashSkillActivation(skillId) {
-    const colorMap = {
-      skill_vortex: 'rgba(80,160,255,0.22)',
-      skill_magnet: 'rgba(255,180,50,0.22)',
-      skill_slow:   'rgba(80,255,200,0.22)',
-      skill_multi:  'rgba(200,80,255,0.22)',
-    };
-    const col = colorMap[skillId] || 'rgba(255,255,255,0.18)';
-    const el = document.createElement('div');
-    el.style.cssText = `
-      position:fixed;inset:0;background:${col};
-      pointer-events:none;z-index
+}
