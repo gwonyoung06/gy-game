@@ -90,3 +90,18 @@ export function getPersonalRecords() {
     .map(([stage, score]) => ({ stage: parseInt(stage), score }))
     .sort((a, b) => b.score - a.score);
 }
+
+export function recordCapturedType(type) {
+  if (!type) return;
+  const save = loadSave();
+  if (!save.capturedTypes) save.capturedTypes = {};
+  save.capturedTypes[type] = (save.capturedTypes[type] || 0) + 1;
+  saveSave(save);
+}
+
+export function getPersonalRecords() {
+  const save = loadSave();
+  return Object.entries(save.highScores)
+    .map(([stage, score]) => ({ stage: parseInt(stage), score }))
+    .sort((a, b) => b.score - a.score);
+}

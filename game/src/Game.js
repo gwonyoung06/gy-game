@@ -1455,6 +1455,81 @@ export class Game {
     });
   }
 
+  // ── 크리처 도감 렌더링 ────────────────────────────────────────
+  _renderDex() {
+    const content  = document.getElementById('dex-content');
+    const countEl  = document.getElementById('dex-count');
+    const pctEl    = document.getElementById('dex-pct');
+    const fillEl   = document.getElementById('dex-bar-fill');
+    if (!content) return;
+
+    const save = loadSave();
+    const captured = save.capturedTypes || {};
+
+    // 전 스테이지 크리처를 type 기준으로 중복 제거 (보스 포함)
+    const seen = new Map();
+    STAGES.forEach(stage => {
+      stage.creatures.forEach(c => {
+        if (!seen.has(c.type)) seen.set(c.type, { ...c, stageIcon: stage.icon });
+      });
+      if (stage.miniBoss && !seen.has(stage.miniBoss.type)) {
+        seen.set(stage.miniBoss.type, { ...stage.miniBoss, stageIcon: stage.icon, isBoss: true });
+      }
+    });
+
+    const total = seen.size;
+    const discoveredCount = [...seen.keys()].filter(t => (captured[t] || 0) > 0).length;
+
+    if (countEl) countEl.textContent = `${discoveredCount} / ${total}`;
+    const pct = total > 0 ? Math.round(discoveredCount / total * 100) : 0;
+    if (pctEl)  pctEl.textContent  = `${pct}%`;
+    if (fillEl) fillEl.style.width = `${pct}%`;
+
+    content.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'dex-grid';
+
+    seen.forEach((c, type) => {
+      const cnt   = captured[type] || 0;
+      const found = cnt > 0;
+      const clr = typeof c.color === 'number'
+        ? `#${c.color.toString(16).padStart(6, '0')}`
+        : (c.color || '#888');
+
+      const card = document.createElement('div');
+      card.className = `dex-card${found ? ' dex-caught' : ' dex-unknown'}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = found ? 'dex-avatar' : 'dex-avatar dex-avatar-unknown';
+      avatar.style.borderColor = found ? clr : 'rgba(255,255,255,0.12)';
+      avatar.style.color = found ? clr : 'rgba(255,255,255,0.25)';
+      avatar.textContent = found ? '' : '?';
+      if (found) {
+        const dot = document.createElement('div');
+        dot.style.cssText = `width:28px;height:28px;border-radius:50%;background:${clr};opacity:0.85;box-shadow:0 0 10px ${clr}66;`;
+        avatar.appendChild(dot);
+      }
+      if (c.isBoss && found) {
+        const crown = document.createElement('div');
+        crown.className = 'dex-boss-crown';
+        crown.textContent = '\u{1F451}';
+        avatar.appendChild(crown);
+      }
+
+      const nameEl = document.createElement('div');
+      nameEl.className = `dex-name${found ? '' : ' dex-name-unknown'}`;
+      nameEl.textContent = found ? c.name : '???';
+
+      const metaEl = document.createElement('div');
+      metaEl.className = 'dex-meta';
+      metaEl.textContent = found ? `${c.stageIcon} \xd7${cnt}` : '';
+
+      card.append(avatar, nameEl, metaEl);
+      grid.appendChild(card);
+    });
+    content.appendChild(grid);
+  }
+
   // ── 스마트 조준선 ──────────────────────────────────────────────
   _updateCrosshair() {
     const el = document.getElementById('crosshair');
