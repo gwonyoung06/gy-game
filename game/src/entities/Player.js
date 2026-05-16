@@ -929,3 +929,34 @@ export class Player {
   }
 
   // ?? Public methods ???????????????????
+
+  // ── Public API ─────────────────────────────────────────────────
+  /** 포획 동작: 팔 스윙 애니메이션 트리거 */
+  swing() {
+    if (this.isSwinging) return;
+    this.isSwinging = true;
+    this.swingTimer = 0;
+    this._swingFlash = 1.0;
+  }
+
+  /** 카메라 기준 XZ 전방 벡터 반환 (WaveSystem.tryCapture 에서 사용) */
+  getForward(camCtrl) {
+    return camCtrl.getForwardXZ();
+  }
+
+  /** 플레이어 월드 위치 (Three.js Vector3) */
+  get position() {
+    return this.mesh.position;
+  }
+
+  dispose() {
+    this.scene.remove(this.mesh);
+    this.mesh.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+        else obj.material.dispose();
+      }
+    });
+  }
+}

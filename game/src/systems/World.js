@@ -3360,4 +3360,41 @@ export class World {
     const x = cx ?? 0, z = cz ?? 0;
     const y = this.getHeight(x, z);
     const g = new THREE.Group();
-    const barkMat  = new THREE.MeshLambertMaterial({ color: 0x
+    const barkMat  = new THREE.MeshLambertMaterial({ color: 0x4a3728 });
+    const leafMat  = new THREE.MeshLambertMaterial({ color: 0x2d5a1b });
+    const trunkH = 35;
+    let trunk = null;
+    for (let seg = 0; seg < 5; seg++) {
+      const r0 = 1.8 - seg * 0.28, r1 = 1.5 - seg * 0.28;
+      const segH = trunkH / 5;
+      const t = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, segH, 8), barkMat.clone());
+      t.position.set(0, seg * segH + segH * 0.5, 0);
+      t.castShadow = true;
+      g.add(t);
+      if (seg === 0) trunk = t;
+    }
+    // 방사형 가지 + 침엽 무더기
+    for (let b = 0; b < 8; b++) {
+      const a = (b / 8) * Math.PI * 2;
+      const ly = 12 + b * 2.5;
+      const br = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 7, 5), barkMat.clone());
+      const bx = Math.cos(a) * 3.5, bz = Math.sin(a) * 3.5;
+      br.position.set(bx, ly, bz);
+      br.rotation.set(Math.cos(a) * 0.45, a, Math.sin(a) * 0.45);
+      g.add(br);
+      const lv = new THREE.Mesh(new THREE.SphereGeometry(3.2, 6, 4), leafMat.clone());
+      lv.scale.set(1.2, 0.5, 1.2);
+      lv.position.set(Math.cos(a) * 8, ly + 1, Math.sin(a) * 8);
+      g.add(lv);
+    }
+    // 꼭대기 첨탑형 잎
+    const top = new THREE.Mesh(new THREE.ConeGeometry(3.5, 10, 7), leafMat.clone());
+    top.position.set(0, trunkH + 3, 0);
+    g.add(top);
+    g.position.set(x, y, z);
+    g.scale.setScalar(1.4);
+    this.scene.add(g); this.objects.push(g);
+    this._zones.landmarks.push({ x, z });
+    return { x, z };
+  }
+}

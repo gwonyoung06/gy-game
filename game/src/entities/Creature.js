@@ -2179,3 +2179,13 @@ export class Creature {
       if (!child.isMesh) return;
       if (child.geometry && !_cachedGeos.has(child.geometry)) {
         child.g
+        child.geometry.dispose();
+      }
+      if (child.material) {
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach(m => m.dispose());
+      }
+    });
+    this.mesh = null;
+  }
+}
