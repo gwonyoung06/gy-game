@@ -1690,10 +1690,10 @@ export class Creature {
       const cx = this._targetPos.x, cz = this._targetPos.z;
       const figureX = cx + Math.sin(this.time * 1.5) * 1.5;
       const figureZ = cz + Math.sin(this.time * 3.0) * 0.75;
-      const dir = new THREE.Vector3(figureX - this.mesh.position.x, 0, figureZ - this.mesh.position.z);
-      if (dir.length() > 0.1) {
-        dir.normalize();
-        this.mesh.position.addScaledVector(dir, speed * 2.5 * delta);
+      _tv0.set(figureX - this.mesh.position.x, 0, figureZ - this.mesh.position.z);
+      if (_tv0.length() > 0.1) {
+        _tv0.normalize();
+        this.mesh.position.addScaledVector(_tv0, speed * 2.5 * delta);
       }
     }
     this.baseY = this.baseY || 2;
