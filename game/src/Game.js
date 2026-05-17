@@ -826,15 +826,17 @@ export class Game {
       c.alive && !c.captured && c.mesh.position.distanceTo(playerPos) < LABEL_RANGE
     );
 
-    // 기존 레이블 재사용 (DOM 최소화)
+    // 기존 레이블 재사용 (DOM 최소화) — li는 실제 렌더된 레이블 카운터
+    // (i ≠ li: z>1 스킵된 크리처는 레이블 슬롯을 소비하지 않아야 함)
     const existing = [...container.children];
-    near.forEach((c, i) => {
+    let li = 0;
+    near.forEach(c => {
       _v.copy(c.mesh.position).project(this.camera);
       const sx = (_v.x + 1) / 2 * W;
       const sy = (-_v.y + 1) / 2 * H - 30;
-      if (_v.z > 1) return; // 카메라 뒤
+      if (_v.z > 1) return; // 카메라 뒤 — 레이블 슬롯 소비 안 함
 
-      let label = existing[i];
+      let label = existing[li];
       if (!label) {
         label = document.createElement('div');
         label.className = 'creature-label';
@@ -848,11 +850,12 @@ export class Game {
         : `${c.config.name || c.config.type} 💰${c.config.coins}`;
       label.style.transform = `translate(${sx}px, ${sy}px)`;
       label.style.opacity = Math.max(0.4, 1 - dist / LABEL_RANGE);
+      li++;
     });
 
-    // 남은 기존 레이블 숨기기
-    for (let i = near.length; i < existing.length; i++) {
-      existing[i].remove();
+    // 사용하지 않은 기존 레이블 제거
+    while (container.children.length > li) {
+      container.lastChild.remove();
     }
   }
 
