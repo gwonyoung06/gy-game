@@ -13,6 +13,7 @@ import { SHOP_ITEMS, CONSUMABLES } from './data/shop.js';
 import { particlePool, _cachedMats, _cachedGeos } from './entities/Creature.js';
 import { audioManager } from './systems/AudioManager.js';
 import { submitScore, fetchGlobalLeaderboard } from './utils/supabase.js';
+import { DebugOverlay } from './utils/DebugOverlay.js';
 
 // 스킬 쿨다운 테이블
 const SKILL_CD = {
@@ -36,6 +37,7 @@ export class Game {
       () => this._onInventoryClose()
     );
     this.minimap   = null; // 게임 시작 시 생성
+    this.debug     = null; // 디버그 오버레이 (게임 시작 후 초기화)
     this.currentScreen = 'title';
 
     // 스킬 슬롯별 쿨다운 { Q, E, R }
@@ -642,6 +644,18 @@ export class Game {
     }
     if (pbValEl && this._stagePB > 0) pbValEl.textContent = this._stagePB.toLocaleString();
 
+    // ── 디버그 오버레이 초기화 (이전 것 정리 후 새로 생성) ──────
+    this.debug?.dispose();
+    this.debug = new DebugOverlay(this.renderer, this.scene, this.camera);
+    // 디버그 추가 기능 연결
+    this.debug.onScreenshot   = () => this._debugScreenshot();
+    this.debug.onSpeedChange  = (mult) => { this._debugSpeedMult = mult; };
+    this.debug.onGodMode      = (on)   => { this._debugGodMode   = on; };
+    this.debug.onFreeCamera   = (on)   => { this._debugFreeCamera = on; if (!on && this.camCtrl) { this.camCtrl._freeCam = false; } };
+    this._debugSpeedMult  = 1.0;
+    this._debugGodMode    = false;
+    this._debugFreeCamera = false;
+
     this.hud.show(`스테이지 ${stageData.id} - ${stageData.name}`);
     this._showScreen('game');
     this._applyWeatherOverlay(this.settings.weather);
@@ -710,7 +724,8 @@ export class Game {
       if (this._slowMoTimer > 0) {
         this._slowMoTimer -= rawDelta;
       }
-      const delta = rawDelta * (this._slowMoTimer > 0 ? 0.3 : 1.0);
+      // 디버그 속도 배율 (F6) 적용
+      const delta = rawDelta * (this._slowMoTimer > 0 ? 0.3 : 1.0) * (this._debugSpeedMult ?? 1.0);
 
       if (this.player && this.waves && this.camCtrl) {
         // 모바일 조이스틱 → Player.keys 매핑
@@ -772,6 +787,19 @@ export class Game {
           this._newRecord = true;
           this._showPBFlash();
         }
+      }
+
+      // 디버그 오버레이 업데이트 (HUD·AI라벨·무적 등)
+      if (this.debug) {
+        // 갓모드: 무적타이머 항상 유지
+        if (this._debugGodMode) this._invincibleTimer = 99;
+        this.debug.update(
+          rawDelta,
+          this.player?.position ?? null,
+          this.waves  ?? null,
+          this.world  ?? null,
+          this.player ?? null,
+        );
       }
 
       this.renderer.render(this.scene, this.camera);
@@ -872,6 +900,8 @@ export class Game {
     document.getElementById('hud-pb')?.classList.add('hidden');
     particlePool.reset();
 
+    this.debug?.dispose();
+    this.debug = null;
     this.camCtrl?.dispose();
     this.waves?.dispose();
     this.world?.dispose();
@@ -1193,6 +1223,22 @@ export class Game {
     document.addEventListener('pointerlockchange', check);
     // dispose 시 제거를 위해 저장
     this._lockWatcher = check;
+  }
+
+  // ── 디버그: 스크린샷 PNG 저장 ────────────────────────────────
+  _debugScreenshot() {
+    // preserveDrawingBuffer 없이도 toDataURL 직후 렌더 직후엔 유효
+    this.renderer.render(this.scene, this.camera);
+    const url  = this.renderer.domElement.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href     = url;
+    link.download = `hunters_${Date.now()}.png`;
+    link.click();
+    // 화면 플래시 피드백
+    const flash = document.createElement('div');
+    flash.style.cssText = 'position:fixed;inset:0;background:#fff;opacity:0.5;z-index:99999;pointer-events:none;';
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 120);
   }
 
   // 스킬로 생물 포획 시 코인/점수 처리
@@ -1895,56 +1941,3 @@ export class Game {
   _updateBossWarning(state) {
     const el = document.getElementById('boss-warning');
     if (!el) return;
-    const stageData = this.waves?.stage;
-    const hasBoss = stageData?.miniBoss != null;
-    const nearEnd = hasBoss && state.wave === 3 &&
-                    (state.target - state.captured) <= 5 &&
-                    state.target > state.captured;
-    el.classList.toggle('hidden', !nearEnd);
-  }
-
-  // ── PB 경신 플래시 알림 ─────────────────────────────────────
-  _showPBFlash() {
-    const pbEl = document.getElementById('hud-pb');
-    const pbValEl = document.getElementById('hud-pb-val');
-    if (pbEl) {
-      pbEl.classList.remove('hidden');
-      pbEl.classList.add('pb-new-record');
-      pbEl.textContent = '🏆 신기록!';
-    }
-    this.hud.showWaveMessage('🏆 신기록 달성!', true);
-  }
-
-  // ── 콤보 버스트 링 (5×/10× 콤보) ────────────────────────────
-  _showComboBurst(combo) {
-    const color = combo >= 10 ? '#ffee00' : '#ff8844';
-    const rings  = combo >= 10 ? 5 : 3;
-    if (combo >= 10) this.camCtrl?.shake(0.18);
-    for (let i = 0; i < rings; i++) {
-      const r = document.createElement('div');
-      r.style.cssText = `
-        position:fixed;left:50%;top:50%;
-        width:80px;height:80px;border-radius:50%;
-        border:3px solid ${color};
-        pointer-events:none;z-index:400;
-        animation:comboBurst ${0.55 + i * 0.08}s ease-out ${i * 75}ms forwards;
-      `;
-      document.body.appendChild(r);
-      setTimeout(() => r.remove(), 700 + i * 75);
-    }
-  }
-
-  // ── 보스 웨이브 레드 플래시 ──────────────────────────────────
-  _bossFlash() {
-    this.camCtrl?.shake(0.42);
-    const el = document.createElement('div');
-    el.style.cssText = `
-      position:fixed;inset:0;
-      background:radial-gradient(ellipse at center, rgba(180,0,0,0.5) 0%, rgba(255,0,0,0.15) 60%, transparent 100%);
-      pointer-events:none;z-index:300;
-      animation:skillFlash 0.7s ease forwards;
-    `;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 700);
-  }
-}
