@@ -1287,6 +1287,25 @@ export class Game {
     audioManager.sfxCombo?.(Math.max(1, this.waves?.combo || 1));
   }
 
+  // ── 스킬 활성화 플래시 (화면 엣지 색상 펄스) ──────────────────
+  _flashSkillActivation(skillId) {
+    const colors = {
+      vortex:      '#00e5ff',
+      magnet:      '#ffd600',
+      speed_boost: '#76ff03',
+      skill_multi: '#e040fb',
+    };
+    const col = colors[skillId] || '#ffffff';
+    const el = document.createElement('div');
+    el.style.cssText = `position:fixed;inset:0;pointer-events:none;z-index:9999;` +
+      `border: 6px solid ${col};border-radius:4px;opacity:0.9;` +
+      `animation:none;transition:opacity 0.5s;`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => { el.style.opacity = '0'; });
+    setTimeout(() => el.remove(), 520);
+  }
+
+
   // ── 핫바 슬롯 사용 (1~9 키) ───────────────────────────────────
   _useHotbarSlot(index) {
     const save = loadSave();
