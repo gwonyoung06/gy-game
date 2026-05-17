@@ -9,7 +9,7 @@ import { Shop } from './ui/Shop.js';
 import { Inventory } from './ui/Inventory.js';
 import { Minimap } from './ui/Minimap.js';
 import { loadSave, addCoins, markStageCleared, updateSave, recordCapturedType } from './utils/storage.js';
-import { SHOP_ITEMS, CONSUMABLES } from './data/shop.js';
+import { SHOP_ITEMS } from './data/shop.js';
 import { particlePool, _cachedMats, _cachedGeos } from './entities/Creature.js';
 import { audioManager } from './systems/AudioManager.js';
 import { submitScore, fetchGlobalLeaderboard } from './utils/supabase.js';
