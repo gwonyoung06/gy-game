@@ -635,7 +635,6 @@ export class Game {
     this.scene = new THREE.Scene();
     this.world  = new World(this.scene, stageData, this.settings);
     this.player = new Player(this.scene);
-    this._applyShopEffects();
     this.camCtrl = new CameraController(this.camera, this.renderer.domElement);
     const _s = JSON.parse(localStorage.getItem('gy_settings') || '{"sens":100}');
     this.camCtrl.sensitivity = 0.0028 * (_s.sens / 100);
@@ -655,6 +654,8 @@ export class Game {
       (dmg)    => this._onDamage(dmg),
       this.world
     );
+    // waves 생성 후 적용 — noise_reduce가 this.waves.creatures에 접근하므로
+    this._applyShopEffects();
 
     const minimapCanvas = document.getElementById('minimap-canvas');
     if (minimapCanvas) {
