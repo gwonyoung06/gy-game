@@ -42,6 +42,7 @@ export class CameraController {
 
     // Pointer Lock 상태
     this._locked = false;
+    this._skipMove = 0; // 잠금 직후 첫 이벤트 스킵 카운터
 
     this._onMouseMove = this._handleMouseMove.bind(this);
     this._onWheel     = this._handleWheel.bind(this);
@@ -66,11 +67,17 @@ export class CameraController {
   get isLocked() { return this._locked; }
 
   _handleLockChange() {
+    const wasLocked = this._locked;
     this._locked = document.pointerLockElement === this.canvas;
+    // 잠금 획득 직후 첫 mousemove는 accumulated delta 가능 → 스킵
+    if (this._locked && !wasLocked) this._skipMove = 2;
+    // 잠금 해제 시 커서 명시적 복원
+    if (!this._locked) document.body.style.cursor = '';
   }
 
   _handleMouseMove(e) {
     if (!this._locked) return;
+    if (this._skipMove > 0) { this._skipMove--; return; }
     this.yaw  -= e.movementX * this.sensitivity;
     this.pitch = Math.max(this.minPitch, Math.min(this.maxPitch,
       this.pitch + e.movementY * this.sensitivity));

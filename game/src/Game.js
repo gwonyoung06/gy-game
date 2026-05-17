@@ -260,8 +260,9 @@ export class Game {
     // 키보드
     document.addEventListener('keydown', e => {
       if (this.currentScreen === 'game') {
-        // WASD 키 입력 시 포인터락 미획득 상태면 자동 획득 (클릭 없이 바로 이동 가능)
-        if (!this.camCtrl?.isLocked && ['KeyW','KeyA','KeyS','KeyD'].includes(e.code)) {
+        // 이동키 입력 시 포인터락 미획득 상태면 자동 획득
+        const _moveCodes = ['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
+        if (!this.camCtrl?.isLocked && _moveCodes.includes(e.code)) {
           this.camCtrl?.requestLock();
         }
 
@@ -276,7 +277,10 @@ export class Game {
 
         // I: 인벤토리 (포인터락 해제 후 전환)
         if (e.code === 'KeyI') {
+          if (this.player) this.player.keys = {};
           this.camCtrl?.exitLock();
+          if (this.camCtrl) this.camCtrl._shakeIntensity = 0;
+          document.body.style.cursor = '';
           this._stopLoop();
           this.hud.hide();
           this._showScreen('inventory');
@@ -285,9 +289,12 @@ export class Game {
 
         // P: 상점
         if (e.code === 'KeyP') {
+          if (this.player) this.player.keys = {};
+          this.camCtrl?.exitLock();
+          if (this.camCtrl) this.camCtrl._shakeIntensity = 0;
+          document.body.style.cursor = '';
           this._stopLoop();
           this.hud.hide();
-          document.exitPointerLock();
           this._showScreen('shop');
           this.shop.open(this.selectedStage);
         }
@@ -1510,12 +1517,17 @@ export class Game {
   _pauseGame() {
     this._stopLoop();
     this.camCtrl?.exitLock();
+    if (this.camCtrl) this.camCtrl._shakeIntensity = 0; // 재개 시 흔들림 방지
+    if (this.player) this.player.keys = {};             // keyup 누락 방지
+    document.body.style.cursor = '';                    // 커서 명시적 복원
     this._showLockHint(false);
     audioManager.setState('pause');
     this._showScreen('pause');
   }
 
   _resumeGame() {
+    if (this.camCtrl) this.camCtrl._shakeIntensity = 0; // 재개 흔들림 방지
+    if (this.player)  this.player.keys = {};            // 키 상태 리셋
     this._showScreen('game');
     this._startLoop();
     audioManager.setState('exploration');
