@@ -626,6 +626,11 @@ export class Game {
       this.world
     );
 
+    // 웨이브 클리어 시 업그레이드 카드 훅
+    this.waves.onWaveClear = (_nextWave, spawnFn) => {
+      this._showUpgradeCards(spawnFn);
+    };
+
     const minimapCanvas = document.getElementById('minimap-canvas');
     if (minimapCanvas) {
       this.minimap = new Minimap(minimapCanvas, stageData.id, this.world._zones, 130);
@@ -846,8 +851,16 @@ export class Game {
       const dist = c.mesh.position.distanceTo(playerPos);
       const inRange = dist <= this.player.captureRange;
       label.className = inRange ? 'creature-label creature-label--in-range' : 'creature-label';
+      let gaugeHtml = '';
+      if (inRange) {
+        const fwd = this.player.getForward(this.camCtrl);
+        const pct = Math.round(c.getCaptureChance(playerPos, fwd) * 100);
+        const hue = pct < 40 ? 0 : pct < 70 ? 40 : 120;
+        gaugeHtml = `<div class="label-chance-gauge"><div class="label-chance-fill" style="width:${pct}%;background:hsl(${hue},90%,52%)"></div></div>`
+                  + `<div class="label-hint">포획확률 ${pct}%　클릭!</div>`;
+      }
       label.innerHTML = inRange
-        ? `<span>${c.config.name || c.config.type}</span> <span class="label-coins">💰${c.config.coins}</span><div class="label-hint">클릭!</div>`
+        ? `<span>${c.config.name || c.config.type}</span> <span class="label-coins">💰${c.config.coins}</span>${gaugeHtml}`
         : `${c.config.name || c.config.type} 💰${c.config.coins}`;
       label.style.transform = `translate(${sx}px, ${sy}px)`;
       label.style.opacity = Math.max(0.4, 1 - dist / LABEL_RANGE);
@@ -888,6 +901,13 @@ export class Game {
     // 포획 피드 초기화
     const feedEl = document.getElementById('capture-feed');
     if (feedEl) feedEl.innerHTML = '';
+    // 업그레이드 카드 초기화
+    const upgradeEl = document.getElementById('upgrade-card-overlay');
+    if (upgradeEl) upgradeEl.classList.add('hidden');
+    const cnpEl = document.getElementById('capture-name-popup');
+    if (cnpEl) cnpEl.classList.add('hidden');
+    this._coinMult = 1; this._scoreMult = 1;
+    this._luckBonus = 0; this._bonusCapture = 0;
     // 스트릭 어나운서 초기화
     const streakEl = document.getElementById('streak-announcer');
     if (streakEl) { streakEl.classList.remove('streak-show'); streakEl.classList.add('hidden'); }
@@ -1133,9 +1153,13 @@ export class Game {
     const result = this.waves.tryCapture(
       this.player.position,
       this.player.getForward(this.camCtrl),
-      this.player.captureRange
+      this.player.captureRange,
+      this._luckBonus ?? 0
     );
     if (result) {
+      // 업그레이드 배율 적용
+      result.coins = Math.floor(result.coins * (this._coinMult  ?? 1));
+      result.score = Math.floor(result.score * (this._scoreMult ?? 1));
       this.sessionScore += result.score;
       this.sessionCoins += result.coins;
       this.totalCoins = addCoins(result.coins);
@@ -1144,6 +1168,9 @@ export class Game {
       this._triggerCaptureFlash();
       this.camCtrl?.shake(0.13);
       audioManager.sfxCaptureSuccess();
+      // 크리처 이름 팝업 (피드백 강화)
+      { const cfg = result.creature?.config;
+        this.hud.showCaptureNamePopup(cfg?.name || cfg?.type || '생물', this._creatureIcon(cfg?.type)); }
       // 도감 기록
       recordCapturedType(result.creature?.config?.type);
       // 실시간 포획 피드 항목 추가
@@ -1189,6 +1216,64 @@ export class Game {
     if (this._captureFlashTimeout) clearTimeout(this._captureFlashTimeout);
     this._captureFlashTimeout = setTimeout(() => { el.style.opacity = '0'; }, 140);
   }
+
+  // ── 웨이브 업그레이드 카드 ────────────────────────────────────
+  _showUpgradeCards(onDone) {
+    const UPGRADES = [
+      { icon: '🎯', name: '포획 범위 +20%',  desc: '포획 가능 거리가 넓어집니다',
+        apply: () => { if (this.player) this.player.captureRange *= 1.2; } },
+      { icon: '⚡', name: '이동 속도 +15%',  desc: '플레이어가 더 빠르게 달립니다',
+        apply: () => { if (this.player) this.player._speedBonus = (this.player._speedBonus ?? 1) * 1.15; } },
+      { icon: '⏰', name: '시간 +20초',       desc: '스테이지 제한 시간이 증가합니다',
+        apply: () => { this.waves?.addTime(20); } },
+      { icon: '💰', name: '코인 +35%',        desc: '이번 스테이지 코인 획득량 증가',
+        apply: () => { this._coinMult = (this._coinMult ?? 1) * 1.35; } },
+      { icon: '🔥', name: '콤보 유지 +2초',   desc: '콤보가 끊기지 않는 시간이 늘어납니다',
+        apply: () => { if (this.waves) this.waves.comboTimer = Math.max(0, (this.waves.comboTimer ?? 0) - 2); } },
+      { icon: '❤️', name: 'HP +40 회복',      desc: '현재 HP를 즉시 회복합니다',
+        apply: () => { this.playerHP = Math.min((this.playerHP ?? 100) + 40, this.playerMaxHP ?? 100); } },
+      { icon: '🍀', name: '럭키 포획 +20%',   desc: '모든 생물의 포획 확률이 상승합니다',
+        apply: () => { this._luckBonus = (this._luckBonus ?? 0) + 0.20; } },
+      { icon: '🌟', name: '점수 배율 +25%',   desc: '획득 점수가 1.25배가 됩니다',
+        apply: () => { this._scoreMult = (this._scoreMult ?? 1) * 1.25; } },
+      { icon: '💨', name: '대시 쿨다운 -30%', desc: '대시를 더 자주 사용할 수 있습니다',
+        apply: () => { if (this.player) this.player._dashCooldownMax = (this.player._dashCooldownMax ?? 1.2) * 0.7; } },
+      { icon: '🛡', name: '즉시 무적 5초',     desc: '잠시 동안 피해를 받지 않습니다',
+        apply: () => { this._invincibleTimer = 5; } },
+      { icon: '✨', name: '광역 포획 +1',      desc: '범위 내 생물 1마리 추가 자동 포획',
+        apply: () => { this._bonusCapture = (this._bonusCapture ?? 0) + 1; } },
+      { icon: '🔮', name: '포획 확률 시각화',   desc: '크리처 머리 위 확률 게이지 강화',
+        apply: () => { this._showCaptureRadius = true; } },
+    ];
+    const pool = [...UPGRADES].sort(() => Math.random() - 0.5).slice(0, 3);
+    if (document.pointerLockElement) document.exitPointerLock();
+    this.hud.showUpgradeCards(pool, (idx) => {
+      pool[idx].apply();
+      setTimeout(() => { this.camCtrl?.requestLock(); onDone(); }, 400);
+    });
+  }
+
+  // ── 크리처 타입 → 이모지 ─────────────────────────────────────
+  _creatureIcon(type) {
+    const M = {
+      dragonfly:'🪰',butterfly:'🦋',bee:'🐝',ladybug:'🐞',cicada:'🦗',
+      beetle:'🪲',grasshopper:'🦗',mantis:'🪲',cricket:'🦗',stag:'🪲',
+      worm:'🪱',mole:'🐀',snail:'🐌',pill_bug:'🐛',centipede:'🐛',
+      frog:'🐸',tadpole:'🐸',water_strider:'💧',water_beetle:'🪲',larvae:'🐛',
+      firefly:'✨',leech:'🪱',crayfish:'🦞',salamander:'🦎',giant_beetle:'👑',
+      crucian:'🐟',loach:'🐟',catfish:'🐟',eel:'🐍',turtle:'🐢',
+      crab:'🦀',jellyfish:'🪼',seahorse:'🐡',clownfish:'🐠',starfish:'⭐',
+      shark:'🦈',whale:'🐋',octopus:'🐙',manta:'🦈',anglerfish:'🐡',
+      parrot:'🦜',iguana:'🦎',toucan:'🐦',tree_frog:'🐸',python:'🐍',
+      lion:'🦁',elephant:'🐘',zebra:'🦓',giraffe:'🦒',hyena:'🐺',
+      penguin:'🐧',elk:'🦌',snow_fox:'🦊',yeti:'❄️',snowbird:'🐦',
+      gorilla:'🦍',anaconda:'🐍',poison_frog:'🐸',jaguar:'🐆',
+      trex:'🦖',triceratops:'🦕',raptor:'🦖',pterodactyl:'🐦',stegosaurus:'🦕',
+      alien:'👾',robot:'🤖',space_jellyfish:'🪼',comet_bug:'⭐',moonwalker:'🌕',
+    };
+    return M[type] ?? '🐾';
+  }
+
 
   // ── 튜토리얼 오버레이 ─────────────────────────────────────────
   _showTutorial() {
@@ -1941,3 +2026,56 @@ export class Game {
   _updateBossWarning(state) {
     const el = document.getElementById('boss-warning');
     if (!el) return;
+    const stageData = this.waves?.stage;
+    const hasBoss = stageData?.miniBoss != null;
+    const nearEnd = hasBoss && state.wave === 3 &&
+                    (state.target - state.captured) <= 5 &&
+                    state.target > state.captured;
+    el.classList.toggle('hidden', !nearEnd);
+  }
+
+  // ── PB 경신 플래시 알림 ─────────────────────────────────────
+  _showPBFlash() {
+    const pbEl = document.getElementById('hud-pb');
+    const pbValEl = document.getElementById('hud-pb-val');
+    if (pbEl) {
+      pbEl.classList.remove('hidden');
+      pbEl.classList.add('pb-new-record');
+      pbEl.textContent = '🏆 신기록!';
+    }
+    this.hud.showWaveMessage('🏆 신기록 달성!', true);
+  }
+
+  // ── 콤보 버스트 링 (5×/10× 콤보) ────────────────────────────
+  _showComboBurst(combo) {
+    const color = combo >= 10 ? '#ffee00' : '#ff8844';
+    const rings  = combo >= 10 ? 5 : 3;
+    if (combo >= 10) this.camCtrl?.shake(0.18);
+    for (let i = 0; i < rings; i++) {
+      const r = document.createElement('div');
+      r.style.cssText = `
+        position:fixed;left:50%;top:50%;
+        width:80px;height:80px;border-radius:50%;
+        border:3px solid ${color};
+        pointer-events:none;z-index:400;
+        animation:comboBurst ${0.55 + i * 0.08}s ease-out ${i * 75}ms forwards;
+      `;
+      document.body.appendChild(r);
+      setTimeout(() => r.remove(), 700 + i * 75);
+    }
+  }
+
+  // ── 보스 웨이브 레드 플래시 ──────────────────────────────────
+  _bossFlash() {
+    this.camCtrl?.shake(0.42);
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position:fixed;inset:0;
+      background:radial-gradient(ellipse at center, rgba(180,0,0,0.5) 0%, rgba(255,0,0,0.15) 60%, transparent 100%);
+      pointer-events:none;z-index:300;
+      animation:skillFlash 0.7s ease forwards;
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 700);
+  }
+}

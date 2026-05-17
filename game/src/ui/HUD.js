@@ -397,4 +397,56 @@ export class HUD {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 900);
   }
+  // ── 포획 크리처 이름 팝업 ─────────────────────────────────────
+  showCaptureNamePopup(name, icon = '✨') {
+    const el = document.getElementById('capture-name-popup');
+    if (!el) return;
+    if (this._cnpTimer) clearTimeout(this._cnpTimer);
+    if (this._cnpExitTimer) clearTimeout(this._cnpExitTimer);
+    el.innerHTML = `
+      <div class="cnp-caught">CAUGHT!</div>
+      <div class="cnp-icon">${icon}</div>
+      <div class="cnp-name">${name}</div>
+    `;
+    el.classList.remove('hidden', 'cnp-exit');
+    el.offsetHeight;
+    el.classList.add('cnp-enter');
+    this._cnpTimer = setTimeout(() => {
+      el.classList.remove('cnp-enter');
+      el.classList.add('cnp-exit');
+      this._cnpExitTimer = setTimeout(() => el.classList.add('hidden'), 360);
+    }, 1200);
+  }
+
+  // ── 웨이브 업그레이드 카드 ────────────────────────────────────
+  showUpgradeCards(options, onSelect) {
+    const overlay = document.getElementById('upgrade-card-overlay');
+    if (!overlay) { onSelect(0); return; }
+    overlay.innerHTML = `
+      <div class="upgrade-card-title">⚡ WAVE CLEAR</div>
+      <div class="upgrade-card-sub">업그레이드를 선택하세요</div>
+      <div class="upgrade-cards-row">
+        ${options.map((opt, i) => `
+          <div class="upgrade-card" data-idx="${i}">
+            <div class="upgrade-card-icon">${opt.icon}</div>
+            <div class="upgrade-card-name">${opt.name}</div>
+            <div class="upgrade-card-desc">${opt.desc}</div>
+            <div class="upgrade-card-pick">선택하기 →</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    overlay.classList.remove('hidden');
+    overlay.querySelectorAll('.upgrade-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const idx = parseInt(card.dataset.idx, 10);
+        overlay.style.animation = 'upgradeFadeIn 0.2s ease reverse forwards';
+        setTimeout(() => {
+          overlay.classList.add('hidden');
+          overlay.style.animation = '';
+          onSelect(idx);
+        }, 200);
+      }, { once: true });
+    });
+  }
 }

@@ -52,6 +52,7 @@ export class WaveSystem {
     this.comboTimer = 0;
     this.maxCombo = 0;
     this._spawnRings = []; // 스폰 링 이펙트 목록
+    this.onWaveClear = null; // (nextWave, spawnFn) — 업그레이드 카드 훅
     this._spawnWave(1);
   }
 
@@ -161,15 +162,21 @@ export class WaveSystem {
       this.waveActive = false;
       const nextWave = this.currentWave + 1;
       if (nextWave <= this.maxWaves) {
-        // 카운트다운 메시지 시퀀스 (1.5초 분할: 0.5s간격으로 3→2→1)
         const isBoss = nextWave === 4 && this.stage.miniBoss;
         const label  = isBoss ? '👑 보스 등장' : `웨이브 ${nextWave}`;
-        [3, 2, 1].forEach((n, idx) => {
-          setTimeout(() => {
-            if (this.onWaveComplete) this.onWaveComplete(`⚡ ${label} 준비 ${n}`, true);
-          }, idx * 350);
-        });
-        setTimeout(() => this._spawnWave(nextWave), 1500);
+        const doSpawn = () => {
+          [3, 2, 1].forEach((n, idx) => {
+            setTimeout(() => {
+              if (this.onWaveComplete) this.onWaveComplete(`⚡ ${label} 준비 ${n}`, true);
+            }, idx * 350);
+          });
+          setTimeout(() => this._spawnWave(nextWave), 1500);
+        };
+        if (this.onWaveClear) {
+          this.onWaveClear(nextWave, doSpawn);
+        } else {
+          doSpawn();
+        }
       }
     }
 
@@ -199,7 +206,7 @@ export class WaveSystem {
   }
 
   // ── 포획 시도 (확률 기반) ─────────────────────────────────────
-  tryCapture(playerPos, playerForward, captureRange) {
+  tryCapture(playerPos, playerForward, captureRange, luckBonus = 0) {
     if (!this.active) return null;
 
     for (const creature of this.creatures) {
@@ -215,8 +222,8 @@ export class WaveSystem {
       const dot = toCreature.normalize().dot(playerForward);
       if (dot < (creature.isBoss ? 0.0 : 0.1)) continue;
 
-      // 종별 포획 확률 체크 (핵심: 잠자리는 뒤에서만 잡힘)
-      const chance = creature.getCaptureChance(playerPos, playerForward);
+      // 종별 포획 확률 체크 + 럭키 보너스 (업그레이드 카드)
+      const chance = Math.min(1, creature.getCaptureChance(playerPos, playerForward) + luckBonus);
       if (Math.random() > chance) continue; // 확률 실패 → 놓침
 
       creature.capture();
