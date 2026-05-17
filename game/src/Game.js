@@ -1236,8 +1236,9 @@ export class Game {
         this.waves.creatures.forEach(c => {
           if (!c.alive || c.captured) return;
           if (c.mesh.position.distanceTo(pos) > 15) return;
-          const toC = c.mesh.position.clone().sub(pos).normalize();
-          if (toC.dot(fwd) < 0.2) return;
+          const _dx = c.mesh.position.x - pos.x, _dz = c.mesh.position.z - pos.z;
+          const _dl = Math.sqrt(_dx*_dx + _dz*_dz) || 1;
+          if ((_dx/_dl)*fwd.x + (_dz/_dl)*fwd.z < 0.2) return;
           c.capture();
           this.waves.capturedCount++;
           this.waves.combo++;
@@ -1278,11 +1279,11 @@ export class Game {
         break;
       }
       case 'skill_multi': {
-        // 분신 채망 — 3초간 포획 범위 3배
+        // 분신 채망 — 5초간 포획 범위 3배
         if (!this.player) break;
         this.player.captureRange *= 3;
         setTimeout(() => { if (this.player) this.player.captureRange /= 3; }, 5000);
-        this.hud.showWaveMessage('👐 분신 채망!');
+        this.hud.showWaveMessage('👐 분신 채망! (5초)');
         break;
       }
     }
