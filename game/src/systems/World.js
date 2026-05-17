@@ -98,77 +98,231 @@ export class World {
     this._build();
   }
 
-  // ── 공개: 지형 높이 쿼리 ──────────────────────────────────────
-  // 다중 옥타브 노이즈 합성 — 자연스러운 구릉 지형
+  // ── 공개: 지형 높이 쿼리 (스테이지별 고유 공식) ──────────────
   getHeight(x, z) {
-    const s = this._scl;
-    // 큰 언덕 (저주파 — 넓은 기복)
-    const macro  = Math.sin(x * 0.011 + 0.7) * Math.cos(z * 0.009 + 1.2) * 8 * s
-                 + Math.cos(x * 0.007 - z * 0.013 + 2.3) * 6 * s;
-    // 중간 굴곡 (중주파 — 언덕 세부)
-    const meso   = Math.sin(x * 0.024 + z * 0.019 + 0.4) * 3.5 * s
-                 + Math.cos(x * 0.031 - 0.8) * Math.sin(z * 0.026 + 1.7) * 2.5 * s;
-    // 미세 텍스처 (고주파 — 지면 요철)
-    const micro  = Math.sin(x * 0.055 + z * 0.048 + 3.1) * 0.9 * s
-                 + Math.cos(x * 0.072 - z * 0.061 + 0.5) * 0.6 * s;
-    const h = macro + meso + micro;
-    // 음수 영역은 거의 평탄하게 — 자연스러운 계곡 느낌
-    const soft = h >= 0 ? h : h * 0.06;
-    // 스폰 원점 근처(반경 20m)는 완전 평탄 — 시작점 안정성 보장
-    const d = Math.sqrt(x * x + z * z);
-    const fade = d < 18 ? 0 : d < 32 ? (d - 18) / 14 : 1;
+    const id  = this.stage.id;
+    const s   = this._scl;
+    const d   = Math.sqrt(x * x + z * z);
+    // 스폰 중심 평탄 페이드
+    const fade = d < 18 ? 0 : d < 34 ? (d - 18) / 16 : 1;
+
+    let h = 0;
+
+    if (id <= 3) {
+      // ── 공원 ─ 완만한 인공 언덕, 중앙 산책로 살짝 낮게
+      const roll  = Math.sin(x * 0.013 + 0.7) * Math.cos(z * 0.011 + 1.3) * 6 * s
+                  + Math.cos(x * 0.009 - z * 0.012 + 2.1) * 4 * s;
+      const bump  = Math.sin(x * 0.026 + z * 0.022 + 0.5) * 2.2 * s;
+      const path  = -Math.max(0, 1.8 - Math.abs(x) * 0.016) * 0.9 * s; // 중앙 통로 낮음
+      h = roll + bump + path;
+
+    } else if (id === 4) {
+      // ── 연못 ─ 그릇형: 중앙 낮고 외곽 완만히 상승, 수초 요철
+      const bowl   = Math.max(0, (d - 20) / 55) * 3.5 * s;
+      const ripple = Math.sin(x * 0.040 + 1.2) * Math.cos(z * 0.036 + 0.9) * 0.9 * s;
+      h = bowl + ripple;
+
+    } else if (id === 5) {
+      // ── 습지 ─ 더 울퉁불퉁, 수렁 패임, 갈대밭 언덕
+      const marsh  = Math.sin(x * 0.018 + 0.4) * Math.cos(z * 0.015 + 1.8) * 3.5 * s
+                   + Math.sin(x * 0.032 - z * 0.027 + 2.2) * 1.8 * s;
+      const sag    = -Math.max(0, 2.0 - Math.abs(Math.sin(x * 0.04) * Math.cos(z * 0.035)) * 4) * 0.5 * s;
+      h = marsh + sag;
+
+    } else if (id === 6) {
+      // ── 강가 ─ 강 중심 낮고 제방 경사, 모래톱 형성
+      const bank   = Math.max(0, (Math.abs(x) - 25) / 60) * 4.5 * s;
+      const ripple = Math.sin(x * 0.045 + 0.7) * Math.cos(z * 0.038 + 1.4) * 1.2 * s;
+      const bar    = Math.max(0, 1.5 - Math.abs(z * 0.018 + Math.sin(x * 0.012))) * 0.8 * s;
+      h = bank + ripple + bar;
+
+    } else if (id === 7) {
+      // ── 바닷가 ─ 완만한 해안 경사, 파도 지형, 모래언덕
+      const shore  = Math.max(0, d - 35) * 0.020 * s;
+      const dune   = Math.sin(x * 0.038 + 0.9) * Math.cos(z * 0.034 + 0.5) * 2.2 * s;
+      const tide   = Math.sin(x * 0.09 + z * 0.07 + 1.6) * 0.5 * s;
+      h = shore + dune + tide;
+
+    } else if (id === 8) {
+      // ── 깊은 바다 ─ 해저 평탄 + 산호초 언덕 + 해구
+      const seabed = Math.sin(x * 0.010 + 0.5) * Math.cos(z * 0.009 + 1.1) * 3.0 * s;
+      const reef   = Math.max(0, 2.0 - Math.sqrt((x - 60) * (x - 60) + (z + 40) * (z + 40)) * 0.03) * 3 * s;
+      h = seabed + reef;
+
+    } else if (id === 9) {
+      // ── 열대우림 ─ 울창한 언덕 + 계곡 + 강줄기
+      const jungle = Math.sin(x * 0.014 + 0.8) * Math.cos(z * 0.012 + 1.5) * 9 * s
+                   + Math.cos(x * 0.009 - z * 0.011 + 2.7) * 6 * s;
+      const vines  = Math.sin(x * 0.028 + z * 0.024 + 0.3) * 3.5 * s;
+      const river  = -Math.max(0, 2.5 - Math.abs(x * 0.015 + Math.sin(z * 0.008) * 3)) * 1.5 * s;
+      h = jungle + vines + river;
+
+    } else if (id === 10) {
+      // ── 사바나 ─ 광활한 평원 + 코피에(바위섬 언덕) 2개
+      const plains = Math.sin(x * 0.008 + 1.2) * Math.cos(z * 0.007 + 0.8) * 10 * s
+                   + Math.cos(x * 0.013 - z * 0.011 + 1.9) * 5 * s;
+      const micro  = Math.sin(x * 0.050 + z * 0.045 + 2.8) * 1.4 * s;
+      const kopje1 = Math.max(0, 12 * s - Math.sqrt((x + 90) * (x + 90) + (z - 70) * (z - 70)) * 0.18 * s);
+      const kopje2 = Math.max(0,  8 * s - Math.sqrt((x - 130) * (x - 130) + (z + 85) * (z + 85)) * 0.14 * s);
+      h = plains + micro + kopje1 + kopje2;
+
+    } else if (id === 11) {
+      // ── 설산 ─ 뾰족한 봉우리 + 눈 덮인 능선 + 빙하 계곡
+      const peaks  = Math.sin(x * 0.010 + 0.6) * 18 * s + Math.cos(z * 0.009 + 2.0) * 15 * s;
+      const ridges = Math.sin(x * 0.022 + z * 0.018 + 0.4) * 8 * s
+                   + Math.cos(x * 0.030 - z * 0.024 + 1.3) * 5 * s;
+      const glacier = -Math.max(0, 5 * s - Math.sqrt((x + 50) * (x + 50) + z * z) * 0.06 * s) * 0.6;
+      const detail  = Math.sin(x * 0.065 + z * 0.058 + 2.2) * 1.8 * s;
+      h = peaks + ridges + glacier + detail;
+
+    } else if (id === 12) {
+      // ── 밀림 ─ 두꺼운 식생, 계단식 지형, 숨겨진 계곡
+      const canopy = Math.sin(x * 0.012 + 0.3) * Math.cos(z * 0.010 + 1.7) * 14 * s
+                   + Math.cos(x * 0.008 - z * 0.007 + 2.4) * 10 * s;
+      const steps  = Math.sin(x * 0.025 + z * 0.020 + 1.0) * 5.5 * s;
+      const gorge  = -Math.max(0, 3.5 - Math.abs(x * 0.012 + Math.sin(z * 0.009) * 5)) * 2.5 * s;
+      const tex    = Math.sin(x * 0.070 + z * 0.062 + 3.0) * 1.2 * s;
+      h = canopy + steps + gorge + tex;
+
+    } else if (id === 13) {
+      // ── 화산지대 ─ 화산 콘 + 용암 평원 + 절벽
+      const lava   = Math.sin(x * 0.011 + 0.9) * Math.cos(z * 0.010 + 1.4) * 16 * s
+                   + Math.cos(x * 0.007 - z * 0.009 + 3.2) * 10 * s;
+      const cliffs = Math.sin(x * 0.022 + z * 0.018 + 0.7) * 7 * s;
+      const rough  = Math.sin(x * 0.048 + z * 0.042 + 1.9) * 2.8 * s;
+      // 화산 봉우리 고정 위치
+      const v1 = Math.max(0, 20 * s - Math.sqrt((x - 150) * (x - 150) + (z + 80) * (z + 80)) * 0.25 * s);
+      h = lava + cliffs + rough + v1;
+
+    } else if (id === 14) {
+      // ── 공룡섬 ─ 극적 지형, 메사(탁상지형), 협곡
+      const mesa   = Math.sin(x * 0.010 + 0.5) * 20 * s + Math.cos(z * 0.009 + 2.1) * 14 * s;
+      const canyon = -Math.max(0, 6 * s - Math.abs(Math.sin(x * 0.014 + z * 0.010)) * 10 * s);
+      const rough  = Math.sin(x * 0.040 + z * 0.035 + 2.4) * 3.5 * s;
+      const pillar = Math.max(0, 8 * s - Math.sqrt((x + 100) * (x + 100) + (z - 130) * (z - 130)) * 0.20 * s);
+      h = mesa + canyon + rough + pillar;
+
+    } else {
+      // ── 우주 (15) ─ 달 표면, 크레이터 분지 + 평탄 기저
+      const moonBase = Math.sin(x * 0.012 + 0.4) * Math.cos(z * 0.010 + 1.0) * 2.5;
+      const crater1  = -Math.max(0, 5.0 - Math.sqrt((x - 55) * (x - 55) + (z - 35) * (z - 35)) * 0.09);
+      const crater2  = -Math.max(0, 3.5 - Math.sqrt((x + 75) * (x + 75) + (z + 55) * (z + 55)) * 0.07);
+      const crater3  = -Math.max(0, 4.0 - Math.sqrt((x - 20) * (x - 20) + (z + 100) * (z + 100)) * 0.08);
+      h = moonBase + crater1 + crater2 + crater3;
+    }
+
+    const soft = h >= 0 ? h : h * 0.07;
     return soft * fade;
+  }
+
+  // ── 스테이지별 조명·안개 파라미터 ────────────────────────────
+  _stageAtmosphere(id, tod) {
+    // [ambientColor, ambientInt, sunColor, sunInt, sunX, sunY, sunZ, fogColorHex, fogBaseDensity, hemiGround]
+    const M = {
+      1:  [0xffeedd, 0.75, 0xfffce0, 1.45, 120, 280,  80, 0x99ccee, 0.006, 0x66bb44],
+      2:  [0xfff0f0, 0.80, 0xfffde0, 1.50,  90, 260,  60, 0xaaddff, 0.005, 0x77cc55],
+      3:  [0xeeffee, 0.78, 0xffffe0, 1.45, 100, 270,  70, 0xaaccee, 0.006, 0x66aa44],
+      4:  [0xddeecc, 0.68, 0xddfaff, 1.30,  70, 220,  90, 0x88bbdd, 0.009, 0x446633],
+      5:  [0xaabbaa, 0.55, 0xbbddcc, 1.10,  40, 180, 110, 0x557766, 0.012, 0x334433],
+      6:  [0xddeeff, 0.72, 0xeef8ff, 1.35,  80, 230,  70, 0x99bbdd, 0.008, 0x557744],
+      7:  [0xfff5dd, 0.85, 0xfffacc, 1.55, 150, 320, 100, 0xbbddff, 0.004, 0xcc9944],
+      8:  [0x002244, 0.35, 0x2244aa, 0.80,  30, 120,  60, 0x001133, 0.015, 0x001122],
+      9:  [0x88cc88, 0.60, 0xaaffaa, 1.20,  60, 200,  80, 0x44aa55, 0.014, 0x226622],
+      10: [0xffcc88, 0.82, 0xffa030, 1.50, 180, 300, 120, 0xffbb66, 0.004, 0xaa7722],
+      11: [0xccddff, 0.70, 0xeef5ff, 1.30,  60, 200, -60, 0xaaccee, 0.012, 0x88aacc],
+      12: [0x224422, 0.50, 0x88dd88, 1.10,  40, 180,  90, 0x225533, 0.016, 0x112211],
+      13: [0x442211, 0.55, 0xff6622, 1.30, 200, 250,  80, 0xff6633, 0.010, 0x331100],
+      14: [0x553322, 0.60, 0xddaa44, 1.25, 160, 240,  90, 0xaa7744, 0.008, 0x442211],
+      15: [0x000011, 0.15, 0x6688ff, 0.60,   0, 500,   0, 0x000011, 0.000, 0x000011],
+    };
+    return M[id] ?? M[1];
   }
 
   _build() {
     const env = this.stage.env;
     const tod = this.settings.timeOfDay;
+    const id  = this.stage.id;
 
     let skyColor = env.sky ?? 0x87ceeb;
-    if (tod === 'night') skyColor = 0x000d1a;
+    if (tod === 'night') skyColor = id === 15 ? 0x000011 : 0x000d1a;
     else if (tod === 'dusk') skyColor = 0xff6633;
 
-    // 하늘 도움 (gradient dome) + 안개는 horizon 색 기준
+    // ── 대기 파라미터 (스테이지별) ────────────────────────────
+    const [ambCol, ambInt, sunCol, sunInt, sunX, sunY, sunZ, fogHex, fogBase, hemiGnd]
+      = this._stageAtmosphere(id, tod);
+
+    // 시간대 보정
+    const todAmbMult = tod === 'night' ? 0.28 : tod === 'dusk' ? 0.60 : 1.00;
+    const todSunMult = tod === 'night' ? 0.20 : tod === 'dusk' ? 0.70 : 1.00;
+    const actualSunCol  = tod === 'night' ? 0x445577 : tod === 'dusk' ? 0xff7722 : sunCol;
+    const actualFogHex  = tod === 'night' ? (id === 15 ? 0x000011 : 0x050d1a) : tod === 'dusk' ? 0xaa4422 : fogHex;
+
+    // 하늘 돔
     const horizonColor = this._horizonColor(skyColor, tod);
     this.scene.background = null;
     this._buildSkyDome(skyColor, horizonColor, tod);
 
-    // 안개: 맑은날 시야 확보, 안개날씨만 의미있는 밀도
-    const fogMult  = this.settings.weather === 'fog'  ? 2.5
-                   : this.settings.weather === 'rain' ? 1.3 : 1.0;
-    const fogDense = (env.fogDensity ?? 0.008) * fogMult * 0.20;
-    this.scene.fog = new THREE.FogExp2(new THREE.Color(horizonColor), fogDense);
+    // 안개
+    const fogWMult = this.settings.weather === 'fog'  ? 2.8
+                   : this.settings.weather === 'rain' ? 1.4 : 1.0;
+    const fogDense = id === 15 ? 0 : Math.max(0.001, fogBase * fogWMult * 0.22);
+    this.scene.fog = id === 15 ? null : new THREE.FogExp2(new THREE.Color(actualFogHex), fogDense);
 
-    // 조명 — 낮 시간대는 밝고 선명하게, 그림자 소프트
-    const ambInt  = tod === 'night' ? 0.30 : tod === 'dusk' ? 0.60 : 1.00;
-    const sunCol  = tod === 'night' ? 0x7799cc : tod === 'dusk' ? 0xff8833 : 0xfffdf0;
-    const ambient = new THREE.AmbientLight(0xffffff, ambInt * 0.70);
-    const sun     = new THREE.DirectionalLight(sunCol, ambInt * 1.4);
-    sun.position.set(80, 200, 100);
+    // 조명
+    const ambient = new THREE.AmbientLight(new THREE.Color(ambCol), ambInt * todAmbMult);
+    const sun     = new THREE.DirectionalLight(new THREE.Color(actualSunCol), sunInt * todSunMult);
+    sun.position.set(sunX, sunY, sunZ);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.radius = 2; // 소프트 그림자
+    sun.shadow.radius     = id >= 13 ? 1.5 : 2.5;
     sun.shadow.camera.near = 1;
-    sun.shadow.camera.far  = 600;
-    sun.shadow.camera.left = sun.shadow.camera.bottom = -200;
-    sun.shadow.camera.right = sun.shadow.camera.top  =  200;
-    const hemi = new THREE.HemisphereLight(skyColor, env.ground ?? 0x558833, 0.50);
+    sun.shadow.camera.far  = 700;
+    sun.shadow.camera.left = sun.shadow.camera.bottom = -220;
+    sun.shadow.camera.right = sun.shadow.camera.top   =  220;
+    const hemi = new THREE.HemisphereLight(skyColor, new THREE.Color(hemiGnd), 0.55 * todAmbMult);
+
+    // 스테이지별 보조 조명
+    if (id === 5 || id === 12) {
+      // 습지·밀림: 녹색 반사광 (대기 산란)
+      const fillGreen = new THREE.DirectionalLight(0x224422, 0.25);
+      fillGreen.position.set(-60, 80, 40);
+      this.scene.add(fillGreen);
+      this.objects.push(fillGreen);
+    }
+    if (id === 13 || id === 14) {
+      // 화산·공룡섬: 붉은 지면 반사 (용암 글로우)
+      const lavaGlow = new THREE.PointLight(0xff4400, 1.5, 160);
+      lavaGlow.position.set(0, 5, 0);
+      this.scene.add(lavaGlow);
+      this.objects.push(lavaGlow);
+    }
+    if (id === 15) {
+      // 우주: 원형 점광원 (행성 반사)
+      const starLight = new THREE.PointLight(0x6688ff, 1.0, 800);
+      starLight.position.set(0, 400, 0);
+      this.scene.add(starLight);
+      this.objects.push(starLight);
+    }
+
     this.scene.add(ambient, sun, hemi);
     this.objects.push(ambient, sun, hemi);
 
     this._buildGround(env);
 
-    const id = this.stage.id;
-    if (id <= 3)  this._buildPark();
+    if      (id <= 3)  this._buildPark();
     else if (id <= 5)  this._buildPond();
-    else if (id <= 8)  this._buildOcean();
-    else if (id <= 10) this._buildSavanna();
-    else if (id <= 12) this._buildForest();
+    else if (id === 6) this._buildRiver();
+    else if (id === 7) this._buildBeach();
+    else if (id === 8) this._buildOcean();
+    else if (id === 9) this._buildJungle();
+    else if (id === 10)this._buildSavanna();
+    else if (id === 11)this._buildSnowMtn();
+    else if (id === 12)this._buildForest();
     else if (id <= 14) this._buildDinoIsland();
     else               this._buildSpace();
 
     if (this.settings.weather === 'rain') this._buildRain();
-    else if (this.stage.id === 11)        this._buildSnow();
+    else if (id === 11)                   this._buildSnow();
   }
 
   // ── horizon 색: 대기 산란 — 하늘색을 유지하면서 살짝 밝게
@@ -263,53 +417,148 @@ export class World {
     addLayer(80,   4.0, 0xffe8c0, 1.00); // 초밝은 별
   }
 
-  // ── 지면 — 3채널 vertexColor: 안전(밝음)/위험(어두움) + 고도 음영 ─
+  // ── 스테이지별 지면 컬러 팔레트 ──────────────────────────────
+  _groundPalette(id) {
+    // [base, highlight, shadow, accent, accent2]
+    const P = {
+      1:  [0x52b34a, 0x6ecb5e, 0x3a7a2e, 0xd4a856, 0x8fcc70], // 공원: 잔디+흙길+밝은풀
+      2:  [0x5abf4e, 0x7cd96a, 0x3a8232, 0xe8b86a, 0xffddaa], // 꽃밭: 밝은 초록+꽃밭 황토
+      3:  [0x4aaa40, 0x62c456, 0x2e7428, 0xb8a060, 0x7acc60], // 잔디밭
+      4:  [0x3a7a40, 0x4ea050, 0x1e4a28, 0x2a6696, 0x8ab060], // 연못: 수풀+수면
+      5:  [0x2a5a35, 0x3a7a48, 0x162c1c, 0x1a4450, 0x4a8060], // 습지: 어두운 수렁
+      6:  [0x557040, 0x6a8e52, 0x384828, 0x8b7040, 0x9aaa68], // 강가: 제방+모래
+      7:  [0xd4c080, 0xeedd99, 0xa89050, 0x2266aa, 0xc8b070], // 바닷가: 모래+모래언덕
+      8:  [0x0a3050, 0x1a5070, 0x051828, 0x0d4a7a, 0x1a6888], // 깊은바다: 어두운 해저
+      9:  [0x2a6630, 0x3a8a42, 0x183820, 0x7a5a28, 0x5aaa50], // 열대우림: 짙은 정글
+      10: [0xc4924a, 0xdaac60, 0x886430, 0x6a4a20, 0xffcc70], // 사바나: 황토+마른풀
+      11: [0xd8e8f0, 0xf0f8ff, 0xa0b8c8, 0x7090a8, 0xffffff], // 설산: 흰 눈+얼음
+      12: [0x1e5228, 0x286c36, 0x102a16, 0x4a3010, 0x3a7830], // 밀림: 어두운 정글
+      13: [0x3a2010, 0x4e2c18, 0x1e0c08, 0x882200, 0x6a3018], // 화산: 검은 용암암석
+      14: [0x4a3820, 0x60502e, 0x2a2010, 0x663318, 0x786040], // 공룡섬: 선사 암석
+      15: [0x707888, 0x90a0b0, 0x404858, 0x303848, 0xb0c0d0], // 우주: 달 회색
+    };
+    return P[id] ?? P[1];
+  }
+
+  // ── 지면 — 스테이지별 다층 vertexColor (지형 + 고도 + 구역 반응) ─
   _buildGround(env) {
-    const seg = 120; // 해상도 업
+    const seg = 128; // 고해상도
     const geo = new THREE.PlaneGeometry(MAP_HALF * 2, MAP_HALF * 2, seg, seg);
     const pos = geo.attributes.position;
-
-    const baseCol    = new THREE.Color(env.ground ?? 0x56ab2f);
-    // 안전: 원색보다 채도+밝기 강조 (플레이어 출발점)
-    const safeCol    = baseCol.clone().offsetHSL(0,  0.08,  0.10);
-    // 위험: 어둡고 채도 낮아 긴장감 표현
-    const dangerCol  = baseCol.clone().offsetHSL(0, -0.08, -0.22);
-    // 경로 색상 (길, 모래 등)
-    const pathCol    = baseCol.clone().offsetHSL(0, -0.15, 0.12);
+    const id  = this.stage.id;
+    const [cBase, cHigh, cShadow, cAccent, cAccent2] = this._groundPalette(id).map(h => new THREE.Color(h));
 
     const colArr = new Float32Array(pos.count * 3);
 
     for (let i = 0; i < pos.count; i++) {
       const lx = pos.getX(i);
-      const ly = pos.getY(i);   // local Y = -worldZ after rotation
-      const d = Math.sqrt(lx * lx + ly * ly);
-      const h = this.getHeight(lx, -ly);
+      const ly = pos.getY(i); // PlaneGeometry local Y = world -Z
+      const wz = -ly;
+      const d  = Math.sqrt(lx * lx + ly * ly);
+      const h  = this.getHeight(lx, wz);
       pos.setZ(i, h);
 
-      // 거리 기반 색상: safe → danger
-      const t     = Math.min(1, Math.max(0, (d - this._zones.safe) / (this._zones.transition - this._zones.safe)));
-      const blend = t * t; // 이차 커브 — 경계 선명
-      let c = safeCol.clone().lerp(dangerCol, blend);
+      // 정규화 고도 (0~1)
+      const hNorm = Math.max(0, Math.min(1, (h + 1) / (Math.max(1, 18 * this._scl) + 1)));
+      // 중심~외곽 (0~1)
+      const dNorm = Math.min(1, d / 200);
 
-      // 고도 음영: 높은 지점은 약간 밝게 (자연스러운 언덕 느낌)
-      const hNorm = Math.max(0, h) / (8 * this._scl + 0.001);
-      c.offsetHSL(0, 0, hNorm * 0.06);
+      let c;
+
+      if (id <= 3) {
+        // 공원: 밝은 잔디 → 그늘진 풀 / 흙길 (낮은 h) 포함
+        const pathBlend = Math.max(0, 0.7 - Math.abs(lx) * 0.012) * Math.max(0, 1 - Math.abs(h) * 0.5);
+        c = cBase.clone().lerp(cHigh, hNorm * 0.5);
+        c.lerp(cAccent, pathBlend * 0.6); // 흙길 황토색
+        c.lerp(cShadow, dNorm * 0.25);
+
+      } else if (id <= 5) {
+        // 연못/습지: 물 가장자리 어두운 수렁색, 높은 곳 풀
+        const waterEdge = Math.max(0, 0.5 - d / 80) * 0.8;
+        c = cBase.clone().lerp(cShadow, waterEdge);
+        c.lerp(cHigh, hNorm * 0.6);
+
+      } else if (id <= 6) {
+        // 강가: 수변(낮은h) 모래+진흙, 높은 곳 제방 풀
+        const mudBlend = Math.max(0, 1 - hNorm * 3) * 0.7;
+        c = cBase.clone().lerp(cAccent, mudBlend);
+        c.lerp(cHigh, hNorm * 0.5);
+
+      } else if (id === 7) {
+        // 바닷가: 해안선(낮은 곳) 흰 모래, 멀리 모래언덕 황토
+        c = cBase.clone();
+        c.lerp(cHigh,   Math.max(0, 1 - hNorm * 2.5) * 0.7); // 평지 → 밝은 모래
+        c.lerp(cShadow, hNorm * 0.4);                         // 언덕 → 진한 모래
+        c.lerp(cAccent, dNorm * 0.35);                        // 외곽 황토
+
+      } else if (id === 8) {
+        // 깊은 바다: 해저 다크블루, 산호 언덕 청록
+        c = cBase.clone().lerp(cHigh, hNorm * 0.7);
+        c.lerp(cAccent2, hNorm * hNorm * 0.5); // 높은 산호초 청록
+
+      } else if (id === 9) {
+        // 열대우림: 짙은 초록 + 강줄기 낮은 곳 갈색
+        const streamBlend = Math.max(0, 1 - hNorm * 4) * Math.max(0, 0.8 - d / 120) * 0.6;
+        c = cBase.clone().lerp(cHigh, hNorm * 0.4);
+        c.lerp(cAccent, streamBlend); // 강줄기 갈색
+
+      } else if (id === 10) {
+        // 사바나: 황금빛 평원, 코피에 바위산 주변 암석색
+        const kopje1d = Math.sqrt((lx + 90) * (lx + 90) + (ly - 70) * (ly - 70));
+        const kopje2d = Math.sqrt((lx - 130) * (lx - 130) + (ly + 85) * (ly + 85));
+        const rockBlend = Math.max(0, 1 - Math.min(kopje1d, kopje2d) / 25) * 0.75;
+        c = cBase.clone().lerp(cHigh, Math.sin(lx * 0.04 + ly * 0.03) * 0.5 + 0.5);
+        c.lerp(cShadow, rockBlend); // 암석 주변 어둡게
+        c.lerp(cAccent2, hNorm * 0.3); // 언덕 정상 밝게
+
+      } else if (id === 11) {
+        // 설산: 흰 눈 (높은 곳), 낮은 곳 얼음 파랑
+        c = cShadow.clone().lerp(cBase, hNorm * 0.8);
+        c.lerp(cHigh, Math.max(0, hNorm - 0.5) * 2 * 0.9); // 고지대 순백
+        // 빙하 계곡: 약간 파란빛
+        const glacierBlend = Math.max(0, 0.5 - d / 80) * (1 - hNorm) * 0.5;
+        c.lerp(new THREE.Color(0x8ab0d0), glacierBlend);
+
+      } else if (id === 12) {
+        // 밀림: 짙은 정글, 고도 따라 이끼 → 나무 뿌리
+        c = cBase.clone().lerp(cShadow, (1 - hNorm) * 0.6);
+        c.lerp(cAccent, Math.max(0, 1 - hNorm * 3) * 0.45); // 낮은 곳 뿌리 갈색
+        c.lerp(cHigh, hNorm * 0.3);
+
+      } else if (id === 13) {
+        // 화산: 검은 용암 기반, 높이에 따라 적열(붉은 용암)
+        c = cBase.clone();
+        c.lerp(cAccent, hNorm * 0.7);       // 높은 곳 붉은 용암암
+        c.lerp(new THREE.Color(0xff4400), Math.max(0, hNorm - 0.6) * 2 * 0.35); // 화산 정상 용암
+
+      } else if (id === 14) {
+        // 공룡섬: 선사 암석, 계곡 어두움, 꼭대기 밝은 암석
+        c = cBase.clone().lerp(cHigh, hNorm * 0.5);
+        c.lerp(cShadow, (1 - hNorm) * dNorm * 0.45);
+        c.lerp(cAccent, Math.max(0, 0.4 - hNorm) * 0.5); // 협곡 저지대 적갈색
+
+      } else {
+        // 우주: 달 회색 + 크레이터 어두운 분지
+        c = cBase.clone().lerp(cHigh, hNorm * 0.5);
+        c.lerp(cShadow, Math.max(0, -h) * 0.3); // 크레이터 내부 어둡게
+        // 충돌 메테오라이트 흔적 (랜덤 점)
+        const meteorBlend = Math.max(0, Math.sin(lx * 0.18 + 2.1) * Math.cos(ly * 0.22 + 1.4) + 0.88) * 0.5;
+        c.lerp(cAccent, meteorBlend * 0.4);
+      }
 
       colArr[i * 3]     = c.r;
       colArr[i * 3 + 1] = c.g;
       colArr[i * 3 + 2] = c.b;
     }
+
     geo.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
     geo.computeVertexNormals();
 
-    const ground = new THREE.Mesh(
-      geo,
-      new THREE.MeshStandardMaterial({
-        vertexColors: true,
-        roughness: 0.92,
-        metalness: 0.00,
-      })
-    );
+    const ground = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: id === 7 ? 0.85 : id === 8 ? 0.6 : id === 15 ? 0.98 : 0.92,
+      metalness: 0.00,
+    }));
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     this.scene.add(ground);
@@ -435,7 +684,198 @@ export class World {
     this._spawnSeaStacks(12);
   }
 
-  // ── 사바나 (9~10) ─────────────────────────────────────────────
+  // ── 강가 (6) ──────────────────────────────────────────────────
+  _buildRiver() {
+    const rng = this._rng;
+    this._spawnDistantSilhouettes('pond');
+    // 구불구불 강 — 중심 X축 기준 폭 60m 띠
+    const riverMat = new THREE.MeshLambertMaterial({ color: 0x1a6080, transparent: true, opacity: 0.82 });
+    for (let seg = -8; seg <= 8; seg++) {
+      const sz = seg * 60;
+      const ox = Math.sin(sz * 0.012) * 40;   // 구불구불
+      const rw = new THREE.Mesh(new THREE.PlaneGeometry(60 + rng() * 20, 65), riverMat);
+      rw.rotation.x = -Math.PI / 2;
+      rw.position.set(ox, 0.12, sz);
+      this.scene.add(rw); this.objects.push(rw);
+    }
+    // 강둑 나무 양쪽
+    const bankL = poissonSpawn(80, MAP_HALF * 0.82, 7, rng).map(p => ({ x: p.x - 55, z: p.z }));
+    const bankR = poissonSpawn(80, MAP_HALF * 0.82, 7, rng).map(p => ({ x: p.x + 55, z: p.z }));
+    this._spawnTrees(0, 0, 'oak', [...bankL, ...bankR]);
+    this._spawnRockClusters(40, MAP_HALF * 0.80, 0.8, 3.5, 0x6a7055);
+    this._spawnAllFlowers(MAP_HALF * 0.78);
+    this._spawnReedBeds(20);
+    this._spawnFishingHuts(8);
+    this._spawnWaterfalls(3);
+    this._spawnSteppingStones(8);
+    this._spawnWoodenBridge();
+    this._spawnDriftwood(20);
+    this._spawnLanterns(12);
+    this._spawnPicnicTables(10);
+    // 강 모래톱 (모래 패치)
+    for (let i = 0; i < 8; i++) {
+      const bx = (rng() - 0.5) * 80, bz = (rng() - 0.5) * 200;
+      const bar = new THREE.Mesh(
+        new THREE.CircleGeometry(8 + rng() * 12, 12),
+        new THREE.MeshLambertMaterial({ color: 0xd4b870, transparent: true, opacity: 0.9 })
+      );
+      bar.rotation.x = -Math.PI / 2;
+      bar.position.set(bx, 0.14, bz);
+      this.scene.add(bar); this.objects.push(bar);
+    }
+    this._buildAtmosphereParticles({ count: 150, spread: 90, maxY: 5, color: 0xddeeff, size: 0.045 });
+  }
+
+  // ── 바닷가 (7) ────────────────────────────────────────────────
+  _buildBeach() {
+    const rng = this._rng;
+    this._spawnDistantSilhouettes('ocean');
+    // 바다: 중심에서 먼 쪽(외곽)을 바다로
+    const sea = new THREE.Mesh(
+      new THREE.PlaneGeometry(MAP_HALF * 2, MAP_HALF * 2, 2, 2),
+      new THREE.MeshLambertMaterial({ color: 0x1a88cc, transparent: true, opacity: 0.90 })
+    );
+    sea.rotation.x = -Math.PI / 2;
+    sea.position.set(0, 0.06, -300);   // 한쪽으로 치우쳐 해안선 형성
+    this.scene.add(sea); this.objects.push(sea);
+    // 파도선 (하얀 물거품)
+    for (let i = 0; i < 5; i++) {
+      const wave = new THREE.Mesh(
+        new THREE.PlaneGeometry(MAP_HALF * 2, 4, 1, 1),
+        new THREE.MeshLambertMaterial({ color: 0xeeffff, transparent: true, opacity: 0.7 - i * 0.1 })
+      );
+      wave.rotation.x = -Math.PI / 2;
+      wave.position.set(0, 0.10, -180 - i * 18);
+      this.scene.add(wave); this.objects.push(wave);
+    }
+    this._spawnHeroLighthouse(220, -220);
+    this._spawnRockClusters(50, MAP_HALF * 0.85, 1.5, 6, 0x8a8070);
+    this._spawnCoral(50);
+    this._spawnShells(80);
+    this._spawnCliffs();
+    this._spawnBeachHuts(10);
+    this._spawnLifePreservers(14);
+    this._spawnPiers(4);
+    this._spawnDriftwood(30);
+    this._spawnTidePools(12);
+    this._spawnSeaStacks(8);
+    this._spawnAnchors(6);
+    // 야자나무 (해변 특유)
+    const palmPts = clusterSpawn(5, 8, 120, 50, rng);
+    this._spawnTrees(0, 0, 'palm', palmPts);
+    this._buildAtmosphereParticles({ count: 120, spread: 120, maxY: 8, color: 0xffeedd, size: 0.05 });
+  }
+
+  // ── 열대우림 (9) ──────────────────────────────────────────────
+  _buildJungle() {
+    const rng = this._rng;
+    this._spawnDistantSilhouettes('forest');
+    // 정글 강 (중심 북동쪽)
+    const riverMat = new THREE.MeshLambertMaterial({ color: 0x1a4a30, transparent: true, opacity: 0.80 });
+    for (let seg = -6; seg <= 6; seg++) {
+      const sz = seg * 65 + 30;
+      const ox = Math.sin(sz * 0.010 + 1.3) * 55;
+      const rv = new THREE.Mesh(new THREE.PlaneGeometry(45 + rng() * 15, 70), riverMat);
+      rv.rotation.x = -Math.PI / 2;
+      rv.position.set(ox, 0.10, sz);
+      this.scene.add(rv); this.objects.push(rv);
+    }
+    // 열대 나무 — 야자+오크 혼합
+    const junglePts = clusterSpawn(18, 14, MAP_HALF * 0.88, 38, rng)
+      .filter(p => Math.hypot(p.x, p.z) > 32);
+    const palmPts = clusterSpawn(8, 6, MAP_HALF * 0.75, 45, rng);
+    this._spawnTrees(0, 0, 'oak',  junglePts);
+    this._spawnTrees(0, 0, 'palm', palmPts);
+    this._spawnRockClusters(60, MAP_HALF * 0.85, 1, 4, 0x446655);
+    this._spawnMushrooms(50);
+    this._spawnFallenLogs(30);
+    this._spawnMossRocks(45);
+    this._spawnAllFlowers(MAP_HALF * 0.80, true);
+    this._spawnGiantFerns(60);
+    this._spawnForestShrine(3);
+    this._spawnVineBridges(4);
+    this._spawnFirePits(6);
+    this._spawnHangingLanterns(18);
+    this._spawnReedBeds(12);
+    this._spawnCattails(15, 30, 0, 60);
+    // 정글 폭포
+    this._spawnWaterfalls(5);
+    // 짙은 정글 대기 (열기와 안개)
+    this._buildAtmosphereParticles({ count: 350, spread: 120, maxY: 18, color: 0x88ff88, size: 0.065 });
+  }
+
+  // ── 설산 (11) ─────────────────────────────────────────────────
+  _buildSnowMtn() {
+    const rng = this._rng;
+    this._spawnDistantSilhouettes('forest');
+    // 빙하 (중심 계곡)
+    const iceMat = new THREE.MeshLambertMaterial({ color: 0x99ccee, transparent: true, opacity: 0.75 });
+    for (let seg = -4; seg <= 4; seg++) {
+      const sz = seg * 70;
+      const ox = Math.sin(sz * 0.008 + 0.5) * 30;
+      const ice = new THREE.Mesh(new THREE.PlaneGeometry(55 + rng() * 20, 75), iceMat);
+      ice.rotation.x = -Math.PI / 2;
+      ice.position.set(ox, 0.15, sz);
+      this.scene.add(ice); this.objects.push(ice);
+    }
+    // 침엽수 (낮은 고도에만)
+    const pineBase = poissonSpawn(90, MAP_HALF * 0.82, 9, rng)
+      .filter(p => {
+        const h = this.getHeight(p.x, p.z);
+        return h < 6; // 낮은 지역에만 나무
+      });
+    this._spawnTrees(0, 0, 'pine', pineBase);
+    this._spawnRockClusters(70, MAP_HALF * 0.85, 1.5, 6, 0x9aafbb);
+    this._spawnMossRocks(40);
+    this._spawnFallenLogs(25);
+    // 눈 쌓인 바위
+    this._spawnSnowCapRocks(50);
+    this._buildSnow();   // 눈 파티클
+    // 아이스 크리스탈 (장식)
+    this._spawnIceCrystals(30);
+    this._buildAtmosphereParticles({ count: 200, spread: 120, maxY: 20, color: 0xeef8ff, size: 0.060 });
+  }
+
+  // ── 내부 전용: 눈 덮인 바위 ──────────────────────────────────
+  _spawnSnowCapRocks(count) {
+    const rng = this._rng;
+    const mat = new THREE.MeshLambertMaterial({ color: 0x889aaa });
+    const snowMat = new THREE.MeshLambertMaterial({ color: 0xf4f8ff });
+    for (let i = 0; i < count; i++) {
+      const x = (rng() - 0.5) * MAP_HALF * 1.6;
+      const z = (rng() - 0.5) * MAP_HALF * 1.6;
+      const y = this.getHeight(x, z);
+      const r = 1.2 + rng() * 2.5;
+      const rock = new THREE.Mesh(new THREE.SphereGeometry(r, 6, 5), mat.clone());
+      rock.scale.set(1, 0.6 + rng() * 0.5, 1);
+      rock.position.set(x, y + r * 0.4, z);
+      this.scene.add(rock); this.objects.push(rock);
+      // 눈 캡
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(r * 0.8, 6, 4), snowMat.clone());
+      cap.position.set(x, y + r * 0.8, z);
+      cap.scale.set(1, 0.3, 1);
+      this.scene.add(cap); this.objects.push(cap);
+    }
+  }
+
+  // ── 내부 전용: 빙하 크리스탈 ─────────────────────────────────
+  _spawnIceCrystals(count) {
+    const rng = this._rng;
+    const mat = new THREE.MeshLambertMaterial({ color: 0xaaddff, transparent: true, opacity: 0.75 });
+    for (let i = 0; i < count; i++) {
+      const x = (rng() - 0.5) * MAP_HALF * 1.4;
+      const z = (rng() - 0.5) * MAP_HALF * 1.4;
+      const y = this.getHeight(x, z);
+      const h = 1.5 + rng() * 3.5;
+      const crystal = new THREE.Mesh(new THREE.ConeGeometry(0.4 + rng() * 0.4, h, 5), mat.clone());
+      crystal.position.set(x, y + h * 0.5, z);
+      crystal.rotation.y = rng() * Math.PI * 2;
+      crystal.rotation.z = (rng() - 0.5) * 0.3;
+      this.scene.add(crystal); this.objects.push(crystal);
+    }
+  }
+
+  // ── 사바나 (10) ───────────────────────────────────────────────
   _buildSavanna() {
     const rng = this._rng;
     this._spawnDistantSilhouettes('savanna');
@@ -3442,4 +3882,6 @@ export class World {
     this._zones.landmarks.push({ x, z });
     return { x, z };
   }
+
+
 }
