@@ -709,7 +709,7 @@ export class Player {
       _mv.normalize();
       // 터치 조이스틱 아날로그 스케일 (키보드는 항상 1.0)
       const analogScale = this._touchSpeedScale ?? 1.0;
-      _vel.lerp(_mv.clone().multiplyScalar(this.speed * Math.max(0.25, analogScale)), Math.min(1, 10 * delta));
+      _vel.lerp(_mv.multiplyScalar(this.speed * Math.max(0.25, analogScale)), Math.min(1, 10 * delta));
     } else {
       _vel.lerp(_mv.set(0, 0, 0), Math.min(1, 13 * delta));
     }
