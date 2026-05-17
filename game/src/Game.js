@@ -1096,7 +1096,7 @@ export class Game {
 
   // ── 컨페티 (스테이지 클리어 이펙트) ──────────────────────────
   _launchConfetti() {
-    const MAX = 60;
+    const MAX = 120;
     if (document.querySelectorAll('.confetti-p').length >= MAX) return;
     if (!document.getElementById('_confettiStyle')) {
       const s = document.createElement('style');
@@ -1108,7 +1108,7 @@ export class Game {
       document.head.appendChild(s);
     }
     const colors = ['#ffd700','#ff6b35','#4ecdc4','#ff88ff','#4488ff','#fff','#aaff88'];
-    const count  = Math.min(22, MAX - document.querySelectorAll('.confetti-p').length);
+    const count  = Math.min(44, MAX - document.querySelectorAll('.confetti-p').length);
     for (let i = 0; i < count; i++) {
       const el  = document.createElement('div');
       el.className = 'confetti-p';
@@ -1213,6 +1213,7 @@ export class Game {
     } else {
       audioManager.sfxCaptureFail();
       this.hud.showMissPopup?.();
+      this._showMissVignette();
     }
   }
 
@@ -1222,6 +1223,31 @@ export class Game {
     el.style.opacity = '1';
     if (this._captureFlashTimeout) clearTimeout(this._captureFlashTimeout);
     this._captureFlashTimeout = setTimeout(() => { el.style.opacity = '0'; }, 140);
+  }
+
+  _showMissVignette() {
+    let el = document.getElementById('miss-vignette');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'miss-vignette';
+      el.style.cssText = [
+        'position:fixed',
+        'inset:0',
+        'pointer-events:none',
+        'z-index:9997',
+        'box-shadow:inset 0 0 120px 40px rgba(255,0,0,0.45)',
+        'opacity:0',
+        'transition:opacity 0.1s',
+      ].join(';');
+      document.body.appendChild(el);
+    }
+    clearTimeout(this._missVigTimeout);
+    el.style.transition = 'opacity 0.1s';
+    el.style.opacity = '0.8';
+    this._missVigTimeout = setTimeout(() => {
+      el.style.transition = 'opacity 0.2s';
+      el.style.opacity = '0';
+    }, 100);
   }
 
   // ── 웨이브 업그레이드 카드 ────────────────────────────────────
@@ -1578,7 +1604,27 @@ export class Game {
   }
 
   // ── 이벤트 핸들러 ─────────────────────────────────────────────
-  _onCapture() {}
+  _onCapture(data) {
+    if (!data) return;
+    const creature = data.creature;
+
+    // 보스 포획 시 강화 이펙트
+    if (creature?.isBoss) {
+      this.camCtrl?.shake(0.35);
+      document.body.style.filter = 'brightness(1.8) saturate(2)';
+      setTimeout(() => { document.body.style.filter = ''; }, 200);
+      this.hud.showWaveMessage('\u{1F451} BOSS CAPTURED!', false);
+    }
+
+    // 콤보 10 이상 화면 펄스
+    const combo = data.combo ?? 0;
+    if (combo >= 10) {
+      document.documentElement.style.setProperty('--combo-glow', '1');
+      setTimeout(() => {
+        document.documentElement.style.setProperty('--combo-glow', '0');
+      }, 600);
+    }
+  }
 
   // 공격형 동물에게 피격
   _onDamage(damage) {

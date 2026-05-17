@@ -120,6 +120,10 @@ export class HUD {
   update(state, totalCoins, delta = 0, sessionScore = 0) {
     const t = state.timeRemaining;
     this.timer.textContent = t;
+    // 타이머 긴박감 클래스
+    this.timer.classList.toggle('timer-urgent',  t <= 10);
+    this.timer.classList.toggle('timer-warning', t > 10 && t <= 30);
+    this.timer.classList.toggle('timer-normal',  t > 30);
     this.timer.classList.toggle('urgent', t <= 10);
 
     // 포획 수 증가 시 바운스 애니메이션
@@ -141,6 +145,12 @@ export class HUD {
       // 색상: 청록(0%) → 금색(50%) → 주황(100%)
       const hue = Math.round(180 - pct * 1.5);
       this.captureBar.style.background = `hsl(${hue},90%,55%)`;
+      // 진행바 래퍼에 단계 클래스 적용
+      const barWrap = this.captureBar.parentElement;
+      if (barWrap) {
+        barWrap.classList.toggle('progress-near', pct >= 80);
+        barWrap.classList.toggle('progress-mid',  pct >= 50 && pct < 80);
+      }
     }
 
     const waveName = state.wave <= 3 ? `웨이브 ${state.wave}` : '⚡ 보스!';

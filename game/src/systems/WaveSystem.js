@@ -64,6 +64,8 @@ export class WaveSystem {
     if (wave <= 3) {
       // 일반 웨이브 – 스폰 수 0.4 → 1.0 (맵이 비어보이지 않게)
       const spawnMultiplier = wave === 1 ? 1.0 : wave === 2 ? 1.5 : 2.0;
+      // 웨이브 1 최소 스폰 거리: 플레이어로부터 30유닛 이상
+      const minSpawnDist = wave === 1 ? 30 : 0;
       this.stage.creatures.forEach(cfg => {
         const count = Math.ceil(cfg.count * spawnMultiplier * diff.countMult * 1.0);
         const speedMult = diff.speedMult * (wave === 3 ? 1.3 : 1.0);
@@ -72,11 +74,22 @@ export class WaveSystem {
           // 없으면 기존 랜덤 스폰으로 fallback (하위 호환)
           const hint = this.world ? this.world.getSpawnPosition(cfg.type) : null;
           const creature = new Creature(this.scene, { ...cfg, speed: cfg.speed * speedMult }, 110, hint); // spawnArea: 플레이 반경 120m 전체 분포
+          // 웨이브 1: 플레이어 위치(원점 기준)에서 최소 30유닛 이상 보장
+          if (minSpawnDist > 0) {
+            const pos = creature.mesh.position;
+            const dx = pos.x, dz = pos.z;
+            const d = Math.sqrt(dx * dx + dz * dz);
+            if (d < minSpawnDist) {
+              const scale = minSpawnDist / Math.max(d, 0.1);
+              pos.x *= scale;
+              pos.z *= scale;
+            }
+          }
           // LOD 분산 — 같은 프레임에 몰리지 않도록 오프셋 배정
           creature._tickOffset = this.creatures.length & 3; // 0~3 순환
           this.creatures.push(creature);
           // 스폰 링 이펙트 (웨이브 2+ 만 — 웨이브1은 게임 시작 직후라 어색함)
-          if (wave > 1) this._emitSpawnRing(creature.mesh.position);
+          if (wave > 1) this._emitSpawnRing(creature.mesh.position, false, wave);
         }
       });
     } else if (wave === 4 && this.stage.miniBoss) {
@@ -192,8 +205,9 @@ export class WaveSystem {
   }
 
   // ── 스폰 링 이펙트 ────────────────────────────────────────────
-  _emitSpawnRing(pos, isBoss = false) {
-    const color  = isBoss ? 0xff4400 : 0x4ecdc4;
+  _emitSpawnRing(pos, isBoss = false, wave = 0) {
+    // 웨이브 3은 주황색으로 긴장감 표현
+    const color  = isBoss ? 0xff4400 : wave === 3 ? 0xff6600 : 0x4ecdc4;
     const radius = isBoss ? 1.2 : 0.6;
     const geo = new THREE.TorusGeometry(radius, 0.06, 4, 20);
     const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false });
@@ -248,6 +262,7 @@ export class WaveSystem {
   }
 
   _comboMult() {
+    if (this.combo >= 15) return 2.5;
     if (this.combo >= 10) return 2.0;
     if (this.combo >= 5)  return 1.5;
     if (this.combo >= 3)  return 1.2;

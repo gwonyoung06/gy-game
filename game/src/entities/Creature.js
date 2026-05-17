@@ -135,89 +135,89 @@ const _tv2 = new THREE.Vector3();
 // style: 이동 방식 키
 export const PROFILES = {
   // ─── 곤충류 ─────────────────────────────
-  dragonfly:    { style:'erratic_hover', fleeRadius:9,  frontFleeBoost:3.5, captureChanceBack:0.95, captureChanceFront:0.05 },
-  butterfly:    { style:'flap_drift',    fleeRadius:4,  frontFleeBoost:1.2, captureChanceBack:0.90, captureChanceFront:0.65 },
-  bee:          { style:'buzz_hover',    fleeRadius:6,  frontFleeBoost:1.8, captureChanceBack:0.85, captureChanceFront:0.30 },
-  cicada:       { style:'erratic_hover', fleeRadius:7,  frontFleeBoost:2.0, captureChanceBack:0.88, captureChanceFront:0.15 },
-  ladybug:      { style:'walk_wander',   fleeRadius:3,  frontFleeBoost:1.2, captureChanceBack:0.90, captureChanceFront:0.70 },
-  beetle:       { style:'walk_wander',   fleeRadius:3,  frontFleeBoost:1.0, captureChanceBack:0.85, captureChanceFront:0.65 },
-  grasshopper:  { style:'hop_pause',     fleeRadius:8,  frontFleeBoost:3.0, captureChanceBack:0.92, captureChanceFront:0.08 },
-  mantis:       { style:'walk_wander',   fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.85, captureChanceFront:0.40 },
-  cricket:      { style:'hop_pause',     fleeRadius:6,  frontFleeBoost:2.0, captureChanceBack:0.88, captureChanceFront:0.25 },
-  stag:         { style:'flap_drift',    fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.85, captureChanceFront:0.45 },
-  worm:         { style:'walk_wander',   fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.95, captureChanceFront:0.85 },
-  mole:         { style:'walk_wander',   fleeRadius:4,  frontFleeBoost:1.2, captureChanceBack:0.88, captureChanceFront:0.60 },
-  snail:        { style:'walk_wander',   fleeRadius:1,  frontFleeBoost:1.0, captureChanceBack:0.99, captureChanceFront:0.95 },
-  pill_bug:     { style:'walk_wander',   fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.95, captureChanceFront:0.85 },
-  centipede:    { style:'walk_wander',   fleeRadius:4,  frontFleeBoost:1.3, captureChanceBack:0.88, captureChanceFront:0.55 },
-  firefly:      { style:'flap_drift',    fleeRadius:3,  frontFleeBoost:1.2, captureChanceBack:0.92, captureChanceFront:0.72 },
+  dragonfly:    { style:'erratic_hover', fleeRadius:9,  frontFleeBoost:3.5, captureChanceBack:0.65, captureChanceFront:0.05 },
+  butterfly:    { style:'flap_drift',    fleeRadius:4,  frontFleeBoost:1.2, captureChanceBack:0.65, captureChanceFront:0.65 },
+  bee:          { style:'buzz_hover',    fleeRadius:6,  frontFleeBoost:1.8, captureChanceBack:0.65, captureChanceFront:0.30 },
+  cicada:       { style:'erratic_hover', fleeRadius:7,  frontFleeBoost:2.0, captureChanceBack:0.65, captureChanceFront:0.15 },
+  ladybug:      { style:'walk_wander',   fleeRadius:3,  frontFleeBoost:1.2, captureChanceBack:0.65, captureChanceFront:0.65 },
+  beetle:       { style:'walk_wander',   fleeRadius:3,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  grasshopper:  { style:'hop_pause',     fleeRadius:8,  frontFleeBoost:3.0, captureChanceBack:0.65, captureChanceFront:0.08 },
+  mantis:       { style:'walk_wander',   fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.65, captureChanceFront:0.40 },
+  cricket:      { style:'hop_pause',     fleeRadius:6,  frontFleeBoost:2.0, captureChanceBack:0.65, captureChanceFront:0.25 },
+  stag:         { style:'flap_drift',    fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.65, captureChanceFront:0.45 },
+  worm:         { style:'walk_wander',   fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  mole:         { style:'walk_wander',   fleeRadius:4,  frontFleeBoost:1.2, captureChanceBack:0.65, captureChanceFront:0.60 },
+  snail:        { style:'walk_wander',   fleeRadius:1,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  pill_bug:     { style:'walk_wander',   fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  centipede:    { style:'walk_wander',   fleeRadius:4,  frontFleeBoost:1.3, captureChanceBack:0.65, captureChanceFront:0.55 },
+  firefly:      { style:'flap_drift',    fleeRadius:3,  frontFleeBoost:1.2, captureChanceBack:0.65, captureChanceFront:0.65 },
   // ─── 연못 생물 ───────────────────────────
-  frog:         { style:'hop_pause',     fleeRadius:5,  frontFleeBoost:1.8, captureChanceBack:0.88, captureChanceFront:0.45 },
-  tadpole:      { style:'swim_curve',    fleeRadius:3,  frontFleeBoost:1.2, captureChanceBack:0.90, captureChanceFront:0.70 },
-  water_strider:{ style:'walk_wander',   fleeRadius:5,  frontFleeBoost:1.8, captureChanceBack:0.88, captureChanceFront:0.30 },
-  water_beetle: { style:'swim_curve',    fleeRadius:4,  frontFleeBoost:1.4, captureChanceBack:0.85, captureChanceFront:0.55 },
-  larvae:       { style:'walk_wander',   fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.95, captureChanceFront:0.85 },
-  leech:        { style:'walk_wander',   fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.95, captureChanceFront:0.80 },
-  crayfish:     { style:'sidewalk',      fleeRadius:4,  frontFleeBoost:1.5, captureChanceBack:0.85, captureChanceFront:0.50 },
-  salamander:   { style:'walk_wander',   fleeRadius:4,  frontFleeBoost:1.3, captureChanceBack:0.88, captureChanceFront:0.58 },
-  crucian:      { style:'swim_curve',    fleeRadius:4,  frontFleeBoost:1.5, captureChanceBack:0.88, captureChanceFront:0.55 },
-  loach:        { style:'swim_curve',    fleeRadius:3,  frontFleeBoost:1.3, captureChanceBack:0.90, captureChanceFront:0.65 },
-  catfish:      { style:'swim_curve',    fleeRadius:4,  frontFleeBoost:1.4, captureChanceBack:0.85, captureChanceFront:0.55 },
-  soft_turtle:  { style:'walk_wander',   fleeRadius:3,  frontFleeBoost:1.0, captureChanceBack:0.90, captureChanceFront:0.75 },
-  heron:        { style:'flap_drift',    fleeRadius:7,  frontFleeBoost:2.0, captureChanceBack:0.85, captureChanceFront:0.35 },
+  frog:         { style:'hop_pause',     fleeRadius:5,  frontFleeBoost:1.8, captureChanceBack:0.65, captureChanceFront:0.45 },
+  tadpole:      { style:'swim_curve',    fleeRadius:3,  frontFleeBoost:1.2, captureChanceBack:0.65, captureChanceFront:0.65 },
+  water_strider:{ style:'walk_wander',   fleeRadius:5,  frontFleeBoost:1.8, captureChanceBack:0.65, captureChanceFront:0.30 },
+  water_beetle: { style:'swim_curve',    fleeRadius:4,  frontFleeBoost:1.4, captureChanceBack:0.65, captureChanceFront:0.55 },
+  larvae:       { style:'walk_wander',   fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  leech:        { style:'walk_wander',   fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  crayfish:     { style:'sidewalk',      fleeRadius:4,  frontFleeBoost:1.5, captureChanceBack:0.65, captureChanceFront:0.50 },
+  salamander:   { style:'walk_wander',   fleeRadius:4,  frontFleeBoost:1.3, captureChanceBack:0.65, captureChanceFront:0.58 },
+  crucian:      { style:'swim_curve',    fleeRadius:4,  frontFleeBoost:1.5, captureChanceBack:0.65, captureChanceFront:0.55 },
+  loach:        { style:'swim_curve',    fleeRadius:3,  frontFleeBoost:1.3, captureChanceBack:0.65, captureChanceFront:0.65 },
+  catfish:      { style:'swim_curve',    fleeRadius:4,  frontFleeBoost:1.4, captureChanceBack:0.65, captureChanceFront:0.55 },
+  soft_turtle:  { style:'walk_wander',   fleeRadius:3,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  heron:        { style:'flap_drift',    fleeRadius:7,  frontFleeBoost:2.0, captureChanceBack:0.65, captureChanceFront:0.35 },
   // ─── 바다 생물 ───────────────────────────
-  crab:         { style:'sidewalk',      fleeRadius:4,  frontFleeBoost:1.5, captureChanceBack:0.85, captureChanceFront:0.50 },
-  conch:        { style:'walk_wander',   fleeRadius:1,  frontFleeBoost:1.0, captureChanceBack:0.99, captureChanceFront:0.95 },
-  abalone:      { style:'walk_wander',   fleeRadius:1,  frontFleeBoost:1.0, captureChanceBack:0.99, captureChanceFront:0.95 },
-  octopus:      { style:'pulse_drift',   fleeRadius:6,  frontFleeBoost:2.0, captureChanceBack:0.80, captureChanceFront:0.40 },
-  starfish:     { style:'walk_wander',   fleeRadius:1,  frontFleeBoost:1.0, captureChanceBack:0.99, captureChanceFront:0.95 },
-  shark:        { style:'circle_charge', fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.75, captureChanceFront:0.35,
+  crab:         { style:'sidewalk',      fleeRadius:4,  frontFleeBoost:1.5, captureChanceBack:0.65, captureChanceFront:0.50 },
+  conch:        { style:'walk_wander',   fleeRadius:1,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  abalone:      { style:'walk_wander',   fleeRadius:1,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  octopus:      { style:'pulse_drift',   fleeRadius:6,  frontFleeBoost:2.0, captureChanceBack:0.65, captureChanceFront:0.40 },
+  starfish:     { style:'walk_wander',   fleeRadius:1,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  shark:        { style:'circle_charge', fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.35,
                   aggroRange:18, damage:22, attackCooldown:2.0 },
-  puffer:       { style:'swim_curve',    fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.82, captureChanceFront:0.48 },
-  jellyfish:    { style:'pulse_drift',   fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.92, captureChanceFront:0.78 },
-  ray:          { style:'swim_curve',    fleeRadius:5,  frontFleeBoost:1.6, captureChanceBack:0.83, captureChanceFront:0.45 },
-  whale:        { style:'swim_curve',    fleeRadius:8,  frontFleeBoost:2.0, captureChanceBack:0.75, captureChanceFront:0.40 },
+  puffer:       { style:'swim_curve',    fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.65, captureChanceFront:0.48 },
+  jellyfish:    { style:'pulse_drift',   fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  ray:          { style:'swim_curve',    fleeRadius:5,  frontFleeBoost:1.6, captureChanceBack:0.65, captureChanceFront:0.45 },
+  whale:        { style:'swim_curve',    fleeRadius:8,  frontFleeBoost:2.0, captureChanceBack:0.65, captureChanceFront:0.40 },
   // ─── 열대 생물 ───────────────────────────
-  parrot:       { style:'flap_drift',    fleeRadius:6,  frontFleeBoost:1.8, captureChanceBack:0.85, captureChanceFront:0.38 },
-  chameleon:    { style:'walk_wander',   fleeRadius:3,  frontFleeBoost:1.2, captureChanceBack:0.90, captureChanceFront:0.65 },
-  sloth:        { style:'walk_wander',   fleeRadius:1,  frontFleeBoost:1.0, captureChanceBack:0.97, captureChanceFront:0.90 },
-  iguana:       { style:'walk_wander',   fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.85, captureChanceFront:0.50 },
-  spider:       { style:'walk_wander',   fleeRadius:4,  frontFleeBoost:1.3, captureChanceBack:0.88, captureChanceFront:0.60 },
+  parrot:       { style:'flap_drift',    fleeRadius:6,  frontFleeBoost:1.8, captureChanceBack:0.65, captureChanceFront:0.38 },
+  chameleon:    { style:'walk_wander',   fleeRadius:3,  frontFleeBoost:1.2, captureChanceBack:0.65, captureChanceFront:0.65 },
+  sloth:        { style:'walk_wander',   fleeRadius:1,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  iguana:       { style:'walk_wander',   fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.65, captureChanceFront:0.50 },
+  spider:       { style:'walk_wander',   fleeRadius:4,  frontFleeBoost:1.3, captureChanceBack:0.65, captureChanceFront:0.60 },
   // ─── 사바나 생물 ─────────────────────────
-  zebra:        { style:'walk_wander',   fleeRadius:12, frontFleeBoost:2.5, captureChanceBack:0.82, captureChanceFront:0.25 },
-  ostrich:      { style:'walk_wander',   fleeRadius:10, frontFleeBoost:2.2, captureChanceBack:0.80, captureChanceFront:0.30 },
-  hyena:        { style:'circle_charge', fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.78, captureChanceFront:0.35,
+  zebra:        { style:'walk_wander',   fleeRadius:12, frontFleeBoost:2.5, captureChanceBack:0.65, captureChanceFront:0.25 },
+  ostrich:      { style:'walk_wander',   fleeRadius:10, frontFleeBoost:2.2, captureChanceBack:0.65, captureChanceFront:0.30 },
+  hyena:        { style:'circle_charge', fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.35,
                   aggroRange:16, damage:18, attackCooldown:2.2 },
-  croc:         { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.72, captureChanceFront:0.28,
+  croc:         { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.28,
                   aggroRange:14, damage:25, attackCooldown:3.0 },
-  cheetah:      { style:'stalk_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.78, captureChanceFront:0.30,
+  cheetah:      { style:'stalk_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.30,
                   aggroRange:20, damage:20, attackCooldown:1.8 },
   // ─── 극지/설원 생물 ──────────────────────
-  snow_leopard: { style:'stalk_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.80, captureChanceFront:0.28,
+  snow_leopard: { style:'stalk_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.28,
                   aggroRange:18, damage:22, attackCooldown:2.0 },
-  polar_bear:   { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.70, captureChanceFront:0.20,
+  polar_bear:   { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.20,
                   aggroRange:16, damage:30, attackCooldown:3.0 },
-  penguin:      { style:'walk_wander',   fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.88, captureChanceFront:0.50 },
-  reindeer:     { style:'walk_wander',   fleeRadius:10, frontFleeBoost:2.0, captureChanceBack:0.82, captureChanceFront:0.30 },
-  mammoth:      { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.70, captureChanceFront:0.18,
+  penguin:      { style:'walk_wander',   fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.65, captureChanceFront:0.50 },
+  reindeer:     { style:'walk_wander',   fleeRadius:10, frontFleeBoost:2.0, captureChanceBack:0.65, captureChanceFront:0.30 },
+  mammoth:      { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.18,
                   aggroRange:18, damage:32, attackCooldown:3.5 },
-  gorilla:      { style:'circle_charge', fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.72, captureChanceFront:0.22,
+  gorilla:      { style:'circle_charge', fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.22,
                   aggroRange:16, damage:28, attackCooldown:2.5 },
-  cobra:        { style:'walk_wander',   fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.75, captureChanceFront:0.30,
+  cobra:        { style:'walk_wander',   fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.30,
                   aggroRange:10, damage:20, attackCooldown:2.0 },
-  jaguar:       { style:'stalk_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.78, captureChanceFront:0.25,
+  jaguar:       { style:'stalk_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.25,
                   aggroRange:22, damage:26, attackCooldown:2.2 },
   elephant:     { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.68, captureChanceFront:0.18,
                   aggroRange:15, damage:28, attackCooldown:3.5 },
   rhino:        { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.68, captureChanceFront:0.15,
                   aggroRange:16, damage:30, attackCooldown:3.0 },
   // ─── 공룡 ────────────────────────────────
-  pteranodon:   { style:'soar_circle',   fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.82, captureChanceFront:0.38 },
-  stegosaurus:  { style:'walk_wander',   fleeRadius:6,  frontFleeBoost:1.3, captureChanceBack:0.80, captureChanceFront:0.45 },
-  triceratops:  { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.72, captureChanceFront:0.22,
+  pteranodon:   { style:'soar_circle',   fleeRadius:5,  frontFleeBoost:1.5, captureChanceBack:0.65, captureChanceFront:0.38 },
+  stegosaurus:  { style:'walk_wander',   fleeRadius:6,  frontFleeBoost:1.3, captureChanceBack:0.65, captureChanceFront:0.45 },
+  triceratops:  { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.22,
                   aggroRange:18, damage:28, attackCooldown:3.0 },
-  brachiosaurus:{ style:'walk_wander',   fleeRadius:4,  frontFleeBoost:1.2, captureChanceBack:0.82, captureChanceFront:0.55 },
-  raptor:       { style:'stalk_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.75, captureChanceFront:0.22,
+  brachiosaurus:{ style:'walk_wander',   fleeRadius:4,  frontFleeBoost:1.2, captureChanceBack:0.65, captureChanceFront:0.55 },
+  raptor:       { style:'stalk_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.22,
                   aggroRange:24, damage:22, attackCooldown:1.6 },
   t_rex:        { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.12,
                   aggroRange:28, damage:38, attackCooldown:3.8 },
@@ -225,14 +225,14 @@ export const PROFILES = {
                   aggroRange:26, damage:35, attackCooldown:3.5 },
   ankylosaurus: { style:'stomp_charge',  fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.68, captureChanceFront:0.18,
                   aggroRange:15, damage:30, attackCooldown:4.0 },
-  parasaurolophus:{ style:'walk_wander', fleeRadius:8,  frontFleeBoost:1.8, captureChanceBack:0.78, captureChanceFront:0.35 },
+  parasaurolophus:{ style:'walk_wander', fleeRadius:8,  frontFleeBoost:1.8, captureChanceBack:0.65, captureChanceFront:0.35 },
   giganotosaurus:{ style:'stomp_charge', fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.60, captureChanceFront:0.10,
                   aggroRange:30, damage:42, attackCooldown:4.0 },
   // ─── 우주 ────────────────────────────────
-  drone:        { style:'erratic_hover', fleeRadius:8,  frontFleeBoost:2.0, captureChanceBack:0.85, captureChanceFront:0.30 },
-  alien:        { style:'erratic_hover', fleeRadius:6,  frontFleeBoost:1.8, captureChanceBack:0.80, captureChanceFront:0.40 },
-  debris:       { style:'flap_drift',    fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.92, captureChanceFront:0.80 },
-  giant_beetle: { style:'walk_wander',   fleeRadius:5,  frontFleeBoost:0,   captureChanceBack:0.75, captureChanceFront:0.25,
+  drone:        { style:'erratic_hover', fleeRadius:8,  frontFleeBoost:2.0, captureChanceBack:0.65, captureChanceFront:0.30 },
+  alien:        { style:'erratic_hover', fleeRadius:6,  frontFleeBoost:1.8, captureChanceBack:0.65, captureChanceFront:0.40 },
+  debris:       { style:'flap_drift',    fleeRadius:2,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
+  giant_beetle: { style:'walk_wander',   fleeRadius:5,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.25,
                   aggroRange:12, damage:18, attackCooldown:2.5 },
   giant_shark:  { style:'circle_charge', fleeRadius:0,  frontFleeBoost:0,   captureChanceBack:0.65, captureChanceFront:0.20,
                   aggroRange:22, damage:28, attackCooldown:2.0 },
@@ -1497,7 +1497,11 @@ export class Creature {
     _tv1.copy(playerPos).sub(this.mesh.position).normalize();
     const approachDot = _tv0.dot(_tv1); // +1=정면, -1=후방
     const t = (approachDot + 1) / 2;   // 0(후방) ~ 1(전방)
-    return prof.captureChanceFront * t + prof.captureChanceBack * (1 - t);
+    const baseChance = prof.captureChanceFront * t + prof.captureChanceBack * (1 - t);
+    // 거리 10 이내 접근 보너스 (가까이 다가갈수록 포획 쉬워짐)
+    const distToCreature = this.mesh.position.distanceTo(playerPos);
+    const closeBonus = distToCreature < 10 ? 0.1 : 0;
+    return Math.min(1, baseChance + closeBonus);
   }
 
   // ── 메인 업데이트 ─────────────────────────────────────────────
@@ -1510,6 +1514,8 @@ export class Creature {
     const style   = this.profile.style;
     const speed   = (this.config.speed || 1);
     const distToPlayer = this.mesh.position.distanceTo(playerPos);
+    // 플레이어 근접 시 도주 속도 부스트 (15유닛 이내)
+    const _proximityBoost = (distToPlayer < 15 && this._state === 'FLEE') ? 1.4 : 1.0;
 
     // ── 상태 전환 결정 ───────────────────────────────────────
     this._updateState(distToPlayer, playerPos, speed);
@@ -1526,21 +1532,22 @@ export class Creature {
     }
 
     // ── 이동 스타일별 처리 ───────────────────────────────────
+    const _boostedSpeed = speed * _proximityBoost;
     switch (style) {
-      case 'erratic_hover':   this._moveErraticHover(delta, playerPos, distToPlayer, speed); break;
-      case 'flap_drift':      this._moveFlapDrift(delta, playerPos, distToPlayer, speed); break;
-      case 'buzz_hover':      this._moveBuzzHover(delta, playerPos, distToPlayer, speed); break;
-      case 'hop_pause':       this._moveHopPause(delta, playerPos, distToPlayer, speed); break;
-      case 'swim_curve':      this._moveSwimCurve(delta, playerPos, distToPlayer, speed); break;
-      case 'sidewalk':        this._moveSidewalk(delta, playerPos, distToPlayer, speed); break;
-      case 'pulse_drift':     this._movePulseDrift(delta, playerPos, distToPlayer, speed); break;
-      case 'walk_wander':     this._moveWalkWander(delta, playerPos, distToPlayer, speed); break;
-      case 'soar_circle':     this._moveSoarCircle(delta, playerPos, distToPlayer, speed); break;
-      case 'circle_charge':   this._moveCircleCharge(delta, playerPos, distToPlayer, speed, onDamage); break;
-      case 'stalk_charge':    this._moveStalkCharge(delta, playerPos, distToPlayer, speed, onDamage); break;
-      case 'stomp_charge':    this._moveStompCharge(delta, playerPos, distToPlayer, speed, onDamage); break;
-      case 'ufo_hover':       this._moveUfoHover(delta, playerPos, distToPlayer, speed); break;
-      default:                this._moveWalkWander(delta, playerPos, distToPlayer, speed); break;
+      case 'erratic_hover':   this._moveErraticHover(delta, playerPos, distToPlayer, _boostedSpeed); break;
+      case 'flap_drift':      this._moveFlapDrift(delta, playerPos, distToPlayer, _boostedSpeed); break;
+      case 'buzz_hover':      this._moveBuzzHover(delta, playerPos, distToPlayer, _boostedSpeed); break;
+      case 'hop_pause':       this._moveHopPause(delta, playerPos, distToPlayer, _boostedSpeed); break;
+      case 'swim_curve':      this._moveSwimCurve(delta, playerPos, distToPlayer, _boostedSpeed); break;
+      case 'sidewalk':        this._moveSidewalk(delta, playerPos, distToPlayer, _boostedSpeed); break;
+      case 'pulse_drift':     this._movePulseDrift(delta, playerPos, distToPlayer, _boostedSpeed); break;
+      case 'walk_wander':     this._moveWalkWander(delta, playerPos, distToPlayer, _boostedSpeed); break;
+      case 'soar_circle':     this._moveSoarCircle(delta, playerPos, distToPlayer, _boostedSpeed); break;
+      case 'circle_charge':   this._moveCircleCharge(delta, playerPos, distToPlayer, _boostedSpeed, onDamage); break;
+      case 'stalk_charge':    this._moveStalkCharge(delta, playerPos, distToPlayer, _boostedSpeed, onDamage); break;
+      case 'stomp_charge':    this._moveStompCharge(delta, playerPos, distToPlayer, _boostedSpeed, onDamage); break;
+      case 'ufo_hover':       this._moveUfoHover(delta, playerPos, distToPlayer, _boostedSpeed); break;
+      default:                this._moveWalkWander(delta, playerPos, distToPlayer, _boostedSpeed); break;
     }
 
     // ── 공통 애니메이션 ──────────────────────────────────────
@@ -1865,6 +1872,14 @@ export class Creature {
   _moveWalkWander(delta, playerPos, distToPlayer, speed) {
     if (this._state === 'FLEE') {
       _tv0.copy(this.mesh.position).sub(playerPos); _tv0.y = 0; _tv0.normalize();
+      // 도주 중 랜덤 방향 변경 (빈도 0.035/frame — 빠른 지그재그)
+      if (Math.random() < 0.035) {
+        const angle = (Math.random() - 0.5) * Math.PI * 0.6;
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        const nx = _tv0.x * cos - _tv0.z * sin;
+        const nz = _tv0.x * sin + _tv0.z * cos;
+        _tv0.x = nx; _tv0.z = nz;
+      }
       this.mesh.position.addScaledVector(_tv0, speed * 2.5 * delta);
     } else if (this._state === 'AGGRO') {
       _tv0.copy(playerPos).sub(this.mesh.position); _tv0.y = 0;

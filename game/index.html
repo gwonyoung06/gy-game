@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
+  <div id="loading">
+    <div class="loading-logo">HUNTERS</div>
+    <div class="loading-sub">Loading...</div>
   <canvas id="game-canvas"></canvas>
 
   <!-- 화면 전환 페이드 오버레이 -->
@@ -216,12 +219,6 @@
   <!-- 생물 이름표 컨테이너 (게임 중 근거리 생물 위에 표시) -->
   <div id="creature-labels"></div>
 
-  <!-- 웨이브 클리어 후 업그레이드 카드 선택 -->
-  <div id="upgrade-card-overlay" class="hidden"></div>
-
-  <!-- 포획 성공 크리처 이름 팝업 -->
-  <div id="capture-name-popup" class="hidden"></div>
-
   <!-- 타이머 긴박감 오버레이 (10초 이하 빨간 비네트) -->
   <div id="timer-urgency"></div>
 
@@ -264,6 +261,7 @@
         <div class="pause-title">⏸ 일시정지</div>
         <button class="btn btn-primary pause-btn" id="btn-resume">▶ 계속하기</button>
         <button class="btn btn-secondary pause-btn" id="btn-pause-shop">🛒 상점 열기 (P)</button>
+        <button class="btn btn-secondary pause-btn" id="btn-pause-inventory">🎒 인벤토리 (I)</button>
         <button class="btn btn-secondary pause-btn" id="btn-pause-settings">⚙️ 설정</button>
         <button class="btn btn-secondary pause-btn" id="btn-quit-to-title">🏠 타이틀로 돌아가기</button>
       </div>
@@ -325,4 +323,53 @@
         <div class="stat-row"><span>최고 콤보</span><strong id="res-combo">0</strong></div>
         <div class="stat-row"><span>받은 피해</span><strong id="res-damage">0</strong></div>
         <div class="stat-row gold"><span>획득 코인</span><strong id="res-coins">+0</strong></div>
-        <div class="stat-row gold"><span>점수</span><strong id="res-score">0</s
+        <div class="stat-row gold"><span>점수</span><strong id="res-score">0</strong></div>
+      </div>
+      <div class="nickname-row" id="nickname-row">
+        <input type="text" id="nickname-input" placeholder="닉네임으로 랭킹 등록" maxlength="12" />
+        <button class="btn btn-secondary btn-sm" id="btn-register">등록</button>
+      </div>
+      <div class="result-btns">
+        <button class="btn btn-secondary" id="btn-to-shop">🛒 상점</button>
+        <button class="btn btn-secondary" id="btn-to-dex">📖 도감</button>
+        <button class="btn btn-primary" id="btn-retry">🔄 재도전</button>
+        <button class="btn btn-secondary" id="btn-next-stage">다음 →</button>
+        <button class="btn btn-back" id="btn-quit-result">🏠 나가기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 도감 -->
+  <div id="screen-dex" class="screen hidden">
+    <div class="screen-header">
+      <button class="btn btn-back" id="btn-back-from-dex">← 뒤로</button>
+      <h2>📖 크리처 도감</h2>
+      <div class="dex-progress-wrap">
+        <span id="dex-count">0 / 0</span>
+        <span id="dex-pct" style="color:var(--gold);font-weight:700;margin-left:8px;">0%</span>
+      </div>
+    </div>
+    <div class="dex-bar-outer">
+      <div class="dex-bar-fill" id="dex-bar-fill"></div>
+    </div>
+    <div id="dex-content" class="dex-content"></div>
+  </div>
+
+  <!-- 리더보드 -->
+  <div id="screen-leaderboard" class="screen hidden">
+    <div class="screen-header">
+      <button class="btn btn-back" id="btn-back-from-lb">← 뒤로</button>
+      <h2>🏆 리더보드</h2>
+    </div>
+    <div class="lb-tabs">
+      <button class="tab-btn active" data-tab="global">🌍 글로벌 TOP 100</button>
+      <button class="tab-btn" data-tab="personal">👤 내 기록</button>
+    </div>
+    <div class="lb-list" id="lb-content"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+  <div id="upgrade-card-overlay" class="hidden"></div>
+  <div id="capture-name-popup" class="hidden"></div>
+</body>
+</html>
