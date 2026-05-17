@@ -1281,6 +1281,35 @@ export class Game {
     return M[type] ?? '🐾';
   }
 
+  // ── 스킬 사용 시 화면 엣지 플래시 ──────────────────────────
+  _flashSkillActivation(skillId) {
+    // 스킬별 플래시 색상
+    const colorMap = {
+      whirlwind: '#00cfff',
+      magnet:    '#f39c12',
+      freeze:    '#a8e6ff',
+      mimic:     '#9b59b6',
+      dash:      '#2ecc71',
+    };
+    const color = colorMap[skillId] ?? '#ffffff';
+
+    // 기존 엣지 플래시 재사용 or 임시 생성
+    let el = document.getElementById('skill-edge-flash');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'skill-edge-flash';
+      Object.assign(el.style, {
+        position: 'fixed', inset: '0', pointerEvents: 'none',
+        zIndex: '9998', opacity: '0',
+        boxShadow: `inset 0 0 80px 30px ${color}`,
+        transition: 'opacity 0.08s ease',
+      });
+      document.body.appendChild(el);
+    }
+    el.style.boxShadow = `inset 0 0 80px 30px ${color}`;
+    el.style.opacity = '0.7';
+    setTimeout(() => { el.style.opacity = '0'; }, 180);
+  }
 
   // ── 튜토리얼 오버레이 ─────────────────────────────────────────
   _showTutorial() {

@@ -3884,4 +3884,69 @@ export class World {
   }
 
 
+
+  // ── 기하 헬퍼: 실린더 메시 생성 ──────────────────────────────
+  _cyl(rTop, rBot, h, segs, mat, ox = 0, oy = 0, oz = 0) {
+    const geo = new THREE.CylinderGeometry(rTop, rBot, h, segs);
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(ox, oy, oz);
+    m.castShadow = true;
+    return m;
+  }
+
+  // ── 기하 헬퍼: 박스 메시 생성 ────────────────────────────────
+  _box(w, h, d, mat, ox = 0, oy = 0, oz = 0) {
+    const geo = new THREE.BoxGeometry(w, h, d);
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(ox, oy, oz);
+    m.castShadow = true;
+    return m;
+  }
+
+  // ── 영웅 랜드마크: 등대 ───────────────────────────────────────
+  _spawnHeroLighthouse(cx, cz) {
+    const x = cx ?? 0, z = cz ?? 0;
+    const y = Math.max(0, this.getHeight(x, z));
+    const g = new THREE.Group();
+
+    const stoneMat  = new THREE.MeshLambertMaterial({ color: 0xd9cfc4 });
+    const stoneAlt  = new THREE.MeshLambertMaterial({ color: 0xc0392b }); // 빨간 줄
+    const glassMat  = new THREE.MeshLambertMaterial({ color: 0xf9e74b, emissive: 0xffdd00, emissiveIntensity: 0.8, transparent: true, opacity: 0.9 });
+    const roofMat   = new THREE.MeshLambertMaterial({ color: 0x222222 });
+    const baseMat   = new THREE.MeshLambertMaterial({ color: 0xb0a090 });
+
+    // 기단
+    g.add(this._cyl(3.2, 3.8, 1.2, 12, baseMat, 0, 0.6, 0));
+    // 탑 본체 — 3단 (흰/빨/흰)
+    g.add(this._cyl(2.0, 2.8, 6.0, 12, stoneMat.clone(), 0, 4.2, 0));
+    g.add(this._cyl(1.85, 2.05, 2.0, 12, stoneAlt.clone(), 0, 10.2, 0));
+    g.add(this._cyl(1.5, 1.9, 5.0, 12, stoneMat.clone(), 0, 14.7, 0));
+    // 난간 테두리
+    g.add(this._cyl(1.65, 1.65, 0.25, 14, baseMat, 0, 17.35, 0));
+    // 등실 (유리)
+    g.add(this._cyl(1.2, 1.2, 2.2, 10, glassMat, 0, 18.6, 0));
+    // 지붕
+    const roofGeo = new THREE.ConeGeometry(1.4, 1.8, 10);
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(0, 20.5, 0);
+    g.add(roof);
+    // 꼭대기 구
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 6), roofMat.clone());
+    tip.position.set(0, 21.5, 0);
+    g.add(tip);
+    // 출입문
+    g.add(this._box(0.9, 1.4, 0.18, stoneAlt.clone(), 0, 0.7, -2.85));
+    // 창문 (3개)
+    [6, 10, 14].forEach(wy => {
+      g.add(this._box(0.5, 0.7, 0.18, glassMat.clone(), 0, wy, -1.85));
+    });
+
+    g.position.set(x, y, z);
+    this.scene.add(g);
+    this.objects.push(g);
+    this._zones.landmarks.push({ x, z });
+    return { x, z };
+  }
+
+
 }
