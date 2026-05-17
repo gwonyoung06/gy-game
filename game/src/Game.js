@@ -9,7 +9,7 @@ import { Shop } from './ui/Shop.js';
 import { Inventory } from './ui/Inventory.js';
 import { Minimap } from './ui/Minimap.js';
 import { loadSave, addCoins, markStageCleared, updateSave, recordCapturedType } from './utils/storage.js';
-import { SHOP_ITEMS } from './data/shop.js';
+import { SHOP_ITEMS, CONSUMABLES } from './data/shop.js';
 import { particlePool, _cachedMats, _cachedGeos } from './entities/Creature.js';
 import { audioManager } from './systems/AudioManager.js';
 import { submitScore, fetchGlobalLeaderboard } from './utils/supabase.js';
@@ -19,9 +19,6 @@ const SKILL_CD = {
   skill_slow: 30, skill_magnet: 45,
   skill_multi: 40, skill_vortex: 60,
 };
-
-// ── 재사용 가능한 모듈 레벨 벡터 (per-frame 할당 방지) ──────────
-const _gv = new THREE.Vector3(); // creature label / danger indicator 공유
 
 export class Game {
   constructor() {
@@ -182,14 +179,6 @@ export class Game {
     // ── 일시정지 메뉴 버튼 ────────────────────────────────────
     document.getElementById('btn-resume').addEventListener('click', () => this._resumeGame());
 
-    document.getElementById('btn-pause-inventory')?.addEventListener('click', () => {
-      this._stopLoop();
-      this.hud.hide();
-      document.exitPointerLock();
-      this._showScreen('inventory');
-      this.inventory.open(this.player?.mesh ?? null);
-    });
-
     document.getElementById('btn-pause-shop').addEventListener('click', () => {
       this.hud.hide();
       this._showScreen('shop');
@@ -269,6 +258,11 @@ export class Game {
     // 키보드
     document.addEventListener('keydown', e => {
       if (this.currentScreen === 'game') {
+        // WASD 키 입력 시 포인터락 미획득 상태면 자동 획득 (클릭 없이 바로 이동 가능)
+        if (!this.camCtrl?.isLocked && ['KeyW','KeyA','KeyS','KeyD'].includes(e.code)) {
+          this.camCtrl?.requestLock();
+        }
+
         // 스킬 슬롯 Q / E / R
         if (e.code === 'KeyQ') this._useSkillSlot('Q');
         if (e.code === 'KeyE') this._useSkillSlot('E');
@@ -278,8 +272,9 @@ export class Game {
         const num = parseInt(e.key, 10);
         if (num >= 1 && num <= 9) this._useHotbarSlot(num - 1);
 
-        // I: 인벤토리
+        // I: 인벤토리 (포인터락 해제 후 전환)
         if (e.code === 'KeyI') {
+          this.camCtrl?.exitLock();
           this._stopLoop();
           this.hud.hide();
           this._showScreen('inventory');
@@ -540,33 +535,6 @@ export class Game {
         <div class="stage-name">${bs.name}</div>
         ${!unlocked ? '<div class="stage-cleared">🔒 잠김</div>' : ''}
       `;
-      // 잠금 해제된 보너스 스테이지 클릭 핸들러
-      if (unlocked) {
-        card.style.cursor = 'pointer';
-        card.addEventListener('click', () => {
-          // 보너스 스테이지: 일반 스테이지 데이터를 특수 설정으로 실행
-          const bonusMap = {
-            bonus1: { stageId: 5,  weather: 'sunny', difficulty: 'normal', timeOfDay: 'day',   coinBoost: 2.0 },
-            bonus2: { stageId: 10, weather: 'fog',   difficulty: 'hard',   timeOfDay: 'night',  coinBoost: 1.5 },
-            bonus3: { stageId: 14, weather: 'rain',  difficulty: 'extreme',timeOfDay: 'night',  coinBoost: 3.0 },
-          };
-          const cfg = bonusMap[bs.id];
-          if (!cfg) return;
-          this.selectedStage = cfg.stageId;
-          this.settings = { difficulty: cfg.difficulty, weather: cfg.weather, timeOfDay: cfg.timeOfDay, bonusMode: bs.name, coinBoost: cfg.coinBoost };
-          const stage = STAGES.find(s => s.id === cfg.stageId);
-          document.getElementById('pregame-title').textContent = `⭐ 보너스: ${bs.name}`;
-          this._renderPregameCreatures(stage);
-          this._showScreen('pregame');
-        });
-        card.addEventListener('mousemove', e => {
-          const r = card.getBoundingClientRect();
-          const x = (e.clientX - r.left - r.width  / 2) / (r.width  / 2);
-          const y = (e.clientY - r.top  - r.height / 2) / (r.height / 2);
-          card.style.transform = `perspective(700px) rotateY(${x*11}deg) rotateX(${-y*9}deg) scale(1.04)`;
-        });
-        card.addEventListener('mouseleave', () => { card.style.transform = ''; });
-      }
       grid.appendChild(card);
       idx++;
     });
@@ -635,6 +603,7 @@ export class Game {
     this.scene = new THREE.Scene();
     this.world  = new World(this.scene, stageData, this.settings);
     this.player = new Player(this.scene);
+    this._applyShopEffects();
     this.camCtrl = new CameraController(this.camera, this.renderer.domElement);
     const _s = JSON.parse(localStorage.getItem('gy_settings') || '{"sens":100}');
     this.camCtrl.sensitivity = 0.0028 * (_s.sens / 100);
@@ -654,8 +623,6 @@ export class Game {
       (dmg)    => this._onDamage(dmg),
       this.world
     );
-    // waves 생성 후 적용 — noise_reduce가 this.waves.creatures에 접근하므로
-    this._applyShopEffects();
 
     const minimapCanvas = document.getElementById('minimap-canvas');
     if (minimapCanvas) {
@@ -680,6 +647,13 @@ export class Game {
     this._applyWeatherOverlay(this.settings.weather);
     this._startLoop();
     this._showCountdown(); // 3-2-1-GO! 오버레이
+
+    // 카운트다운 종료 후 자동 포인터락 획득 (3×820ms + 여유 200ms = 2660ms)
+    setTimeout(() => {
+      if (this.currentScreen === 'game' && this.camCtrl) {
+        this.camCtrl.requestLock();
+      }
+    }, 2660);
 
     this._watchLockState();
 
@@ -821,23 +795,21 @@ export class Game {
     const W = window.innerWidth, H = window.innerHeight;
     const playerPos = this.player.position;
     const LABEL_RANGE = 14;
-    const _v = _gv;
+    const _v = new THREE.Vector3();
 
     const near = this.waves.creatures.filter(c =>
       c.alive && !c.captured && c.mesh.position.distanceTo(playerPos) < LABEL_RANGE
     );
 
-    // 기존 레이블 재사용 (DOM 최소화) — li는 실제 렌더된 레이블 카운터
-    // (i ≠ li: z>1 스킵된 크리처는 레이블 슬롯을 소비하지 않아야 함)
+    // 기존 레이블 재사용 (DOM 최소화)
     const existing = [...container.children];
-    let li = 0;
-    near.forEach(c => {
+    near.forEach((c, i) => {
       _v.copy(c.mesh.position).project(this.camera);
       const sx = (_v.x + 1) / 2 * W;
       const sy = (-_v.y + 1) / 2 * H - 30;
-      if (_v.z > 1) return; // 카메라 뒤 — 레이블 슬롯 소비 안 함
+      if (_v.z > 1) return; // 카메라 뒤
 
-      let label = existing[li];
+      let label = existing[i];
       if (!label) {
         label = document.createElement('div');
         label.className = 'creature-label';
@@ -851,12 +823,11 @@ export class Game {
         : `${c.config.name || c.config.type} 💰${c.config.coins}`;
       label.style.transform = `translate(${sx}px, ${sy}px)`;
       label.style.opacity = Math.max(0.4, 1 - dist / LABEL_RANGE);
-      li++;
     });
 
-    // 사용하지 않은 기존 레이블 제거
-    while (container.children.length > li) {
-      container.lastChild.remove();
+    // 남은 기존 레이블 숨기기
+    for (let i = near.length; i < existing.length; i++) {
+      existing[i].remove();
     }
   }
 
@@ -945,10 +916,12 @@ export class Game {
     scene.background = new THREE.Color(0x0a0f1e);
     scene.fog = new THREE.Fog(0x0a0f1e, 30, 80);
     this._titleScene = scene;
+
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
     camera.position.set(0, 8, 30);
     camera.lookAt(0, 0, 0);
     this._titleCamera = camera;
+
     const colors = [0x4ecdc4, 0xffd700, 0xff6b35, 0x4488ff, 0xff88ff, 0xaaffaa];
     const orbs = [];
     for (let i = 0; i < 28; i++) {
@@ -958,7 +931,9 @@ export class Game {
       });
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(
-        (Math.random() - 0.5) * 56, (Math.random() - 0.5) * 28, (Math.random() - 0.5) * 36 - 8
+        (Math.random() - 0.5) * 56,
+        (Math.random() - 0.5) * 28,
+        (Math.random() - 0.5) * 36 - 8
       );
       mesh.userData.vx = (Math.random() - 0.5) * 0.018;
       mesh.userData.vy = (Math.random() - 0.5) * 0.012;
@@ -966,11 +941,12 @@ export class Game {
       scene.add(mesh);
       orbs.push(mesh);
     }
+
     let t = 0;
     const loop = () => {
       this._titleRafId = requestAnimationFrame(loop);
       t += 0.016;
-      orbs.forEach(o => {
+      orbs.forEach((o, i) => {
         o.position.x += o.userData.vx;
         o.position.y += o.userData.vy + Math.sin(t * 0.6 + o.userData.phase) * 0.003;
         if (o.position.x > 32)  o.position.x = -32;
@@ -987,34 +963,52 @@ export class Game {
   }
 
   _stopTitleScene() {
-    if (this._titleRafId) { cancelAnimationFrame(this._titleRafId); this._titleRafId = null; }
+    if (this._titleRafId) {
+      cancelAnimationFrame(this._titleRafId);
+      this._titleRafId = null;
+    }
     if (this._titleScene) {
       this._titleScene.traverse(obj => {
         if (obj.geometry) obj.geometry.dispose();
         if (obj.material) { obj.material.map?.dispose(); obj.material.dispose(); }
       });
-      this._titleScene = null; this._titleCamera = null;
+      this._titleScene = null;
+      this._titleCamera = null;
     }
   }
 
-  // ── 3-2-1-GO! 카운트다운 ────────────────────────────────────
+  // ── 3-2-1-GO! 카운트다운 오버레이 ─────────────────────────────
   _showCountdown() {
+    // 스타일 1회 주입
     if (!document.getElementById('_countAnimStyle')) {
-      const s = document.createElement('style'); s.id = '_countAnimStyle';
-      s.textContent = '@keyframes countPop{0%{transform:scale(1.8);opacity:0}18%{transform:scale(1);opacity:1}72%{transform:scale(1);opacity:1}100%{transform:scale(0.4);opacity:0}}';
+      const s = document.createElement('style');
+      s.id = '_countAnimStyle';
+      s.textContent = `@keyframes countPop {
+        0%   { transform:scale(1.8);opacity:0; }
+        18%  { transform:scale(1.0);opacity:1; }
+        72%  { transform:scale(1.0);opacity:1; }
+        100% { transform:scale(0.4);opacity:0; }
+      }`;
       document.head.appendChild(s);
     }
     const wrap = document.createElement('div');
     wrap.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:500;';
     document.body.appendChild(wrap);
+
     const nums = ['3','2','1','GO!'];
     let i = 0;
     const next = () => {
-      const isGo = nums[i] === 'GO!';
       const span = document.createElement('span');
+      const isGo = nums[i] === 'GO!';
       span.textContent = nums[i];
-      span.style.cssText = `font-size:${isGo?88:120}px;font-weight:900;font-family:'Rajdhani',sans-serif;color:${isGo?'#4ecdc4':'#fff'};text-shadow:0 0 40px ${isGo?'rgba(78,205,196,0.9)':'rgba(255,255,255,0.8)'},0 4px 20px rgba(0,0,0,0.9);animation:countPop 0.82s ease-out forwards;position:absolute;`;
-      wrap.innerHTML = ''; wrap.appendChild(span);
+      span.style.cssText = `
+        font-size:${isGo ? 88 : 120}px;font-weight:900;font-family:'Rajdhani',sans-serif;
+        color:${isGo ? '#4ecdc4' : '#fff'};letter-spacing:${isGo ? '4px' : '0'};
+        text-shadow:0 0 40px ${isGo ? 'rgba(78,205,196,0.9)' : 'rgba(255,255,255,0.8)'},0 4px 20px rgba(0,0,0,0.9);
+        animation:countPop 0.82s ease-out forwards;position:absolute;
+      `;
+      wrap.innerHTML = '';
+      wrap.appendChild(span);
       i++;
       if (i < nums.length) setTimeout(next, 820);
       else setTimeout(() => wrap.remove(), 820);
@@ -1022,7 +1016,7 @@ export class Game {
     next();
   }
 
-  // ── 날씨 오버레이 ─────────────────────────────────────────────
+  // ── 날씨 오버레이 적용 ─────────────────────────────────────────
   _applyWeatherOverlay(weather) {
     document.getElementById('weather-overlay')?.remove();
     if (!weather || weather === 'sunny') return;
@@ -1030,55 +1024,75 @@ export class Game {
     el.id = 'weather-overlay';
     el.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:5;';
     if (weather === 'rain') {
-      el.style.background = 'repeating-linear-gradient(-60deg,transparent,transparent 2px,rgba(174,214,241,0.12) 2px,rgba(174,214,241,0.12) 3px)';
+      el.style.background = `repeating-linear-gradient(-60deg,
+        transparent,transparent 2px,rgba(174,214,241,0.12) 2px,rgba(174,214,241,0.12) 3px)`;
       el.style.backgroundSize = '6px 18px';
       el.style.animation = 'rainStreaks 0.18s linear infinite';
     } else if (weather === 'fog') {
-      el.style.background = 'radial-gradient(ellipse at 20% 50%,rgba(200,210,220,0.18) 0%,transparent 60%),radial-gradient(ellipse at 80% 30%,rgba(180,200,215,0.14) 0%,transparent 55%)';
+      el.style.background = `
+        radial-gradient(ellipse at 20% 50%, rgba(200,210,220,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 30%, rgba(180,200,215,0.14) 0%, transparent 55%)`;
       el.style.animation = 'fogDrift 8s ease-in-out infinite alternate';
     }
     document.body.appendChild(el);
   }
 
-  // ── 컨페티 이펙트 ─────────────────────────────────────────────
+  // ── 컨페티 (스테이지 클리어 이펙트) ──────────────────────────
   _launchConfetti() {
     const MAX = 60;
     if (document.querySelectorAll('.confetti-p').length >= MAX) return;
     if (!document.getElementById('_confettiStyle')) {
-      const s = document.createElement('style'); s.id = '_confettiStyle';
-      s.textContent = '@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+      const s = document.createElement('style');
+      s.id = '_confettiStyle';
+      s.textContent = `@keyframes confettiFall {
+        0%   { transform:translateY(0) rotate(0deg);   opacity:1; }
+        100% { transform:translateY(110vh) rotate(720deg); opacity:0; }
+      }`;
       document.head.appendChild(s);
     }
     const colors = ['#ffd700','#ff6b35','#4ecdc4','#ff88ff','#4488ff','#fff','#aaff88'];
-    const count = Math.min(22, MAX - document.querySelectorAll('.confetti-p').length);
+    const count  = Math.min(22, MAX - document.querySelectorAll('.confetti-p').length);
     for (let i = 0; i < count; i++) {
-      const el = document.createElement('div'); el.className = 'confetti-p';
-      const sz = 6 + Math.random() * 9;
+      const el  = document.createElement('div');
+      el.className = 'confetti-p';
+      const sz  = 6 + Math.random() * 9;
       const dur = 1300 + Math.random() * 900;
       const del = Math.random() * 350;
-      el.style.cssText = `position:fixed;left:${15+Math.random()*70}%;top:-12px;width:${sz}px;height:${sz}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};pointer-events:none;z-index:600;animation:confettiFall ${dur}ms ${del}ms ease-in forwards;`;
+      el.style.cssText = `
+        position:fixed;left:${15 + Math.random() * 70}%;top:-12px;
+        width:${sz}px;height:${sz}px;
+        background:${colors[Math.floor(Math.random() * colors.length)]};
+        border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+        pointer-events:none;z-index:600;
+        animation:confettiFall ${dur}ms ${del}ms ease-in forwards;
+      `;
       document.body.appendChild(el);
       el.addEventListener('animationend', () => el.remove());
       setTimeout(() => el.remove(), dur + del + 200);
     }
   }
 
-  // ── 점수 등록 ─────────────────────────────────────────────────
+  // ── 점수 리더보드 등록 ────────────────────────────────────────
   async _registerScore() {
     const nickInput = document.getElementById('nickname-input');
-    const btn = document.getElementById('btn-register');
+    const btn       = document.getElementById('btn-register');
     if (!nickInput || !btn) return;
     const nick = nickInput.value.trim();
     if (!nick) { nickInput.placeholder = '닉네임을 입력해주세요'; nickInput.focus(); return; }
-    btn.disabled = true; btn.textContent = '등록 중...';
+
+    btn.disabled = true;
+    btn.textContent = '등록 중...';
     const stage = STAGES.find(s => s.id === this.selectedStage);
     const ok = await submitScore(nick, this.sessionScore, this.selectedStage, stage?.name || `스테이지 ${this.selectedStage}`);
     if (ok) {
       localStorage.setItem('gy_last_nickname', nick);
-      btn.textContent = '\u2713 등록 완료!'; btn.style.background = 'rgba(78,205,196,0.25)';
+      btn.textContent = '✓ 등록 완료!';
+      btn.style.background = 'rgba(78,205,196,0.25)';
       document.getElementById('nickname-row')?.classList.add('hidden');
     } else {
-      btn.disabled = false; btn.textContent = '재시도'; btn.style.color = '#ff6666';
+      btn.disabled = false;
+      btn.textContent = '재시도';
+      btn.style.color = '#ff6666';
     }
   }
 
@@ -1193,7 +1207,7 @@ export class Game {
       this.waves.combo >= 5  ? 1.5 :
       this.waves.combo >= 3  ? 1.2 : 1.0
     ) : 1.0;
-    const coins = Math.floor(creature.config.coins * diff.coinMult * weatherMult * timeMult * (this.settings?.coinBoost ?? 1.0));
+    const coins = Math.floor(creature.config.coins * diff.coinMult * weatherMult * timeMult);
     const score = Math.floor(creature.config.score * diff.scoreMult * comboMult);
     this.sessionScore += score;
     this.sessionCoins += coins;
@@ -1236,9 +1250,8 @@ export class Game {
         this.waves.creatures.forEach(c => {
           if (!c.alive || c.captured) return;
           if (c.mesh.position.distanceTo(pos) > 15) return;
-          const _dx = c.mesh.position.x - pos.x, _dz = c.mesh.position.z - pos.z;
-          const _dl = Math.sqrt(_dx*_dx + _dz*_dz) || 1;
-          if ((_dx/_dl)*fwd.x + (_dz/_dl)*fwd.z < 0.2) return;
+          const toC = c.mesh.position.clone().sub(pos).normalize();
+          if (toC.dot(fwd) < 0.2) return;
           c.capture();
           this.waves.capturedCount++;
           this.waves.combo++;
@@ -1279,11 +1292,11 @@ export class Game {
         break;
       }
       case 'skill_multi': {
-        // 분신 채망 — 5초간 포획 범위 3배
+        // 분신 채망 — 3초간 포획 범위 3배
         if (!this.player) break;
         this.player.captureRange *= 3;
         setTimeout(() => { if (this.player) this.player.captureRange /= 3; }, 5000);
-        this.hud.showWaveMessage('👐 분신 채망! (5초)');
+        this.hud.showWaveMessage('👐 분신 채망!');
         break;
       }
     }
@@ -1291,25 +1304,6 @@ export class Game {
     this._flashSkillActivation(skillId);
     audioManager.sfxCombo?.(Math.max(1, this.waves?.combo || 1));
   }
-
-  // ── 스킬 활성화 플래시 (화면 엣지 색상 펄스) ──────────────────
-  _flashSkillActivation(skillId) {
-    const colors = {
-      vortex:      '#00e5ff',
-      magnet:      '#ffd600',
-      speed_boost: '#76ff03',
-      skill_multi: '#e040fb',
-    };
-    const col = colors[skillId] || '#ffffff';
-    const el = document.createElement('div');
-    el.style.cssText = `position:fixed;inset:0;pointer-events:none;z-index:9999;` +
-      `border: 6px solid ${col};border-radius:4px;opacity:0.9;` +
-      `animation:none;transition:opacity 0.5s;`;
-    document.body.appendChild(el);
-    requestAnimationFrame(() => { el.style.opacity = '0'; });
-    setTimeout(() => el.remove(), 520);
-  }
-
 
   // ── 핫바 슬롯 사용 (1~9 키) ───────────────────────────────────
   _useHotbarSlot(index) {
@@ -1394,6 +1388,8 @@ export class Game {
     this._showScreen('game');
     this._startLoop();
     audioManager.setState('exploration');
+    // 재개 시 포인터락 자동 재획득
+    if (this.camCtrl) this.camCtrl.requestLock();
     this._showLockHint(!this.camCtrl?.isLocked);
   }
 
@@ -1673,7 +1669,7 @@ export class Game {
     const captured = save.capturedTypes || {};
 
     // 전 스테이지 크리처를 type 기준으로 중복 제거 (보스 포함)
-    const seen = new Map();
+    const seen = new Map(); // type → { name, color, coins, stageIcon, isBoss }
     STAGES.forEach(stage => {
       stage.creatures.forEach(c => {
         if (!seen.has(c.type)) seen.set(c.type, { ...c, stageIcon: stage.icon });

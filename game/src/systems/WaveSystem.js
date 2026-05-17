@@ -230,8 +230,7 @@ export class WaveSystem {
                         : this.settings.weather === 'fog'  ? 1.5 : 1;
       const timeMult = this.settings.timeOfDay === 'night' ? 1.4
                      : this.settings.timeOfDay === 'dusk'  ? 1.1 : 1;
-      const coinBoost = this.settings?.coinBoost ?? 1.0;
-      const coinMult  = diff.coinMult  * weatherMult * timeMult * coinBoost;
+      const coinMult  = diff.coinMult  * weatherMult * timeMult;
       const coins  = Math.floor(creature.config.coins * coinMult);
       const score  = Math.floor(creature.config.score * diff.scoreMult * this._comboMult());
 

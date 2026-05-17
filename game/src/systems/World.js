@@ -55,23 +55,23 @@ function ringSpawn(cx, cz, radius, count, jitter, rng) {
 }
 
 // ── 지형 높이 파라미터 (스테이지별) ──────────────────────────────
-// 자연스러운 기복 — 과도한 굴곡 제거, 스테이지 특성에 맞게 조정
+// 자연스러운 기복 — 게임플레이 중심 시야 확보를 위해 낮게 유지
 const TERRAIN_SCALE = [
   0,     // unused
-  0.20,  // 1-3  공원  — 완만한 잔디 언덕 (인공 공원 느낌)
-  0.20,
-  0.20,
-  0.10,  // 4-5  연못  — 거의 평평, 수면 기준
-  0.10,
-  0.06,  // 6-8  해양  — 해저 평탄, 파도는 비주얼 전용
-  0.06,
-  0.06,
-  0.45,  // 9-10 사바나 — 완만한 대평원 기복
-  0.45,
-  0.85,  // 11-12 숲   — 굴곡 있는 숲 지형
-  0.85,
-  1.40,  // 13-14 공룡섬 — 드라마틱한 지형
-  1.40,
+  0.18,  // 1-3  공원  — 완만한 잔디 언덕 (인공 공원 느낌)
+  0.18,
+  0.18,
+  0.08,  // 4-5  연못  — 거의 평평, 수면 기준
+  0.08,
+  0.04,  // 6-8  해양  — 해저 평탄, 파도는 비주얼 전용
+  0.04,
+  0.04,
+  0.30,  // 9-10 사바나 — 완만한 대평원 기복
+  0.30,
+  0.55,  // 11-12 숲   — 굴곡 있는 숲 지형
+  0.55,
+  0.80,  // 13-14 공룡섬 — 드라마틱한 지형
+  0.80,
   0.02,  // 15   우주  — 거의 평탄 (달 표면)
 ];
 
@@ -99,19 +99,24 @@ export class World {
   }
 
   // ── 공개: 지형 높이 쿼리 ──────────────────────────────────────
+  // 다중 옥타브 노이즈 합성 — 자연스러운 구릉 지형
   getHeight(x, z) {
     const s = this._scl;
-    const h =
-      Math.sin(x * 0.013) * Math.cos(z * 0.011) * 9 * s
-    + Math.sin(x * 0.032 + 1.4) * Math.cos(z * 0.027 + 0.9) * 5 * s
-    + Math.cos(x * 0.058 - z * 0.043) * 2.5 * s
-    + Math.sin(x * 0.008 + z * 0.006) * 7 * s;
-    // 부드러운 최솟값 — Math.max(h,0) 대신 완만한 블렌드로 자연스러운 완만한 평지 유지
-    // h<0 인 구역은 극히 얕은 오목면(h*0.08)이 되어 갑작스러운 평탄 절벽 제거
-    const soft = h >= 0 ? h : h * 0.08;
-    // 스폰 원점 근처(반경 18m)는 평탄하게 — 시작점 자연스러움 보장
+    // 큰 언덕 (저주파 — 넓은 기복)
+    const macro  = Math.sin(x * 0.011 + 0.7) * Math.cos(z * 0.009 + 1.2) * 8 * s
+                 + Math.cos(x * 0.007 - z * 0.013 + 2.3) * 6 * s;
+    // 중간 굴곡 (중주파 — 언덕 세부)
+    const meso   = Math.sin(x * 0.024 + z * 0.019 + 0.4) * 3.5 * s
+                 + Math.cos(x * 0.031 - 0.8) * Math.sin(z * 0.026 + 1.7) * 2.5 * s;
+    // 미세 텍스처 (고주파 — 지면 요철)
+    const micro  = Math.sin(x * 0.055 + z * 0.048 + 3.1) * 0.9 * s
+                 + Math.cos(x * 0.072 - z * 0.061 + 0.5) * 0.6 * s;
+    const h = macro + meso + micro;
+    // 음수 영역은 거의 평탄하게 — 자연스러운 계곡 느낌
+    const soft = h >= 0 ? h : h * 0.06;
+    // 스폰 원점 근처(반경 20m)는 완전 평탄 — 시작점 안정성 보장
     const d = Math.sqrt(x * x + z * z);
-    const fade = d < 12 ? 0 : d < 25 ? (d - 12) / 13 : 1;
+    const fade = d < 18 ? 0 : d < 32 ? (d - 18) / 14 : 1;
     return soft * fade;
   }
 
@@ -128,24 +133,26 @@ export class World {
     this.scene.background = null;
     this._buildSkyDome(skyColor, horizonColor, tod);
 
-    const fogMult = this.settings.weather === 'fog'  ? 3.0
-                  : this.settings.weather === 'rain' ? 1.5 : 1.0;
-    const fogDense = (env.fogDensity ?? 0.008) * fogMult * 0.45;
+    // 안개: 맑은날 시야 확보, 안개날씨만 의미있는 밀도
+    const fogMult  = this.settings.weather === 'fog'  ? 2.5
+                   : this.settings.weather === 'rain' ? 1.3 : 1.0;
+    const fogDense = (env.fogDensity ?? 0.008) * fogMult * 0.20;
     this.scene.fog = new THREE.FogExp2(new THREE.Color(horizonColor), fogDense);
 
-    // 조명
-    const ambInt  = tod === 'night' ? 0.25 : tod === 'dusk' ? 0.55 : 0.85;
-    const sunCol  = tod === 'night' ? 0x8899ff : tod === 'dusk' ? 0xff9944 : 0xfff5e0;
-    const ambient = new THREE.AmbientLight(0xffffff, ambInt * 0.65);
-    const sun     = new THREE.DirectionalLight(sunCol, ambInt * 1.3);
-    sun.position.set(120, 250, 120);
+    // 조명 — 낮 시간대는 밝고 선명하게, 그림자 소프트
+    const ambInt  = tod === 'night' ? 0.30 : tod === 'dusk' ? 0.60 : 1.00;
+    const sunCol  = tod === 'night' ? 0x7799cc : tod === 'dusk' ? 0xff8833 : 0xfffdf0;
+    const ambient = new THREE.AmbientLight(0xffffff, ambInt * 0.70);
+    const sun     = new THREE.DirectionalLight(sunCol, ambInt * 1.4);
+    sun.position.set(80, 200, 100);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.radius = 2; // 소프트 그림자
     sun.shadow.camera.near = 1;
-    sun.shadow.camera.far  = 700;
-    sun.shadow.camera.left = sun.shadow.camera.bottom = -250;
-    sun.shadow.camera.right = sun.shadow.camera.top  =  250;
-    const hemi = new THREE.HemisphereLight(skyColor, env.ground ?? 0x448822, 0.4);
+    sun.shadow.camera.far  = 600;
+    sun.shadow.camera.left = sun.shadow.camera.bottom = -200;
+    sun.shadow.camera.right = sun.shadow.camera.top  =  200;
+    const hemi = new THREE.HemisphereLight(skyColor, env.ground ?? 0x558833, 0.50);
     this.scene.add(ambient, sun, hemi);
     this.objects.push(ambient, sun, hemi);
 
@@ -164,25 +171,41 @@ export class World {
     else if (this.stage.id === 11)        this._buildSnow();
   }
 
-  // ── horizon 색: 안개/대기 산란 느낌 ────────────────────────────
+  // ── horizon 색: 대기 산란 — 하늘색을 유지하면서 살짝 밝게
   _horizonColor(skyColor, tod) {
-    if (tod === 'night') return 0x0a1825;
-    if (tod === 'dusk')  return 0xff7733;
+    if (tod === 'night') return 0x0a1625;
+    if (tod === 'dusk')  return 0xff7033;
     const c = new THREE.Color(skyColor);
-    c.offsetHSL(0, -0.12, 0.14); // 낮: 채도 낮추고 밝게 → 하늘 흰 안개 느낌
+    // 낮: 채도는 유지하고 밝기만 아주 조금 높임 → 흰 박무 대신 하늘색 원경
+    c.offsetHSL(0, -0.04, 0.06);
     return c;
   }
 
-  // ── 하늘 돔: BackSide 구 + vertex color gradient ─────────────
+  // ── 하늘 돔: 3점 그라디언트 (zenith → mid → horizon) ──────────
   _buildSkyDome(zenithColor, horizonColor, tod) {
-    const geo = new THREE.SphereGeometry(800, 24, 14);
+    const geo = new THREE.SphereGeometry(900, 32, 18);
     const pos = geo.attributes.position;
     const colArr = new Float32Array(pos.count * 3);
     const top = new THREE.Color(zenithColor);
     const hor = new THREE.Color(horizonColor);
+    // 중간 색상: 낮에는 하늘색 유지, 석양엔 주황-노랑 밴드
+    const mid = tod === 'dusk'  ? new THREE.Color(0xffaa44)
+              : tod === 'night' ? new THREE.Color(0x081428)
+              : top.clone().offsetHSL(0, 0.02, -0.04);
+
     for (let i = 0; i < pos.count; i++) {
-      const t = Math.max(0, Math.min(1, (pos.getY(i) / 800 + 0.1) / 0.7));
-      const c = hor.clone().lerp(top, t * t); // 이차 보간 → horizon 쪽 더 넓게
+      // normalise Y: -1(밑)~+1(꼭대기)
+      const ny = pos.getY(i) / 900;
+      let c;
+      if (ny >= 0) {
+        // 상반구: zenith → mid
+        const t = Math.min(1, ny / 0.6);
+        c = mid.clone().lerp(top, t * t);
+      } else {
+        // 하반구(지평선 아래): horizon 색 — horizon glow 효과
+        const t = Math.min(1, -ny / 0.25);
+        c = hor.clone().lerp(new THREE.Color(horizonColor).offsetHSL(0, 0.08, -0.04), t);
+      }
       colArr[i * 3]     = c.r;
       colArr[i * 3 + 1] = c.g;
       colArr[i * 3 + 2] = c.b;
@@ -194,66 +217,84 @@ export class World {
     this.scene.add(dome);
     this.objects.push(dome);
 
-    // 태양 디스크 (낮/노을)
+    // 태양 디스크 (낮/노을) — 광원 방향과 일치시킴
     if (tod !== 'night') {
-      const sunColor = tod === 'dusk' ? 0xff5511 : 0xfffae8;
-      const sunMat   = new THREE.MeshBasicMaterial({ color: sunColor });
-      const sunMesh  = new THREE.Mesh(new THREE.SphereGeometry(22, 12, 8), sunMat);
-      sunMesh.position.set(280, 480, -320);
+      const sunColor = tod === 'dusk' ? 0xff6622 : 0xfffef0;
+      const glowColor = tod === 'dusk' ? 0xff8833 : 0xffeeaa;
+      // 태양 본체
+      const sunMat  = new THREE.MeshBasicMaterial({ color: sunColor });
+      const sunMesh = new THREE.Mesh(new THREE.SphereGeometry(18, 16, 12), sunMat);
+      sunMesh.position.set(250, 430, -280);
       this.scene.add(sunMesh);
       this.objects.push(sunMesh);
+      // 태양 후광 (큰 반투명 구체)
+      const glowMat  = new THREE.MeshBasicMaterial({ color: glowColor, transparent: true, opacity: 0.18 });
+      const glowMesh = new THREE.Mesh(new THREE.SphereGeometry(38, 12, 8), glowMat);
+      glowMesh.position.copy(sunMesh.position);
+      this.scene.add(glowMesh);
+      this.objects.push(glowMesh);
     }
 
-    // 별 (밤)
+    // 별 (밤) — 더 풍성하게
     if (tod === 'night') this._buildStars();
   }
 
-  // ── 별: Points — draw call 1개로 800개 처리 ────────────────────
+  // ── 별: 2레이어 Points — 밝기별 분리로 깊이감 ─────────────────
   _buildStars() {
-    const count = 800;
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi   = Math.random() * Math.PI * 0.48; // 상반구에만
-      const r     = 750;
-      positions[i * 3]     = r * Math.cos(phi) * Math.sin(theta);
-      positions[i * 3 + 1] = Math.abs(r * Math.sin(phi)) + 60;
-      positions[i * 3 + 2] = r * Math.cos(phi) * Math.cos(theta);
-    }
-    const geo  = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const mat  = new THREE.PointsMaterial({ color: 0xffffff, size: 2.2, sizeAttenuation: false });
-    const pts  = new THREE.Points(geo, mat);
-    this.scene.add(pts);
-    this.objects.push(pts);
+    const addLayer = (count, size, color, opacity) => {
+      const positions = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi   = Math.acos(1 - Math.random() * 0.9); // 상반구에 집중
+        const r     = 850;
+        positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = Math.abs(r * Math.cos(phi)) + 40;
+        positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const mat = new THREE.PointsMaterial({ color, size, sizeAttenuation: false, transparent: true, opacity });
+      const pts = new THREE.Points(geo, mat);
+      this.scene.add(pts);
+      this.objects.push(pts);
+    };
+    addLayer(1200, 1.6, 0xffffff, 0.90); // 보통 별
+    addLayer(300,  2.8, 0xfff8e0, 1.00); // 밝은 별
+    addLayer(80,   4.0, 0xffe8c0, 1.00); // 초밝은 별
   }
 
-  // ── 지면 — vertexColors로 안전(밝음)/위험(어두움) 구역 시각화 ─
+  // ── 지면 — 3채널 vertexColor: 안전(밝음)/위험(어두움) + 고도 음영 ─
   _buildGround(env) {
-    const seg = 100;
+    const seg = 120; // 해상도 업
     const geo = new THREE.PlaneGeometry(MAP_HALF * 2, MAP_HALF * 2, seg, seg);
     const pos = geo.attributes.position;
 
-    const baseCol   = new THREE.Color(env.ground ?? 0x56ab2f);
-    const safeCol   = baseCol.clone().offsetHSL(0,  0.05,  0.08); // 안전: 더 밝고 채도 높음
-    const dangerCol = baseCol.clone().offsetHSL(0, -0.06, -0.18); // 위험: 어둡고 탁함
+    const baseCol    = new THREE.Color(env.ground ?? 0x56ab2f);
+    // 안전: 원색보다 채도+밝기 강조 (플레이어 출발점)
+    const safeCol    = baseCol.clone().offsetHSL(0,  0.08,  0.10);
+    // 위험: 어둡고 채도 낮아 긴장감 표현
+    const dangerCol  = baseCol.clone().offsetHSL(0, -0.08, -0.22);
+    // 경로 색상 (길, 모래 등)
+    const pathCol    = baseCol.clone().offsetHSL(0, -0.15, 0.12);
 
     const colArr = new Float32Array(pos.count * 3);
 
     for (let i = 0; i < pos.count; i++) {
       const lx = pos.getX(i);
       const ly = pos.getY(i);   // local Y = -worldZ after rotation
-      // getHeight() 내부에서 이미 원점 주변 평탄화 처리함
       const d = Math.sqrt(lx * lx + ly * ly);
       const h = this.getHeight(lx, -ly);
       pos.setZ(i, h);
 
-      // 거리 기반 색상 그라디언트
-      // safe(0~28) → transition(28~85) → danger(85+)
-      const t = Math.min(1, Math.max(0, (d - this._zones.safe) / (this._zones.transition - this._zones.safe)));
-      // 제곱 커브 — 위험 구역 경계가 더 뚜렷하게
-      const blend = t * t;
-      const c = safeCol.clone().lerp(dangerCol, blend);
+      // 거리 기반 색상: safe → danger
+      const t     = Math.min(1, Math.max(0, (d - this._zones.safe) / (this._zones.transition - this._zones.safe)));
+      const blend = t * t; // 이차 커브 — 경계 선명
+      let c = safeCol.clone().lerp(dangerCol, blend);
+
+      // 고도 음영: 높은 지점은 약간 밝게 (자연스러운 언덕 느낌)
+      const hNorm = Math.max(0, h) / (8 * this._scl + 0.001);
+      c.offsetHSL(0, 0, hNorm * 0.06);
+
       colArr[i * 3]     = c.r;
       colArr[i * 3 + 1] = c.g;
       colArr[i * 3 + 2] = c.b;
@@ -263,7 +304,11 @@ export class World {
 
     const ground = new THREE.Mesh(
       geo,
-      new THREE.MeshLambertMaterial({ vertexColors: true })
+      new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.92,
+        metalness: 0.00,
+      })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;

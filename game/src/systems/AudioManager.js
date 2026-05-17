@@ -159,6 +159,7 @@ export class AudioManager {
     this._seqStep      = 0;
 
     // 볼륨 설정
+    this.masterVolume  = 1.0;
     this.musicVolume   = 0.38;
     this.ambientVolume = 0.28;
     this.sfxVolume     = 0.65;
@@ -865,29 +866,31 @@ export class AudioManager {
   }
 
   // ── 볼륨 제어 ────────────────────────────────────────────────────
+  setMasterVolume(v) {
+    this.masterVolume = Math.max(0, Math.min(1, v));
+    if (!this._ready || !this._master) return;
+    // 음소거 중이면 실제 게인은 건드리지 않음 (음소거 해제 시 반영)
+    if (!this._muted) {
+      this._master.gain.linearRampToValueAtTime(this.masterVolume, this._ctx.currentTime + 0.15);
+    }
+  }
+
   setMusicVolume(v) {
     this.musicVolume = Math.max(0, Math.min(1, v));
     if (!this._ready || !this._musicGain) return;
     this._musicGain.gain.linearRampToValueAtTime(this.musicVolume, this._ctx.currentTime + 0.15);
   }
 
-  setSfxVolume(v) {
-    this.sfxVolume = Math.max(0, Math.min(1, v));
-    if (!this._ready || !this._sfxGain) return;
-    this._sfxGain.gain.linearRampToValueAtTime(this.sfxVolume, this._ctx.currentTime + 0.15);
-  }
-
-
-  setMasterVolume(v) {
-    if (!this._ready || !this._master) return;
-    this._master.gain.linearRampToValueAtTime(
-      Math.max(0, Math.min(1, v)), this._ctx.currentTime + 0.15);
-  }
-
   setAmbientVolume(v) {
     this.ambientVolume = Math.max(0, Math.min(1, v));
     if (!this._ready || !this._ambGain) return;
     this._ambGain.gain.linearRampToValueAtTime(this.ambientVolume, this._ctx.currentTime + 0.15);
+  }
+
+  setSfxVolume(v) {
+    this.sfxVolume = Math.max(0, Math.min(1, v));
+    if (!this._ready || !this._sfxGain) return;
+    this._sfxGain.gain.linearRampToValueAtTime(this.sfxVolume, this._ctx.currentTime + 0.15);
   }
 
   // ── 음소거 토글 ──────────────────────────────────────────────────

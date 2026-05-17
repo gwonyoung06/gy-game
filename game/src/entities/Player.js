@@ -34,6 +34,8 @@ function _mkMesh(geo, mat, props = {}) {
 
 // ?? Module-level reuse vectors ?????????????????????????????????????
 const _mv  = new THREE.Vector3();
+const _zero = new THREE.Vector3(0, 0, 0);
+const _vn   = new THREE.Vector3();
 const _vel = new THREE.Vector3();
 
 // ?? Color palette (explorer/hunter) ???????????????????????????????
@@ -709,16 +711,20 @@ export class Player {
       _mv.normalize();
       // 터치 조이스틱 아날로그 스케일 (키보드는 항상 1.0)
       const analogScale = this._touchSpeedScale ?? 1.0;
-      _vel.lerp(_mv.multiplyScalar(this.speed * Math.max(0.25, analogScale)), Math.min(1, 10 * delta));
+      // _zero 재사용: lerp는 인수를 수정하지 않으므로 _mv를 직접 스케일한 임시값 필요
+      // → _vn에 복사 후 스케일 → lerp 타겟으로 사용 (allocation 없음)
+      _vn.copy(_mv).multiplyScalar(this.speed * Math.max(0.25, analogScale));
+      _vel.lerp(_vn, Math.min(1, 10 * delta));
     } else {
-      _vel.lerp(_mv.set(0, 0, 0), Math.min(1, 13 * delta));
+      _vel.lerp(_zero, Math.min(1, 13 * delta));
     }
 
     const moveLen = _vel.length();
     if (moveLen > 0.05) {
       this.mesh.position.addScaledVector(_vel, delta);
-      const vn = _mv.copy(_vel).normalize();
-      const targetAngle = Math.atan2(vn.x, vn.z) + Math.PI;
+      // _vn 재사용: 방향 계산용 (lerp 후 재사용 안전)
+      _vn.copy(_vel).normalize();
+      const targetAngle = Math.atan2(_vn.x, _vn.z) + Math.PI;
       let diff = targetAngle - this.mesh.rotation.y;
       while (diff >  Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
@@ -928,7 +934,6 @@ export class Player {
     }
   }
 
-  // ?? Public methods ???????????????????
 
   // ── Public API ─────────────────────────────────────────────────
   /** 포획 동작: 팔 스윙 애니메이션 트리거 */
@@ -958,5 +963,7 @@ export class Player {
         else obj.material.dispose();
       }
     });
+    window.removeEventListener('keydown', this._keyDown);
+    window.removeEventListener('keyup',   this._keyUp);
   }
 }

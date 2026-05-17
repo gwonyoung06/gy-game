@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 
 const _tgt = new THREE.Vector3();
+const _fwd = new THREE.Vector3(); // getForwardXZ 재사용
+const _rgt = new THREE.Vector3(); // getRightXZ 재사용
 
 /**
  * CameraController — Pointer Lock 기반 3인칭 카메라
@@ -144,11 +146,11 @@ export class CameraController {
   }
 
   getForwardXZ() {
-    return new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw)).normalize();
+    return _fwd.set(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
   }
 
   getRightXZ() {
-    return new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw)).normalize();
+    return _rgt.set(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
   }
 
   dispose() {
