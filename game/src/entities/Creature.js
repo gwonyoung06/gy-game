@@ -1677,7 +1677,7 @@ export class Creature {
   // 꿀벌: 8자 패턴 호버
   _moveBuzzHover(delta, playerPos, distToPlayer, speed) {
     if (this._state === 'FLEE') {
-      const away = this.mesh.position.clone().sub(playerPos).normalize();
+      const away = _tv0.copy(this.mesh.position).sub(playerPos).normalize();
       this.mesh.position.addScaledVector(away, speed * 3 * delta);
     } else {
       this._wanderTimer += delta;
@@ -1891,7 +1891,7 @@ export class Creature {
   // 익룡: 원선 비행
   _moveSoarCircle(delta, playerPos, distToPlayer, speed) {
     if (this._state === 'FLEE') {
-      const away = this.mesh.position.clone().sub(playerPos).normalize();
+      const away = _tv0.copy(this.mesh.position).sub(playerPos).normalize();
       this.mesh.position.addScaledVector(away, speed * 3 * delta);
     } else {
       // 플레이어 중심 원선 비행 (크게)
@@ -2107,7 +2107,7 @@ export class Creature {
       this._wanderTimer = 0;
       this._wanderInterval = 4 + Math.random() * 6;
     }
-    const dir = this._targetPos.clone().sub(this.mesh.position);
+    const dir = _tv0.copy(this._targetPos).sub(this.mesh.position);
     dir.y = 0;
     if (dir.length() > 2) {
       dir.normalize();
