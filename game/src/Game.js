@@ -540,6 +540,33 @@ export class Game {
         <div class="stage-name">${bs.name}</div>
         ${!unlocked ? '<div class="stage-cleared">🔒 잠김</div>' : ''}
       `;
+      // 잠금 해제된 보너스 스테이지 클릭 핸들러
+      if (unlocked) {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => {
+          // 보너스 스테이지: 일반 스테이지 데이터를 특수 설정으로 실행
+          const bonusMap = {
+            bonus1: { stageId: 5,  weather: 'sunny', difficulty: 'normal', timeOfDay: 'day',   coinBoost: 2.0 },
+            bonus2: { stageId: 10, weather: 'fog',   difficulty: 'hard',   timeOfDay: 'night',  coinBoost: 1.5 },
+            bonus3: { stageId: 14, weather: 'rain',  difficulty: 'extreme',timeOfDay: 'night',  coinBoost: 3.0 },
+          };
+          const cfg = bonusMap[bs.id];
+          if (!cfg) return;
+          this.selectedStage = cfg.stageId;
+          this.settings = { difficulty: cfg.difficulty, weather: cfg.weather, timeOfDay: cfg.timeOfDay, bonusMode: bs.name, coinBoost: cfg.coinBoost };
+          const stage = STAGES.find(s => s.id === cfg.stageId);
+          document.getElementById('pregame-title').textContent = `⭐ 보너스: ${bs.name}`;
+          this._renderPregameCreatures(stage);
+          this._showScreen('pregame');
+        });
+        card.addEventListener('mousemove', e => {
+          const r = card.getBoundingClientRect();
+          const x = (e.clientX - r.left - r.width  / 2) / (r.width  / 2);
+          const y = (e.clientY - r.top  - r.height / 2) / (r.height / 2);
+          card.style.transform = `perspective(700px) rotateY(${x*11}deg) rotateX(${-y*9}deg) scale(1.04)`;
+        });
+        card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+      }
       grid.appendChild(card);
       idx++;
     });
@@ -1162,7 +1189,7 @@ export class Game {
       this.waves.combo >= 5  ? 1.5 :
       this.waves.combo >= 3  ? 1.2 : 1.0
     ) : 1.0;
-    const coins = Math.floor(creature.config.coins * diff.coinMult * weatherMult * timeMult);
+    const coins = Math.floor(creature.config.coins * diff.coinMult * weatherMult * timeMult * (this.settings?.coinBoost ?? 1.0));
     const score = Math.floor(creature.config.score * diff.scoreMult * comboMult);
     this.sessionScore += score;
     this.sessionCoins += coins;
