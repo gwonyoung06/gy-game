@@ -2178,7 +2178,6 @@ export class Creature {
     this.mesh.traverse(child => {
       if (!child.isMesh) return;
       if (child.geometry && !_cachedGeos.has(child.geometry)) {
-        child.g
         child.geometry.dispose();
       }
       if (child.material) {
