@@ -609,6 +609,9 @@ export class Game {
     this._slowMoTimer = 0;
     this.totalDamageTaken = 0;
     this._footstepTimer = 0;
+    // 업그레이드 배율 명시 초기화 (_cleanup에서도 리셋되지만 여기서도 명확히)
+    this._coinMult = 1; this._scoreMult = 1;
+    this._luckBonus = 0; this._bonusCapture = 0;
     const save = loadSave();
     this.totalCoins = save.coins;
     this._stagePB   = save.highScores[this.selectedStage] || 0;
@@ -617,7 +620,7 @@ export class Game {
     this.scene = new THREE.Scene();
     this.world  = new World(this.scene, stageData, this.settings);
     this.player = new Player(this.scene);
-    this._applyShopEffects();
+    this._applyShopEffects(save); // player 스탯 적용 (speed/range/swing)
     this.camCtrl = new CameraController(this.camera, this.renderer.domElement);
     const _s = JSON.parse(localStorage.getItem('gy_settings') || '{"sens":100}');
     this.camCtrl.sensitivity = 0.0028 * (_s.sens / 100);
@@ -642,6 +645,15 @@ export class Game {
     this.waves.onWaveClear = (_nextWave, spawnFn) => {
       this._showUpgradeCards(spawnFn);
     };
+
+    // noise_reduce: waves 생성 후 적용 (creatures가 이미 스폰된 상태)
+    // _applyShopEffects 안에서 this.waves가 null이라 여기서 별도 처리
+    const noiseItem  = SHOP_ITEMS.abilities.find(i => i.id === 'noise_reduce');
+    const noiseLevel = save.itemLevels['noise_reduce'] || 0;
+    if (noiseItem && noiseLevel > 0) {
+      const mult = Math.pow(noiseItem.effect.noiseReduce, noiseLevel);
+      this.waves.creatures.forEach(c => { c.profile.fleeRadius *= mult; });
+    }
 
     const minimapCanvas = document.getElementById('minimap-canvas');
     if (minimapCanvas) {
@@ -928,6 +940,15 @@ export class Game {
     const streakEl = document.getElementById('streak-announcer');
     if (streakEl) { streakEl.classList.remove('streak-show'); streakEl.classList.add('hidden'); }
     clearTimeout(this._streakTimer);
+    // 미정리 타임아웃 클리어 (세션 간 누수 방지)
+    clearTimeout(this._fovKickTimer);
+    clearTimeout(this._captureFlashTimeout);
+    clearTimeout(this._missVigTimeout);
+    // pointerlockchange 감시 리스너 제거 (게임 시작마다 새로 등록하므로 이전 것 제거)
+    if (this._lockWatcher) {
+      document.removeEventListener('pointerlockchange', this._lockWatcher);
+      this._lockWatcher = null;
+    }
     // 타이머 긴박감 오버레이 리셋
     const urgEl = document.getElementById('timer-urgency');
     if (urgEl) urgEl.style.opacity = '0';
@@ -1780,13 +1801,12 @@ export class Game {
    *  abilities → move_speed, noise_reduce 등 반복 레벨업 가능 항목
    *  tools     → net_plus, swing_speed
    */
-  _applyShopEffects() {
+  // save를 외부에서 전달받아 중복 loadSave() 호출 방지
+  // noise_reduce는 WaveSystem 생성 후 _startGameImpl에서 별도 적용
+  _applyShopEffects(save = null) {
     if (!this.player) return;
-    const save = loadSave();
-    const allItems = [
-      ...SHOP_ITEMS.tools,
-      ...SHOP_ITEMS.abilities,
-    ];
+    if (!save) save = loadSave();
+    const allItems = [...SHOP_ITEMS.tools, ...SHOP_ITEMS.abilities];
 
     for (const item of allItems) {
       if (!item.effect) continue;
@@ -1796,23 +1816,12 @@ export class Game {
       const effectiveLevel = Math.max(level, save.ownedItems.includes(item.id) ? 1 : 0);
       const { effect } = item;
 
-      // 이동 속도 — 레벨당 +10% 누적
       if (effect.moveSpeed)    this.player.speed        *= Math.pow(effect.moveSpeed,    effectiveLevel);
-      // 포획 범위 — 레벨당 +20% 누적
       if (effect.captureRange) this.player.captureRange *= Math.pow(effect.captureRange, effectiveLevel);
-      // 스윙 속도 — 레벨당 +15% 누적
       if (effect.swingSpeed)   this.player.swingSpeed   *= Math.pow(effect.swingSpeed,   effectiveLevel);
     }
-
-    // noise_reduce: 생물 fleeRadius 축소 비율을 WaveSystem에 전달
-    const noiseItem = SHOP_ITEMS.abilities.find(i => i.id === 'noise_reduce');
-    const noiseLevel = save.itemLevels['noise_reduce'] || 0;
-    if (noiseLevel > 0 && this.waves) {
-      const mult = Math.pow(noiseItem.effect.noiseReduce, noiseLevel);
-      this.waves.creatures.forEach(c => {
-        c.profile.fleeRadius *= mult;
-      });
-    }
+    // noise_reduce는 WaveSystem creatures에 적용해야 하므로
+    // waves 생성 후 _startGameImpl에서 처리 (여기서는 skip)
   }
 
   // ── 리더보드 ──────────────────────────────────────────────────
