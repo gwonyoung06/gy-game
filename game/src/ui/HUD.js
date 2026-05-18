@@ -92,6 +92,50 @@ export class HUD {
     this._skillCDs[key] = { remaining: totalCd, total: totalCd };
   }
 
+  /** 콤보 타이머 바 — 콤보 유지 남은 시간을 가는 바로 표시 */
+  _updateComboTimerBar(state) {
+    // 바 요소가 없으면 최초 1회 생성
+    if (!this._comboTimerBar) {
+      const bar = document.createElement('div');
+      bar.id = '_comboTimerBar';
+      bar.style.cssText = `
+        position:absolute;bottom:-3px;left:0;height:3px;border-radius:2px;
+        background:linear-gradient(90deg,#4ecdc4,#ffd700);
+        transition:width 0.08s linear;pointer-events:none;
+        box-shadow:0 0 6px #ffd700aa;
+      `;
+      const comboEl = document.getElementById('hud-combo');
+      if (comboEl) {
+        comboEl.style.position = 'relative';
+        comboEl.appendChild(bar);
+      }
+      this._comboTimerBar = bar;
+    }
+
+    const ratio = state.comboTimeRatio ?? 0;
+    const bar   = this._comboTimerBar;
+
+    if (state.combo >= 3 && ratio > 0) {
+      bar.style.width   = `${ratio * 100}%`;
+      bar.style.opacity = '1';
+      // 30% 이하 → 빨간색으로 경고
+      if (ratio < 0.3) {
+        bar.style.background = `linear-gradient(90deg,#ff4444,#ff8800)`;
+        bar.style.boxShadow  = `0 0 8px #ff4444cc`;
+        // 진동 효과 (animation 클래스)
+        bar.style.animation  = 'comboUrgentPulse 0.2s ease-in-out infinite alternate';
+      } else {
+        bar.style.background = `linear-gradient(90deg,#4ecdc4,#ffd700)`;
+        bar.style.boxShadow  = `0 0 6px #ffd700aa`;
+        bar.style.animation  = '';
+      }
+    } else {
+      bar.style.width   = '0%';
+      bar.style.opacity = '0';
+      bar.style.animation = '';
+    }
+  }
+
   /** 매 프레임 쿨다운 업데이트 (update()에서 호출) */
   _tickSkillCDs(delta) {
     ['Q', 'E', 'R'].forEach(key => {
@@ -153,7 +197,8 @@ export class HUD {
       }
     }
 
-    const waveName = state.wave <= 3 ? `웨이브 ${state.wave}` : '⚡ 보스!';
+    const waveLabels = ['', '🌿 웨이브 1', '⚡ 웨이브 2', '🔥 웨이브 3', '👑 보스!'];
+    const waveName = waveLabels[Math.min(state.wave, 4)] || `웨이브 ${state.wave}`;
     this.wave.textContent = waveName;
 
     // 웨이브 진행 도트
@@ -185,6 +230,9 @@ export class HUD {
     if (this.comboMult) this.comboMult.textContent = multText;
     if (glow) { glow.style.opacity = glowClass ? '1' : '0'; glow.className = glowClass; }
 
+    // 콤보 타이머 바 업데이트
+    this._updateComboTimerBar(state);
+
     if (delta > 0) this._tickSkillCDs(delta);
   }
 
@@ -214,8 +262,17 @@ export class HUD {
     }, 350);
   }
 
-  showCaptureEffect(coins) {
-    this.captureFxCoins.textContent = coins;
+  showCaptureEffect(coins, creatureName = '') {
+    this.captureFxCoins.textContent = `+${coins} 💰`;
+    // 생물 이름 서브텍스트
+    let nameEl = document.getElementById('_captureName');
+    if (!nameEl) {
+      nameEl = document.createElement('div');
+      nameEl.id = '_captureName';
+      nameEl.style.cssText = `font-size:12px;opacity:0.75;margin-top:2px;letter-spacing:1px;`;
+      this.captureFx?.appendChild(nameEl);
+    }
+    nameEl.textContent = creatureName ? `✅ ${creatureName} 포획!` : '';
     this.captureFx.classList.remove('hidden');
     this.captureFx.style.animation = 'none';
     this.captureFx.offsetHeight; // reflow
@@ -337,9 +394,15 @@ export class HUD {
     }
 
     const isBoss = wave > 3;
-    const msg    = isBoss ? '👑 보스 등장!' : `웨이브 ${wave}`;
-    const sub    = isBoss ? '최후의 일전!' : wave === 1 ? '사냥 시작!' : wave === 2 ? '더 많은 생물이 나타났다!' : '마지막 웨이브!';
-    const color  = isBoss ? '#ff4400' : wave === 1 ? '#4ecdc4' : wave === 2 ? '#ffd700' : '#ff6b35';
+    const waveData = {
+      1: { msg: '🌿 웨이브 1',  sub: '생물들이 나타났다! 빠르게 포획하라!',    color: '#4ecdc4' },
+      2: { msg: '⚡ 웨이브 2',  sub: '더 많은 생물이! 콤보를 이어가라!',       color: '#ffd700' },
+      3: { msg: '🔥 웨이브 3',  sub: '마지막 물결! 전부 잡아라!',              color: '#ff6b35' },
+    };
+    const wd = isBoss
+      ? { msg: '👑 보스 등장!', sub: '전력을 다해라 — 단 하나뿐이다!',          color: '#ff4400' }
+      : (waveData[wave] || { msg: `웨이브 ${wave}`, sub: '계속 싸워라!',        color: '#4ecdc4' });
+    const { msg, sub, color } = wd;
 
     const toast = document.createElement('div');
     toast.style.cssText = `
@@ -370,23 +433,36 @@ export class HUD {
     }, 2000);
   }
 
-  /** 포획 시 점수 팝업 — 랜덤 위치에서 위로 떠오름 */
+  /** 포획 시 점수 팝업 — 점수 크기에 따라 색·크기·지속시간 차등 */
   showScorePopup(score) {
     if (!score || score <= 0) return;
+
+    // 점수 규모별 스타일 분기
+    let color, shadow, fontSize, dur;
+    if (score >= 50000) {
+      color = '#ff4400'; shadow = 'rgba(255,68,0,0.9)'; fontSize = 38; dur = 1600;
+    } else if (score >= 10000) {
+      color = '#ffd700'; shadow = 'rgba(255,215,0,0.9)'; fontSize = 32; dur = 1400;
+    } else if (score >= 1000) {
+      color = '#ff88ff'; shadow = 'rgba(255,140,255,0.8)'; fontSize = 26; dur = 1200;
+    } else {
+      color = '#44ffaa'; shadow = 'rgba(68,255,170,0.85)'; fontSize = 20; dur = 1000;
+    }
+
     const el = document.createElement('div');
     el.style.cssText = `
       position:fixed;
-      top:${24 + Math.random() * 10}%;
-      left:${37 + (Math.random() - 0.5) * 22}%;
-      color:#44ffaa;font-size:21px;font-weight:900;
+      top:${22 + Math.random() * 12}%;
+      left:${36 + (Math.random() - 0.5) * 20}%;
+      color:${color};font-size:${fontSize}px;font-weight:900;
       font-family:'Rajdhani',sans-serif;letter-spacing:1px;
-      text-shadow:0 0 14px rgba(68,255,170,0.85),0 2px 6px rgba(0,0,0,0.9);
+      text-shadow:0 0 16px ${shadow},0 2px 6px rgba(0,0,0,0.9);
       z-index:201;pointer-events:none;
-      animation:scoreFloat 1.1s ease-out forwards;
+      animation:scoreFloat ${dur}ms ease-out forwards;
     `;
     el.textContent = `+${score.toLocaleString()}`;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1100);
+    setTimeout(() => el.remove(), dur);
   }
 
   /** 피격 데미지 팝업 — 랜덤 위치에서 위로 떠오름 */

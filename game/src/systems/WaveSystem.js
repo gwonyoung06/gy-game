@@ -196,10 +196,18 @@ export class WaveSystem {
     // 클리어 체크
     if (this.capturedCount >= this.targetCount) {
       this.active = false;
+      const timeUsed = this.timeLimit - this.timeRemaining;
       this.onStageComplete({
-        captured: this.capturedCount,
-        timeLeft: this.timeRemaining,
-        maxCombo: this.maxCombo,
+        captured:     this.capturedCount,
+        timeLeft:     this.timeRemaining,
+        maxCombo:     this.maxCombo,
+        timeUsed:     Math.max(1, timeUsed),
+        totalSpawned: this.creatures.length,
+        // 초당 포획 속도
+        capturePerSec: timeUsed > 0 ? (this.capturedCount / timeUsed).toFixed(2) : '0.00',
+        // 포획률 (스폰 대비)
+        captureRate: this.creatures.length > 0
+          ? Math.round(this.capturedCount / this.creatures.length * 100) : 100,
       });
     }
   }
@@ -278,12 +286,15 @@ export class WaveSystem {
   }
 
   getState() {
+    const COMBO_MAX = 3; // 콤보 유지 시간(초)
     return {
       timeRemaining: Math.ceil(this.timeRemaining),
       captured: this.capturedCount,
       target: this.targetCount,
       wave: this.currentWave,
       combo: this.combo,
+      // 콤보 타이머 비율 (1.0 = 방금 포획, 0 = 곧 만료)
+      comboTimeRatio: this.combo > 0 ? Math.max(0, 1 - this.comboTimer / COMBO_MAX) : 0,
     };
   }
 

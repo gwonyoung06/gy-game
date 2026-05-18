@@ -181,29 +181,40 @@ export class Minimap {
     // ── 생물 ──────────────────────────────────────────────────
     const radar = this._isRadarActive();
     if (creatures) {
+      const now = performance.now();
       for (let i = 0; i < creatures.length; i++) {
         const c = creatures[i];
         if (!c.alive || c.captured) continue;
         const [cx, cy] = toMap(c.mesh.position.x, c.mesh.position.z);
         if (Math.hypot(cx - cr, cy - cr) > r) continue;
 
-        const aggro = (c.profile?.aggroRange ?? 0) > 0;
-        if (radar) {
-          ctx.fillStyle = '#ffee00';
-        } else if (aggro) {
-          ctx.fillStyle = '#ff4444';
+        const aggro  = (c.profile?.aggroRange ?? 0) > 0;
+        const isBoss = c.isBoss === true;
+
+        if (isBoss) {
+          // 보스: 크고 빨간 별 + 맥박 링
+          const pulse = 0.5 + 0.5 * Math.sin(now / 300);
+          ctx.fillStyle = `rgba(255,${40 + Math.round(pulse*60)},0,${0.75 + pulse * 0.2})`;
+          this._drawStar(ctx, cx, cy, 5 + pulse);
+          ctx.strokeStyle = `rgba(255,60,0,${0.3 + pulse * 0.3})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(cx, cy, 8 + pulse * 4, 0, Math.PI * 2); ctx.stroke();
         } else {
-          ctx.fillStyle = '#44ff99';
-        }
-
-        ctx.beginPath();
-        ctx.arc(cx, cy, aggro ? 3 : 2.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        if (aggro && !radar) {
-          ctx.strokeStyle = 'rgba(255,60,60,0.6)';
-          ctx.lineWidth   = 1;
-          ctx.stroke();
+          if (radar) {
+            ctx.fillStyle = '#ffee00';
+          } else if (aggro) {
+            ctx.fillStyle = '#ff4444';
+          } else {
+            ctx.fillStyle = '#44ff99';
+          }
+          ctx.beginPath();
+          ctx.arc(cx, cy, aggro ? 3 : 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          if (aggro && !radar) {
+            ctx.strokeStyle = 'rgba(255,60,60,0.6)';
+            ctx.lineWidth   = 1;
+            ctx.stroke();
+          }
         }
       }
     }

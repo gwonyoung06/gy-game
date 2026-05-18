@@ -753,15 +753,42 @@ export class Player {
       }
     }
 
-    // getHeight 는 오목 지역에서 살짝 음수를 반환할 수 있음 → 0 이상으로 클램프
-    // +0.18 오프셋: 지형 보간 오차 + 발바닥 두께 고려 (0.12에서 상향)
-    const terrainY = Math.max(0, world ? world.getHeight(this.mesh.position.x, this.mesh.position.z) : 0) + 0.18;
-    if (this.mesh.position.y < terrainY) {
-      // 지형 아래로 클리핑 절대 금지 — 즉시 스냅
-      this.mesh.position.y = terrainY;
+    // 지형 높이 스냅 ─────────────────────────────────────────────
+    if (world) {
+      const px = this.mesh.position.x;
+      const pz = this.mesh.position.z;
+      const D  = 0.5; // 경사 샘플 간격
+
+      // 4방향 샘플로 경사 기울기 반영 (최댓값 기준으로 Y 스냅)
+      const h0 = world.getHeight(px,     pz);
+      const hF = world.getHeight(px,     pz - D); // 앞
+      const hB = world.getHeight(px,     pz + D); // 뒤
+      const hL = world.getHeight(px - D, pz);     // 좌
+      const hR = world.getHeight(px + D, pz);     // 우
+
+      // 발 범위 안에서 가장 높은 지점을 기준으로 발이 뚫리지 않게
+      const maxH = Math.max(h0, hF, hB, hL, hR);
+      const terrainY = Math.max(0, maxH) + 0.22;
+
+      if (this.mesh.position.y < terrainY) {
+        // 지형 아래로 클리핑 절대 금지 — 즉시 스냅
+        this.mesh.position.y = terrainY;
+      } else {
+        // 경사 위를 걸을 때 부드러운 정착 (중력감)
+        this.mesh.position.y += (terrainY - this.mesh.position.y) * Math.min(1, 14 * delta);
+      }
+
+      // 경사에 맞게 캐릭터 기울기 (지형 법선 추정)
+      const slopeX = (hR - hL) / (2 * D);
+      const slopeZ = (hF - hB) / (2 * D);
+      const maxTilt = 0.40; // 최대 기울기 (라디안)
+      const targetRX = Math.max(-maxTilt, Math.min(maxTilt, -slopeZ));
+      const targetRZ = Math.max(-maxTilt, Math.min(maxTilt, -slopeX));
+      this.mesh.rotation.x += (targetRX - this.mesh.rotation.x) * Math.min(1, 8 * delta);
+      this.mesh.rotation.z += (targetRZ - this.mesh.rotation.z) * Math.min(1, 8 * delta);
     } else {
-      // 경사 위를 걸을 때 부드러운 정착 (중력감)
-      this.mesh.position.y += (terrainY - this.mesh.position.y) * Math.min(1, 14 * delta);
+      const terrainY = 0.22;
+      if (this.mesh.position.y < terrainY) this.mesh.position.y = terrainY;
     }
   }
 

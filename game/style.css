@@ -318,6 +318,7 @@ body {
 .stage-card .stage-num        { font-size: 22px; font-weight: 900; color: var(--primary); font-family: var(--font-en); }
 .stage-card .stage-theme-icon { font-size: 34px; margin: 8px 0; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
 .stage-card .stage-name        { font-size: 12px; color: rgba(255,255,255,0.65); font-weight: 600; }
+.stage-card .stage-meta        { font-size: 10px; color: rgba(255,255,255,0.38); margin-top: 3px; letter-spacing: 0.3px; }
 .stage-card .stage-cleared     { font-size: 10px; color: var(--secondary); margin-top: 2px; }
 .stage-card .stage-star-row   { font-size: 13px; margin-top: 5px; letter-spacing: 1px; filter: drop-shadow(0 0 4px rgba(255,215,0,0.6)); }
 
@@ -367,7 +368,13 @@ body {
   color: #ffd700;
   background: rgba(255,215,0,0.07);
 }
-.cc-coins { font-size: 11px; color: rgba(255,215,0,0.85); margin-left: 3px; }
+.cc-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.cc-name { font-weight: 600; }
+.cc-coins { font-size: 11px; color: rgba(255,215,0,0.85); margin-left: 2px; }
+.cc-score { font-size: 10px; color: rgba(255,255,255,0.45); margin-left: 1px; }
+.cc-diff  { font-size: 11px; margin-left: 1px; line-height: 1; }
 
 /* HUD 웨이브 도트 */
 .wave-info { display: flex; flex-direction: column; align-items: center; gap: 3px; }
@@ -651,7 +658,15 @@ body {
   text-align: center;
   letter-spacing: 2px;
 }
-.hud-timer.urgent { color: #ff4444; animation: pulse 0.5s infinite; text-shadow: 0 0 20px rgba(255,68,68,0.7); }
+.hud-timer.urgent {
+  color: #ff3333 !important;
+  animation: timerUrgent 0.4s ease-in-out infinite alternate;
+  text-shadow: 0 0 20px rgba(255,50,50,0.9), 0 0 40px rgba(255,50,50,0.4);
+}
+@keyframes timerUrgent {
+  from { transform: scale(1);    letter-spacing: 2px; }
+  to   { transform: scale(1.08); letter-spacing: 4px; }
+}
 
 .hud-right-info { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .hud-coins { font-size: 16px; font-weight: 700; color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.35); }
@@ -970,6 +985,15 @@ body {
   gap: 22px;
   box-shadow: 0 32px 80px rgba(0,0,0,0.75);
   animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 별점별 결과 카드 테두리 글로우 */
+.result-card.result-stars-1 { border-color: rgba(78,205,196,0.5); box-shadow: 0 32px 80px rgba(0,0,0,0.75), 0 0 30px rgba(78,205,196,0.15); }
+.result-card.result-stars-2 { border-color: rgba(255,215,0,0.5); box-shadow: 0 32px 80px rgba(0,0,0,0.75), 0 0 40px rgba(255,215,0,0.20); }
+.result-card.result-stars-3 { border-color: rgba(255,165,0,0.7); box-shadow: 0 32px 80px rgba(0,0,0,0.75), 0 0 60px rgba(255,215,0,0.35); animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), starGlow 2.5s ease-in-out infinite; }
+@keyframes starGlow {
+  0%, 100% { box-shadow: 0 32px 80px rgba(0,0,0,0.75), 0 0 60px rgba(255,215,0,0.35); }
+  50%       { box-shadow: 0 32px 80px rgba(0,0,0,0.75), 0 0 80px rgba(255,215,0,0.55), 0 0 120px rgba(255,165,0,0.2); }
 }
 
 .result-header { text-align: center; }
@@ -1575,8 +1599,18 @@ body {
   pointer-events: none;
   z-index: 4;
   opacity: 0;
-  box-shadow: inset 0 0 120px rgba(255,30,30,0.45);
-  transition: opacity 0.1s ease;
+  box-shadow:
+    inset 0 0 80px  rgba(255,30,30,0.55),
+    inset 0 0 180px rgba(255,0,0,0.25);
+  transition: opacity 0.12s ease;
+  animation: none;
+}
+#timer-urgency.active {
+  animation: urgencyPulse 0.45s ease-in-out infinite alternate;
+}
+@keyframes urgencyPulse {
+  from { opacity: 0.35; }
+  to   { opacity: 0.75; }
 }
 
 /* ══════════════════════════════════════════════
@@ -1607,6 +1641,11 @@ body {
 @keyframes skillFlash {
   0%   { opacity: 1; }
   100% { opacity: 0; }
+}
+/* 콤보 타이머 만료 경고 펄스 */
+@keyframes comboUrgentPulse {
+  from { opacity: 0.5; transform: scaleX(1);    }
+  to   { opacity: 1.0; transform: scaleX(1.02); }
 }
 
 /* 타이머 urgent 강화 */
@@ -2010,4 +2049,112 @@ body {
 .upgrade-card.selected {
   border-color: #00ff88 !important;
   box-shadow: 0 0 28px rgba(0,255,136,0.55) !important;
+}
+
+/* ══════════════════════════════════════════════
+   크리처 도감 (Dex)
+══════════════════════════════════════════════ */
+#screen-dex {
+  background: var(--dark2);
+  overflow-y: auto;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.dex-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+}
+
+.dex-bar-outer {
+  width: calc(100% - 48px);
+  max-width: 700px;
+  align-self: center;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0 auto 8px;
+}
+.dex-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--secondary), var(--gold));
+  box-shadow: 0 0 10px rgba(78,205,196,0.5);
+  transition: width 0.6s ease;
+}
+
+.dex-content {
+  padding: 8px 20px 32px;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 760px;
+  align-self: center;
+}
+
+.dex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+}
+
+.dex-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 6px 8px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  cursor: default;
+  transition: transform 0.18s ease, border-color 0.2s;
+  animation: slideUp 0.3s ease both;
+}
+.dex-card.dex-caught { border-color: rgba(78,205,196,0.35); }
+.dex-card.dex-caught:hover { transform: translateY(-4px) scale(1.04); border-color: rgba(78,205,196,0.7); }
+.dex-card.dex-unknown { opacity: 0.45; filter: grayscale(0.7); }
+
+.dex-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  position: relative;
+  overflow: visible;
+  flex-shrink: 0;
+}
+.dex-avatar-unknown { background: rgba(255,255,255,0.06); }
+
+.dex-boss-crown {
+  position: absolute;
+  top: -10px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  filter: drop-shadow(0 0 4px rgba(255,215,0,0.8));
+}
+
+.dex-name {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.2;
+  word-break: keep-all;
+}
+.dex-name-unknown { color: rgba(255,255,255,0.3); }
+
+.dex-meta {
+  font-size: 10px;
+  color: rgba(255,255,255,0.45);
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .dex-grid { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; }
 }

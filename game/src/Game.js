@@ -45,7 +45,15 @@ export class Game {
     // 스킬 슬롯별 쿨다운 { Q, E, R }
     this._slotCDs  = { Q: 0, E: 0, R: 0 };
     this.selectedStage = 1;
-    this.settings = { difficulty: 'easy', weather: 'sunny', timeOfDay: 'day' };
+    // 마지막 선택 설정 복원 (없으면 기본값)
+    {
+      const saved = (() => { try { return JSON.parse(localStorage.getItem('hunters_pregame') || '{}'); } catch { return {}; } })();
+      this.settings = {
+        difficulty: saved.difficulty || 'easy',
+        weather:    saved.weather    || 'sunny',
+        timeOfDay:  saved.timeOfDay  || 'day',
+      };
+    }
     this.totalCoins = 0;
     this.sessionScore = 0;
     this.sessionCoins = 0;
@@ -155,9 +163,24 @@ export class Game {
     document.getElementById('btn-back-from-pregame').addEventListener('click', () => this._showScreen('stage-select'));
     document.getElementById('btn-play').addEventListener('click', () => this._startGame());
 
-    this._initOptionGroup('difficulty-options', v => { this.settings.difficulty = v; });
-    this._initOptionGroup('weather-options',    v => { this.settings.weather = v; });
-    this._initOptionGroup('time-options',       v => { this.settings.timeOfDay = v; });
+    const _saveSettings = () => {
+      try { localStorage.setItem('hunters_pregame', JSON.stringify(this.settings)); } catch {}
+    };
+    this._initOptionGroup('difficulty-options', v => { this.settings.difficulty = v; _saveSettings(); });
+    this._initOptionGroup('weather-options',    v => { this.settings.weather    = v; _saveSettings(); });
+    this._initOptionGroup('time-options',       v => { this.settings.timeOfDay  = v; _saveSettings(); });
+
+    // 저장된 설정값에 맞는 버튼 active 처리
+    const _restoreBtn = (groupId, value) => {
+      const el = document.getElementById(groupId);
+      if (!el || !value) return;
+      el.querySelectorAll('.opt-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.value === value);
+      });
+    };
+    _restoreBtn('difficulty-options', this.settings.difficulty);
+    _restoreBtn('weather-options',    this.settings.weather);
+    _restoreBtn('time-options',       this.settings.timeOfDay);
 
     // 결과
     document.getElementById('btn-to-shop').addEventListener('click', () => {
@@ -455,6 +478,8 @@ export class Game {
     // 게임 루프에서 조이스틱 입력 → Player.keys + 아날로그 속도 스케일
     this._touchJoystick = () => {
       if (!this.player) return;
+      // ※ 터치가 없을 때는 키보드 입력을 보존 — 덮어쓰기 금지
+      if (jTouchId === null) return;
       // 키보드 on/off 매핑 (기존 이동 시스템과 호환)
       this.player.keys['KeyW'] = jy < -DEAD;
       this.player.keys['KeyS'] = jy >  DEAD;
@@ -510,6 +535,7 @@ export class Game {
         <div class="stage-num">${stage.id}</div>
         <div class="stage-theme-icon">${stage.icon}</div>
         <div class="stage-name">${stage.name}</div>
+        <div class="stage-meta">⏱${stage.timeLimit}s &nbsp;🎯${stage.targetCount}</div>
         ${cleared  ? `<div class="stage-star-row">${starStr}</div><div class="stage-cleared">${best.toLocaleString()}점</div>` : ''}
         ${!unlocked ? '<div class="stage-cleared">🔒 잠김</div>' : ''}
         ${isNew ? '<div class="stage-new-badge">NEW!</div>' : ''}
@@ -632,7 +658,7 @@ export class Game {
     this.player = new Player(this.scene);
     // 스폰 직후 지형 Y 스냅 — 게임루프 첫 프레임 전에 미리 맞춰 함몰 방지
     {
-      const spawnY = Math.max(0, this.world.getHeight(0, 0)) + 0.12;
+      const spawnY = Math.max(0, this.world.getHeight(0, 0)) + 0.22;
       this.player.mesh.position.set(0, spawnY, 0);
     }
     this._applyShopEffects(save); // player 스탯 적용 (speed/range/swing)
@@ -917,12 +943,27 @@ export class Game {
 
   // ── 타이머 긴박감 (10초 이하 화면 펄스) ──────────────────────
   _updateTimerUrgency(timeRemaining) {
-    const timerEl = document.getElementById('hud-timer');
+    const timerEl   = document.getElementById('hud-timer');
     const urgencyEl = document.getElementById('timer-urgency');
     if (!timerEl) return;
-    const urgent = timeRemaining <= 10 && timeRemaining > 0;
-    timerEl.classList.toggle('urgent', urgent);
-    if (urgencyEl) urgencyEl.style.opacity = urgent ? (Math.sin(Date.now() * 0.01) * 0.15 + 0.15).toString() : '0';
+
+    const critical = timeRemaining <= 10 && timeRemaining > 0; // 10초 이하
+    const warning  = timeRemaining <= 20 && !critical;          // 20초 이하
+
+    timerEl.classList.toggle('urgent', critical);
+
+    if (urgencyEl) {
+      if (critical) {
+        urgencyEl.classList.add('active');
+        urgencyEl.style.opacity = ''; // CSS animation에게 위임
+      } else if (warning) {
+        urgencyEl.classList.remove('active');
+        urgencyEl.style.opacity = '0.18';
+      } else {
+        urgencyEl.classList.remove('active');
+        urgencyEl.style.opacity = '0';
+      }
+    }
   }
 
   _cleanup() {
@@ -968,7 +1009,7 @@ export class Game {
     }
     // 타이머 긴박감 오버레이 리셋
     const urgEl = document.getElementById('timer-urgency');
-    if (urgEl) urgEl.style.opacity = '0';
+    if (urgEl) { urgEl.style.opacity = '0'; urgEl.classList.remove('active'); }
     // 보스 경고 / PB 숨기기
     document.getElementById('boss-warning')?.classList.add('hidden');
     document.getElementById('hud-pb')?.classList.add('hidden');
@@ -1217,7 +1258,7 @@ export class Game {
       this.sessionScore += result.score;
       this.sessionCoins += result.coins;
       this.totalCoins = addCoins(result.coins);
-      this.hud.showCaptureEffect(result.coins);
+      this.hud.showCaptureEffect(result.coins, result.creature?.config?.name ?? '');
       this.hud.showScorePopup(result.score);
       this._triggerCaptureFlash();
       this.camCtrl?.shake(0.13);
@@ -1452,7 +1493,7 @@ export class Game {
     this.sessionScore += score;
     this.sessionCoins += coins;
     this.totalCoins = addCoins(coins);
-    this.hud.showCaptureEffect(coins);
+    this.hud.showCaptureEffect(coins, creature?.config?.name ?? '');
     // 스킬 포획도 일반 포획과 동일하게 점수 팝업 + 캡처 피드에 표시
     this.hud.showScorePopup?.(score);
     recordCapturedType(creature?.config?.type);
@@ -1707,6 +1748,7 @@ export class Game {
       document.getElementById('btn-next-stage').style.display = 'none';
       document.getElementById('nickname-row').classList.add('hidden');
       this._setResultStars(0);
+      document.querySelector('.result-card')?.classList.remove('result-stars-1', 'result-stars-2', 'result-stars-3');
       this._showScreen('result');
       this._animateResultNumbers(this.waves?.capturedCount || 0, 0, this.waves?.maxCombo || 0, this.totalDamageTaken || 0);
     }
@@ -1769,6 +1811,12 @@ export class Game {
     }
 
     this._setResultStars(stars);
+    // 별점에 따른 결과 카드 테두리 글로우
+    const resultCard = document.querySelector('.result-card');
+    if (resultCard) {
+      resultCard.classList.remove('result-stars-1', 'result-stars-2', 'result-stars-3');
+      resultCard.classList.add(`result-stars-${stars}`);
+    }
 
     // 마지막 닉네임 자동 채우기
     const savedNick = localStorage.getItem('gy_last_nickname') || '';
@@ -1776,7 +1824,7 @@ export class Game {
     if (nickInput && savedNick) nickInput.value = savedNick;
 
     this._showScreen('result');
-    this._animateResultNumbers(result.captured, result.timeLeft, result.maxCombo, this.totalDamageTaken || 0);
+    this._animateResultNumbers(result.captured, result.timeLeft, result.maxCombo, this.totalDamageTaken || 0, result);
   }
 
   _onStageFail() {
@@ -1789,12 +1837,14 @@ export class Game {
     document.getElementById('btn-next-stage').style.display = 'none';
     document.getElementById('nickname-row').classList.add('hidden');
     this._setResultStars(0);
+    const resultCard = document.querySelector('.result-card');
+    if (resultCard) resultCard.classList.remove('result-stars-1', 'result-stars-2', 'result-stars-3');
 
     this._showScreen('result');
     this._animateResultNumbers(this.waves?.capturedCount || 0, 0, this.waves?.maxCombo || 0, this.totalDamageTaken || 0);
   }
 
-  _animateResultNumbers(captured, timeLeft, maxCombo, damage = 0) {
+  _animateResultNumbers(captured, timeLeft, maxCombo, damage = 0, extra = {}) {
     const coins  = this.sessionCoins;
     const score  = this.sessionScore;
     const dur    = 1200;
@@ -1809,10 +1859,26 @@ export class Game {
       document.getElementById('res-coins').textContent    = `+${Math.round(t * coins).toLocaleString()}`;
       document.getElementById('res-score').textContent    = Math.round(t * score).toLocaleString();
       const dmgEl = document.getElementById('res-damage');
-      if (dmgEl) dmgEl.textContent = Math.round(t * damage);
+      if (dmgEl) dmgEl.textContent = damage === 0 ? '✨ 무피해' : Math.round(t * damage);
       if (t < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
+
+    // 추가 통계 (애니메이션 없이 즉시 표시)
+    if (extra.captureRate !== undefined) {
+      const rateEl = document.getElementById('res-capture-rate');
+      if (rateEl) {
+        const r = extra.captureRate;
+        rateEl.textContent = `${r}%`;
+        // 색상 코딩: 높을수록 금색
+        rateEl.style.color = r >= 80 ? '#ffd700' : r >= 50 ? '#4ecdc4' : 'rgba(255,255,255,0.7)';
+        if (r >= 80) rateEl.style.textShadow = '0 0 10px rgba(255,215,0,0.5)';
+      }
+    }
+    if (extra.capturePerSec !== undefined) {
+      const cpsEl = document.getElementById('res-cps');
+      if (cpsEl) cpsEl.textContent = `${extra.capturePerSec}/초`;
+    }
   }
 
   // ── 상점 업그레이드 효과 적용 ─────────────────────────────────
@@ -1867,11 +1933,14 @@ export class Game {
       }
       records.forEach(([stageId, score], i) => {
         const stage = STAGES.find(s => s.id === parseInt(stageId));
+        const stars = (save.stageStars || {})[parseInt(stageId)] || 0;
+        const starStr = stars > 0 ? '⭐'.repeat(stars) + '☆'.repeat(3 - stars) : '☆☆☆';
         const row = document.createElement('div');
         row.className = 'lb-row';
         row.innerHTML = `
           <div class="lb-rank ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}">${i + 1}</div>
           <div class="lb-name">${stage?.icon || '?'} ${stage?.name || `스테이지 ${stageId}`}</div>
+          <div style="font-size:11px;letter-spacing:1px;filter:drop-shadow(0 0 3px rgba(255,215,0,0.5))">${starStr}</div>
           <div class="lb-score">${score.toLocaleString()}점</div>
         `;
         container.appendChild(row);
@@ -1996,7 +2065,9 @@ export class Game {
 
       const metaEl = document.createElement('div');
       metaEl.className = 'dex-meta';
-      metaEl.textContent = found ? `${c.stageIcon} \xd7${cnt}` : '';
+      if (found) {
+        metaEl.innerHTML = `${c.stageIcon} ×${cnt}<br><span style="color:rgba(255,215,0,0.6)">💰${c.coins}</span>`;
+      }
 
       card.append(avatar, nameEl, metaEl);
       grid.appendChild(card);
@@ -2095,13 +2166,35 @@ export class Game {
       const chip = document.createElement('div');
       chip.className = `creature-chip${c._boss ? ' creature-chip--boss' : ''}`;
       chip.style.animationDelay = `${i * 40}ms`;
+
+      // 색상 스와치 (생물 고유 색)
+      const colorHex = '#' + ((c.color ?? 0x88aa44) >>> 0).toString(16).padStart(6, '0');
+      const dot = document.createElement('span');
+      dot.className = 'cc-dot';
+      dot.style.background = colorHex;
+      dot.style.boxShadow  = `0 0 4px ${colorHex}99`;
+
       const name = document.createElement('span');
       name.className = 'cc-name';
       name.textContent = c.name;
+
       const coins = document.createElement('span');
       coins.className = 'cc-coins';
       coins.textContent = `💰${c.coins}`;
-      chip.append(name, coins);
+
+      const score = document.createElement('span');
+      score.className = 'cc-score';
+      score.textContent = `🏆${c.score}`;
+
+      // 이동 속도 → 포획 난이도 표시
+      const spd = c.speed ?? 1;
+      const diffLabel = spd >= 1.8 ? '⚡' : spd >= 1.2 ? '🔥' : '🟢';
+      const diff = document.createElement('span');
+      diff.className = 'cc-diff';
+      diff.title = `속도 ${spd}`;
+      diff.textContent = diffLabel;
+
+      chip.append(dot, name, coins, score, diff);
       el.appendChild(chip);
     });
   }
@@ -2152,7 +2245,9 @@ export class Game {
     if (!feed) return;
     const el = document.createElement('div');
     el.className = 'feed-entry';
-    el.textContent = `${name}  +${coins}💰`;
+    // 금액에 따라 색상 변화 (높을수록 골드)
+    const coinColor = coins >= 200 ? '#ffd700' : coins >= 80 ? '#4ecdc4' : '#7affc8';
+    el.innerHTML = `<span style="opacity:.65">✅</span> <span class="feed-name">${name}</span> <span style="color:${coinColor};font-weight:900">+${coins}💰</span>`;
     feed.prepend(el);
     // 최대 4개 유지
     while (feed.children.length > 4) feed.lastChild?.remove();
