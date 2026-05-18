@@ -98,8 +98,8 @@ export class CameraController {
     // 줌 lerp
     this.distance += (this.targetDistance - this.distance) * Math.min(1, 10 * delta);
 
-    // 자동 yaw: 이동 중이고 잠금 상태일 때 플레이어 뒤를 따라옴
-    if (this._autoYaw && isMoving && this._locked) {
+    // 자동 yaw: 이동 중일 때 플레이어 뒤를 따라옴 (포인터락 여부 무관)
+    if (this._autoYaw && isMoving) {
       let diff = playerYaw - this.yaw;
       while (diff >  Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
@@ -164,7 +164,4 @@ export class CameraController {
     window.removeEventListener('mousemove',           this._onMouseMove);
     this.canvas.removeEventListener('wheel',          this._onWheel);
     this.canvas.removeEventListener('contextmenu',    this._noContext);
-    document.removeEventListener('pointerlockchange', this._onLockChange);
-    if (this._locked) document.exitPointerLock();
-  }
-}
+    document.removeEventListener('pointerlockchange', this._onLo

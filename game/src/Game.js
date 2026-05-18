@@ -96,12 +96,12 @@ export class Game {
   // ── 화면 전환 ─────────────────────────────────────────────────
   _showScreen(name) {
     const noFade = name === 'game' || name === 'pause';
+    const fade = document.getElementById('fade-overlay');
     // 게임 화면이 아닐 때 커서 항상 강제 복원 (포인터락 해제 직후 비동기 딜레이 대응)
     if (name !== 'game') {
       document.body.style.cursor = 'auto';
       setTimeout(() => { document.body.style.cursor = 'auto'; }, 80);
     }
-    const fade = document.getElementById('fade-overlay');
     const doSwitch = () => {
       document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
       const el = document.getElementById(`screen-${name}`);
@@ -200,17 +200,16 @@ export class Game {
       this._showScreen('title');
     });
 
-    // 좌클릭 → 포인터락 요청 or 포획
+    // 좌클릭 → 포인터락 요청 + 포획 (락 없어도 포획 허용)
     this.renderer.domElement.addEventListener('click', e => {
       if (this.currentScreen !== 'game') return;
       if (e.button !== 0) return;
+      // 락 미획득 상태면 락 요청 (사용자 제스처이므로 항상 성공)
       if (!this.camCtrl?.isLocked) {
-        // 잠금 안 됐으면 먼저 잠금 요청
         this.camCtrl?.requestLock();
-      } else {
-        // 잠금 상태면 포획
-        this._tryCapture();
       }
+      // 락 여부와 무관하게 포획 시도 (클릭 = 항상 포획 의도)
+      this._tryCapture();
     });
 
     // ── 설정 패널 ────────────────────────────────────────────────
@@ -2161,14 +2160,4 @@ export class Game {
   // ── 보스 웨이브 레드 플래시 ──────────────────────────────────
   _bossFlash() {
     this.camCtrl?.shake(0.42);
-    const el = document.createElement('div');
-    el.style.cssText = `
-      position:fixed;inset:0;
-      background:radial-gradient(ellipse at center, rgba(180,0,0,0.5) 0%, rgba(255,0,0,0.15) 60%, transparent 100%);
-      pointer-events:none;z-index:300;
-      animation:skillFlash 0.7s ease forwards;
-    `;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 700);
-  }
-}
+    const el = document.
