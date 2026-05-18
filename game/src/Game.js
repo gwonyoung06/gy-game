@@ -14,6 +14,7 @@ import { particlePool, _cachedMats, _cachedGeos } from './entities/Creature.js';
 import { audioManager } from './systems/AudioManager.js';
 import { submitScore, fetchGlobalLeaderboard } from './utils/supabase.js';
 import { DebugOverlay } from './utils/DebugOverlay.js';
+import { logger } from './utils/Logger.js';
 
 // 스킬 쿨다운 테이블
 const _gv = new THREE.Vector3(); // danger indicator projection cache
@@ -55,6 +56,7 @@ export class Game {
     this._titleScene   = null;
     this._titleCamera  = null;
 
+    logger.mark('Game constructor start');
     this._initRenderer();
     this._initScreens();
     this._initTouchControls();
@@ -68,6 +70,7 @@ export class Game {
     };
 
     this._showScreen('title');
+    logger.mark('Game constructor done → title');
   }
 
   // ── 렌더러 초기화 ──────────────────────────────────────────────
@@ -588,6 +591,7 @@ export class Game {
     try {
       this._startGameImpl();
     } catch (err) {
+      logger.error(`[_startGame] crash: ${err?.stack || err}`);
       console.error('[_startGame] crash:', err);
       this._showScreen('title');
       const msg = document.createElement('div');
@@ -599,6 +603,7 @@ export class Game {
   }
 
   _startGameImpl() {
+    logger.mark(`startGame stage=${this.selectedStage} diff=${this.settings.difficulty}`);
     this._stopTitleScene();
     this._stopLoop();
     this._cleanup();
