@@ -2,15 +2,6 @@ import * as THREE from 'three';
 import { Creature } from '../entities/Creature.js';
 import { DIFFICULTY } from '../data/stages.js';
 
-// terrain Y 스냅에서 제외할 스타일:
-//  - 비행형: 공중에서 자체 Y 제어
-//  - 수중형: 수면(y=0.4) 고정 자체 제어
-const _FLYING_STYLES_WS = new Set([
-  'erratic_hover', 'flap_drift', 'buzz_hover',
-  'soar_circle', 'ufo_hover', 'pulse_drift',
-  'swim_curve', 'sidewalk', // 수중·수면 생물 — y 자체 관리
-]);
-
 export class WaveSystem {
   /**
    * @param {THREE.Scene} scene
@@ -52,7 +43,6 @@ export class WaveSystem {
     this.comboTimer = 0;
     this.maxCombo = 0;
     this._spawnRings = []; // 스폰 링 이펙트 목록
-    this.onWaveClear = null; // (nextWave, spawnFn) — 업그레이드 카드 훅
     this._spawnWave(1);
   }
 
@@ -64,8 +54,6 @@ export class WaveSystem {
     if (wave <= 3) {
       // 일반 웨이브 – 스폰 수 0.4 → 1.0 (맵이 비어보이지 않게)
       const spawnMultiplier = wave === 1 ? 1.0 : wave === 2 ? 1.5 : 2.0;
-      // 웨이브 1 최소 스폰 거리: 플레이어로부터 30유닛 이상
-      const minSpawnDist = wave === 1 ? 30 : 0;
       this.stage.creatures.forEach(cfg => {
         const count = Math.ceil(cfg.count * spawnMultiplier * diff.countMult * 1.0);
         const speedMult = diff.speedMult * (wave === 3 ? 1.3 : 1.0);
@@ -74,22 +62,11 @@ export class WaveSystem {
           // 없으면 기존 랜덤 스폰으로 fallback (하위 호환)
           const hint = this.world ? this.world.getSpawnPosition(cfg.type) : null;
           const creature = new Creature(this.scene, { ...cfg, speed: cfg.speed * speedMult }, 110, hint); // spawnArea: 플레이 반경 120m 전체 분포
-          // 웨이브 1: 플레이어 위치(원점 기준)에서 최소 30유닛 이상 보장
-          if (minSpawnDist > 0) {
-            const pos = creature.mesh.position;
-            const dx = pos.x, dz = pos.z;
-            const d = Math.sqrt(dx * dx + dz * dz);
-            if (d < minSpawnDist) {
-              const scale = minSpawnDist / Math.max(d, 0.1);
-              pos.x *= scale;
-              pos.z *= scale;
-            }
-          }
           // LOD 분산 — 같은 프레임에 몰리지 않도록 오프셋 배정
           creature._tickOffset = this.creatures.length & 3; // 0~3 순환
           this.creatures.push(creature);
           // 스폰 링 이펙트 (웨이브 2+ 만 — 웨이브1은 게임 시작 직후라 어색함)
-          if (wave > 1) this._emitSpawnRing(creature.mesh.position, false, wave);
+          if (wave > 1) this._emitSpawnRing(creature.mesh.position);
         }
       });
     } else if (wave === 4 && this.stage.miniBoss) {
@@ -143,30 +120,21 @@ export class WaveSystem {
     }
 
     // ── AI LOD 업데이트 ──────────────────────────────────────────
-    // 기본: 60유닛 이상은 4프레임에 1번 update
-    // _lodSkip >= 2(저사양 모드): 30유닛 이상도 격프레임 처리
+    // 60유닛 이상 거리의 생물은 4프레임에 1번만 update
+    // _tickOffset(0~3)으로 분산 → 한 프레임에 부하 집중 방지
     this._frame = (this._frame + 1) & 255;
-    const lodSkip = this._lodSkip ?? 1; // 1=정상, 2=절전
     let aliveCount = 0;
 
     for (const c of this.creatures) {
       if (!c.alive) continue;
 
       const dist = c.mesh.position.distanceTo(playerPos);
-      // 거리 기반 스킵 임계치: 정상=60, 절전=30
-      const skipThresh = lodSkip >= 2 ? 30 : 60;
-      const skipMask   = lodSkip >= 2 ? 1  : 3;  // 절전: 2프레임에 1번
-      if (dist > skipThresh && ((this._frame + (c._tickOffset ?? 0)) & skipMask) !== 0) {
-        aliveCount++;
+      if (dist > 60 && ((this._frame + (c._tickOffset ?? 0)) & 3) !== 0) {
+        aliveCount++; // 이번 프레임 skip — 살아있음은 유지
         continue;
       }
 
       c.update(delta, playerPos, this._damageCallback);
-      // 지상 생물 지형 클리핑 방지 — 비행·수중 스타일 제외하고 terrain Y에 스냅
-      if (c.alive && this.world && !_FLYING_STYLES_WS.has(c.profile?.style)) {
-        const ty = Math.max(0, this.world.getHeight(c.mesh.position.x, c.mesh.position.z));
-        if (c.mesh.position.y < ty + 0.05) c.mesh.position.y = ty + 0.05;
-      }
       if (c.alive) aliveCount++;
     }
 
@@ -175,21 +143,15 @@ export class WaveSystem {
       this.waveActive = false;
       const nextWave = this.currentWave + 1;
       if (nextWave <= this.maxWaves) {
+        // 카운트다운 메시지 시퀀스 (1.5초 분할: 0.5s간격으로 3→2→1)
         const isBoss = nextWave === 4 && this.stage.miniBoss;
         const label  = isBoss ? '👑 보스 등장' : `웨이브 ${nextWave}`;
-        const doSpawn = () => {
-          [3, 2, 1].forEach((n, idx) => {
-            setTimeout(() => {
-              if (this.onWaveComplete) this.onWaveComplete(`⚡ ${label} 준비 ${n}`, true);
-            }, idx * 350);
-          });
-          setTimeout(() => this._spawnWave(nextWave), 1500);
-        };
-        if (this.onWaveClear) {
-          this.onWaveClear(nextWave, doSpawn);
-        } else {
-          doSpawn();
-        }
+        [3, 2, 1].forEach((n, idx) => {
+          setTimeout(() => {
+            if (this.onWaveComplete) this.onWaveComplete(`⚡ ${label} 준비 ${n}`, true);
+          }, idx * 350);
+        });
+        setTimeout(() => this._spawnWave(nextWave), 1500);
       }
     }
 
@@ -205,9 +167,8 @@ export class WaveSystem {
   }
 
   // ── 스폰 링 이펙트 ────────────────────────────────────────────
-  _emitSpawnRing(pos, isBoss = false, wave = 0) {
-    // 웨이브 3은 주황색으로 긴장감 표현
-    const color  = isBoss ? 0xff4400 : wave === 3 ? 0xff6600 : 0x4ecdc4;
+  _emitSpawnRing(pos, isBoss = false) {
+    const color  = isBoss ? 0xff4400 : 0x4ecdc4;
     const radius = isBoss ? 1.2 : 0.6;
     const geo = new THREE.TorusGeometry(radius, 0.06, 4, 20);
     const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false });
@@ -220,7 +181,7 @@ export class WaveSystem {
   }
 
   // ── 포획 시도 (확률 기반) ─────────────────────────────────────
-  tryCapture(playerPos, playerForward, captureRange, luckBonus = 0) {
+  tryCapture(playerPos, playerForward, captureRange) {
     if (!this.active) return null;
 
     for (const creature of this.creatures) {
@@ -232,15 +193,12 @@ export class WaveSystem {
 
       if (dist > adjustedRange) continue;
 
-      // 플레이어가 생물을 향하고 있는가? (XZ 평면 기준 — 공중 생물도 포획 가능)
-      const xzLen = Math.sqrt(toCreature.x * toCreature.x + toCreature.z * toCreature.z);
-      const dot = xzLen > 0.01
-        ? (toCreature.x * playerForward.x + toCreature.z * playerForward.z) / xzLen
-        : 1; // 생물이 바로 위에 있으면 항상 향하고 있는 것으로 간주
+      // 플레이어가 생물을 향하고 있는가? (느슨하게 체크)
+      const dot = toCreature.normalize().dot(playerForward);
       if (dot < (creature.isBoss ? 0.0 : 0.1)) continue;
 
-      // 종별 포획 확률 체크 + 럭키 보너스 (업그레이드 카드)
-      const chance = Math.min(1, creature.getCaptureChance(playerPos, playerForward) + luckBonus);
+      // 종별 포획 확률 체크 (핵심: 잠자리는 뒤에서만 잡힘)
+      const chance = creature.getCaptureChance(playerPos, playerForward);
       if (Math.random() > chance) continue; // 확률 실패 → 놓침
 
       creature.capture();
@@ -265,7 +223,6 @@ export class WaveSystem {
   }
 
   _comboMult() {
-    if (this.combo >= 15) return 2.5;
     if (this.combo >= 10) return 2.0;
     if (this.combo >= 5)  return 1.5;
     if (this.combo >= 3)  return 1.2;

@@ -1,5 +1,6 @@
 {
   "buildCommand": "cd game && npm run build",
   "outputDirectory": "game/dist",
-  "installCommand": "cd game && npm install"
+  "installCommand": "cd game && npm install",
+  "framework": "vite"
 }

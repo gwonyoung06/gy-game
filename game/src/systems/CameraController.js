@@ -1,8 +1,6 @@
 import * as THREE from 'three';
 
 const _tgt = new THREE.Vector3();
-const _fwd = new THREE.Vector3(); // getForwardXZ 재사용
-const _rgt = new THREE.Vector3(); // getRightXZ 재사용
 
 /**
  * CameraController — Pointer Lock 기반 3인칭 카메라
@@ -42,7 +40,6 @@ export class CameraController {
 
     // Pointer Lock 상태
     this._locked = false;
-    this._skipMove = 0; // 잠금 직후 첫 이벤트 스킵 카운터
 
     this._onMouseMove = this._handleMouseMove.bind(this);
     this._onWheel     = this._handleWheel.bind(this);
@@ -67,17 +64,11 @@ export class CameraController {
   get isLocked() { return this._locked; }
 
   _handleLockChange() {
-    const wasLocked = this._locked;
     this._locked = document.pointerLockElement === this.canvas;
-    // 잠금 획득 직후 첫 mousemove는 accumulated delta 가능 → 스킵
-    if (this._locked && !wasLocked) this._skipMove = 2;
-    // 잠금 해제 시 커서 명시적 복원 ('auto' 명시 — '' 제거는 브라우저별로 동작 불일치)
-    if (!this._locked) document.body.style.cursor = 'auto';
   }
 
   _handleMouseMove(e) {
     if (!this._locked) return;
-    if (this._skipMove > 0) { this._skipMove--; return; }
     this.yaw  -= e.movementX * this.sensitivity;
     this.pitch = Math.max(this.minPitch, Math.min(this.maxPitch,
       this.pitch + e.movementY * this.sensitivity));
@@ -98,8 +89,8 @@ export class CameraController {
     // 줌 lerp
     this.distance += (this.targetDistance - this.distance) * Math.min(1, 10 * delta);
 
-    // 자동 yaw: 이동 중일 때 플레이어 뒤를 따라옴 (포인터락 여부 무관)
-    if (this._autoYaw && isMoving) {
+    // 자동 yaw: 이동 중이고 잠금 상태일 때 플레이어 뒤를 따라옴
+    if (this._autoYaw && isMoving && this._locked) {
       let diff = playerYaw - this.yaw;
       while (diff >  Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
@@ -153,15 +144,18 @@ export class CameraController {
   }
 
   getForwardXZ() {
-    return _fwd.set(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
+    return new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw)).normalize();
   }
 
   getRightXZ() {
-    return _rgt.set(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
+    return new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw)).normalize();
   }
 
   dispose() {
     window.removeEventListener('mousemove',           this._onMouseMove);
     this.canvas.removeEventListener('wheel',          this._onWheel);
     this.canvas.removeEventListener('contextmenu',    this._noContext);
-    document.removeEventListener('pointerlockchange', this._onLo
+    document.removeEventListener('pointerlockchange', this._onLockChange);
+    if (this._locked) document.exitPointerLock();
+  }
+}
