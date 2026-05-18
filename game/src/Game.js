@@ -96,6 +96,10 @@ export class Game {
 
   // ── 화면 전환 ─────────────────────────────────────────────────
   _showScreen(name) {
+    // 로딩 화면은 최초 화면 전환 시 1회 제거
+    const loadingEl = document.getElementById('loading');
+    if (loadingEl) loadingEl.style.display = 'none';
+
     const noFade = name === 'game' || name === 'pause';
     const fade = document.getElementById('fade-overlay');
     // 게임 화면이 아닐 때 커서 항상 강제 복원 (포인터락 해제 직후 비동기 딜레이 대응)
