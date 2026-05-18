@@ -13,6 +13,7 @@ const defaultSave = {
   activeSkills: [],
   itemLevels: {},
   stats: { totalCaptured: 0, totalCoinsEarned: 0, bestCombo: 0 },
+  capturedTypes: {},   // { [creatureType]: captureCount }
   // ── 인벤토리 / 핫바 / 스킬 슬롯 ─────────────────────────────
   inventoryGrid: Array(25).fill(null),   // 5×5 인벤토리
   hotbar:        Array(9).fill(null),    // 3×3 핫바 (1~9)
@@ -82,6 +83,14 @@ export function buyItem(itemId, price, level = 1) {
   save.itemLevels[itemId] = level;
   saveSave(save);
   return true;
+}
+
+export function recordCapturedType(type) {
+  if (!type) return;
+  const save = loadSave();
+  if (!save.capturedTypes) save.capturedTypes = {};
+  save.capturedTypes[type] = (save.capturedTypes[type] || 0) + 1;
+  saveSave(save);
 }
 
 export function getPersonalRecords() {

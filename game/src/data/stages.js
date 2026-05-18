@@ -2,7 +2,7 @@ export const STAGES = [
   {
     id: 1, name: '여름 공원', icon: '🌿',
     env: { sky: 0x87CEEB, ground: 0x56ab2f, fog: 0x87CEEB, fogDensity: 0.008 },
-    timeLimit: 60, targetCount: 10,
+    timeLimit: 75, targetCount: 10,
     creatures: [
       { type: 'dragonfly', name: '잠자리', count: 8, speed: 1.0, coins: 10, score: 100, color: 0x4488ff },
       { type: 'butterfly', name: '나비', count: 5, speed: 0.8, coins: 15, score: 150, color: 0xff88ff },
@@ -16,7 +16,7 @@ export const STAGES = [
   {
     id: 2, name: '꽃밭', icon: '🌸',
     env: { sky: 0x98D8FF, ground: 0x6abf2e, fog: 0x98D8FF, fogDensity: 0.007 },
-    timeLimit: 65, targetCount: 12,
+    timeLimit: 80, targetCount: 12,
     creatures: [
       { type: 'beetle', name: '풍뎅이', count: 7, speed: 1.1, coins: 20, score: 200, color: 0x226611 },
       { type: 'grasshopper', name: '메뚜기', count: 6, speed: 1.6, coins: 25, score: 250, color: 0x88aa44 },
@@ -30,7 +30,7 @@ export const STAGES = [
   {
     id: 3, name: '잔디밭', icon: '🌱',
     env: { sky: 0xaaddff, ground: 0x4a9e1f, fog: 0xaaddff, fogDensity: 0.006 },
-    timeLimit: 65, targetCount: 14,
+    timeLimit: 80, targetCount: 14,
     creatures: [
       { type: 'worm', name: '지렁이', count: 8, speed: 0.5, coins: 15, score: 150, color: 0xcc8866 },
       { type: 'mole', name: '두더지', count: 5, speed: 1.2, coins: 30, score: 300, color: 0x886644 },
@@ -127,7 +127,7 @@ export const STAGES = [
   {
     id: 10, name: '사바나', icon: '🦓',
     env: { sky: 0xffaa44, ground: 0xcc9944, fog: 0xffbb55, fogDensity: 0.005 },
-    timeLimit: 85, targetCount: 16,
+    timeLimit: 80, targetCount: 18,
     creatures: [
       { type: 'zebra', name: '얼룩말', count: 4, speed: 2.8, coins: 350, score: 3500, color: 0xeeeeee },
       { type: 'ostrich', name: '타조', count: 4, speed: 3.0, coins: 320, score: 3200, color: 0xaa8833 },
@@ -141,7 +141,7 @@ export const STAGES = [
   {
     id: 11, name: '설산', icon: '🐻',
     env: { sky: 0xaaccff, ground: 0xeeeeff, fog: 0xaaccff, fogDensity: 0.015, snow: true },
-    timeLimit: 90, targetCount: 14,
+    timeLimit: 85, targetCount: 16,
     creatures: [
       { type: 'snow_leopard', name: '눈표범', count: 3, speed: 3.0, coins: 600, score: 6000, color: 0xeeddbb },
       { type: 'polar_bear', name: '북극곰', count: 3, speed: 1.8, coins: 700, score: 7000, color: 0xffffff },
@@ -155,7 +155,7 @@ export const STAGES = [
   {
     id: 12, name: '밀림', icon: '🦁',
     env: { sky: 0x226633, ground: 0x1a4a22, fog: 0x335544, fogDensity: 0.02 },
-    timeLimit: 90, targetCount: 14,
+    timeLimit: 85, targetCount: 16,
     creatures: [
       { type: 'gorilla', name: '고릴라', count: 3, speed: 2.0, coins: 800, score: 8000, color: 0x222222 },
       { type: 'cobra', name: '코브라', count: 4, speed: 2.5, coins: 700, score: 7000, color: 0x556633 },
@@ -169,7 +169,7 @@ export const STAGES = [
   {
     id: 13, name: '화산지대', icon: '🦕',
     env: { sky: 0xff6622, ground: 0x553322, fog: 0xff8844, fogDensity: 0.012, lava: true },
-    timeLimit: 95, targetCount: 14,
+    timeLimit: 85, targetCount: 16,
     creatures: [
       { type: 'pteranodon', name: '프테라노돈', count: 4, speed: 3.0, coins: 1500, score: 15000, color: 0xcc8866 },
       { type: 'stegosaurus', name: '스테고사우루스', count: 3, speed: 1.5, coins: 2000, score: 20000, color: 0x557744 },
@@ -183,7 +183,7 @@ export const STAGES = [
   {
     id: 14, name: '공룡 섬', icon: '🦖',
     env: { sky: 0x885522, ground: 0x664422, fog: 0xaa7744, fogDensity: 0.01 },
-    timeLimit: 100, targetCount: 12,
+    timeLimit: 90, targetCount: 14,
     creatures: [
       { type: 't_rex', name: 'T-Rex', count: 2, speed: 2.5, coins: 5000, score: 50000, color: 0x336622 },
       { type: 'spinosaurus', name: '스피노사우루스', count: 2, speed: 2.2, coins: 4500, score: 45000, color: 0x225533 },
@@ -197,7 +197,7 @@ export const STAGES = [
   {
     id: 15, name: '우주', icon: '👾',
     env: { sky: 0x000011, ground: 0x111122, fog: 0x000022, fogDensity: 0.005, space: true },
-    timeLimit: 120, targetCount: 10,
+    timeLimit: 105, targetCount: 12,
     creatures: [
       { type: 'drone', name: '탐사 드론', count: 4, speed: 3.5, coins: 8000, score: 80000, color: 0x88ccff },
       { type: 'alien', name: '외계인', count: 3, speed: 2.8, coins: 10000, score: 100000, color: 0x44ff88 },
@@ -212,7 +212,7 @@ export const DIFFICULTY = {
   easy:    { timeBonus: 30, countMult: 0.7, speedMult: 0.7, coinMult: 0.7,  scoreMult: 0.7  },
   normal:  { timeBonus: 0,  countMult: 1.0, speedMult: 1.0, coinMult: 1.0,  scoreMult: 1.0  },
   hard:    { timeBonus: -20, countMult: 1.3, speedMult: 1.4, coinMult: 1.5, scoreMult: 1.5  },
-  extreme: { timeBonus: -40, countMult: 1.6, speedMult: 2.0, coinMult: 2.5, scoreMult: 3.0  },
+  extreme: { timeBonus: -40, countMult: 1.4, speedMult: 2.0, coinMult: 2.5, scoreMult: 3.0  },
 };
 
 export const WEATHER = {

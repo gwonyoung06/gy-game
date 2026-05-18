@@ -159,6 +159,7 @@ export class AudioManager {
     this._seqStep      = 0;
 
     // 볼륨 설정
+    this.masterVolume  = 1.0;
     this.musicVolume   = 0.38;
     this.ambientVolume = 0.28;
     this.sfxVolume     = 0.65;
@@ -439,10 +440,16 @@ export class AudioManager {
     src.buffer   = buf;
     src.loop     = true;
 
+    // Q = centerHz/bwHz 최소 8 이상으로 강제 → 협대역 통과로 백색소음 억제
     const filt   = ctx.createBiquadFilter();
     filt.type    = 'bandpass';
     filt.frequency.value = centerHz;
-    filt.Q.value = centerHz / bwHz;
+    filt.Q.value = Math.max(8, centerHz / bwHz);
+
+    // 추가 로우패스 필터로 고주파 잔류 노이즈 제거
+    const lpf = ctx.createBiquadFilter();
+    lpf.type  = 'lowpass';
+    lpf.frequency.value = Math.min(centerHz * 2, 2000);
 
     // LFO로 바람 세기 변화
     const lfo  = ctx.createOscillator();
@@ -456,11 +463,12 @@ export class AudioManager {
     lfo.connect(lfoG);
     lfoG.connect(env.gain);
     src.connect(filt);
-    filt.connect(env);
+    filt.connect(lpf);   // 협대역 통과 → 추가 로우패스
+    lpf.connect(env);
     env.connect(this._ambGain);
     lfo.start(); src.start();
 
-    this._ambNodes.push(src, filt, env, lfo, lfoG);
+    this._ambNodes.push(src, filt, lpf, env, lfo, lfoG);
   }
 
   _addWaterLayer(vol) {
@@ -823,20 +831,168 @@ export class AudioManager {
     osc.start(now); osc.stop(now + 0.08);
   }
 
-  /** 콤보 증가음 (콤보 숫자에 따라 높아짐) */
+  /** 콤보 증가음 — 콤보 수에 따라 피치 상승 + 고콤보 시 리버브 */
   sfxCombo(comboCount) {
-    if (!this._ready) return;
+    if (!this._ctx) return;
     const ctx  = this._ctx;
     const now  = ctx.currentTime;
-    const freq = 440 * Math.pow(1.06, Math.min(comboCount, 20));
-    const osc  = ctx.createOscillator();
-    const env  = ctx.createGain();
-    osc.type   = 'sine';
+
+    // 콤보 단계별 반음 오프셋 계산
+    let semitoneShift = 0;
+    if (comboCount >= 15)      semitoneShift = 6;
+    else if (comboCount >= 10) semitoneShift = 4;
+    else if (comboCount >= 5)  semitoneShift = 2;
+
+    const freq = 440 * Math.pow(2, semitoneShift / 12) * Math.pow(1.06, Math.min(comboCount, 20));
+
+    const osc = ctx.createOscillator();
+    const env = ctx.createGain();
+    osc.type  = 'sine';
     osc.frequency.value = freq;
     env.gain.setValueAtTime(0.18, now);
     env.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
     osc.connect(env); env.connect(this._sfxGain);
+
+    // combo 15+ : 리버브 센드 추가
+    if (comboCount >= 15 && this._reverbSend) {
+      env.connect(this._reverbSend);
+    }
+
     osc.start(now); osc.stop(now + 0.15);
+  }
+
+  /** 포획 실패 — 짧은 하강 글리산도 (400→150Hz, 0.15초) */
+  sfxMiss() {
+    if (!this._ctx) return;
+    const ctx = this._ctx;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const env = ctx.createGain();
+    osc.type  = 'sine';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
+    env.gain.setValueAtTime(0.25, now);
+    env.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    osc.connect(env); env.connect(this._sfxGain);
+    osc.start(now); osc.stop(now + 0.22);
+  }
+
+  /** 업그레이드 카드 선택 — 밝은 상승 아르페지오 (C4→E4→G4→C5) */
+  sfxLevelUp() {
+    if (!this._ctx) return;
+    const ctx   = this._ctx;
+    const now   = ctx.currentTime;
+    // C4=261.63, E4=329.63, G4=392.00, C5=523.25
+    const notes = [261.63, 329.63, 392.00, 523.25];
+    notes.forEach((freq, i) => {
+      const t   = now + i * 0.1;
+      const osc = ctx.createOscillator();
+      const env = ctx.createGain();
+      osc.type  = 'triangle';
+      osc.frequency.value = freq;
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(0.3, t + 0.02);
+      env.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      osc.connect(env); env.connect(this._sfxGain);
+      if (this._reverbSend) env.connect(this._reverbSend);
+      osc.start(t); osc.stop(t + 0.3);
+    });
+  }
+
+  /** 보스 포획 — 저음 드럼 펄스 + 고음 팡파르 + 딜레이 효과 */
+  sfxBossCapture() {
+    if (!this._ctx) return;
+    const ctx = this._ctx;
+    const now = ctx.currentTime;
+
+    // ① DelayNode 체인 (0.12s, feedback 0.4)
+    const delay    = ctx.createDelay(1.0);
+    const fbGain   = ctx.createGain();
+    delay.delayTime.value = 0.12;
+    fbGain.gain.value     = 0.4;
+    delay.connect(fbGain);
+    fbGain.connect(delay);
+    delay.connect(this._sfxGain);
+
+    // ② 저음 드럼 펄스 (80Hz)
+    const drumOsc = ctx.createOscillator();
+    const drumEnv = ctx.createGain();
+    drumOsc.type  = 'sine';
+    drumOsc.frequency.setValueAtTime(80, now);
+    drumOsc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+    drumEnv.gain.setValueAtTime(0.5, now);
+    drumEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    drumOsc.connect(drumEnv); drumEnv.connect(this._sfxGain);
+    drumOsc.start(now); drumOsc.stop(now + 0.3);
+
+    // ③ 팡파르 멜로디 (523→659→784Hz)
+    const fanfareFreqs = [523.25, 659.26, 783.99];
+    fanfareFreqs.forEach((freq, i) => {
+      const t   = now + 0.1 + i * 0.15;
+      const osc = ctx.createOscillator();
+      const env = ctx.createGain();
+      osc.type  = 'square';
+      osc.frequency.value = freq;
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(0.3, t + 0.02);
+      env.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+      osc.connect(env);
+      env.connect(this._sfxGain);
+      env.connect(delay); // 딜레이로 센드
+      osc.start(t); osc.stop(t + 0.35);
+    });
+
+    // 딜레이 노드 자동 정리 (0.9초 후)
+    setTimeout(() => {
+      try { delay.disconnect(); fbGain.disconnect(); } catch {}
+    }, 900);
+  }
+
+  /** 타이머 경고음 — 880Hz 비프 3회 반복 (10초 이하 경고) */
+  sfxTimerAlert() {
+    if (!this._ctx) return;
+    const ctx = this._ctx;
+    const now = ctx.currentTime;
+    const beepDur = 0.08;
+    for (let i = 0; i < 3; i++) {
+      const t   = now + i * (beepDur * 2); // on 0.08s + off 0.08s
+      const osc = ctx.createOscillator();
+      const env = ctx.createGain();
+      osc.type  = 'sine';
+      osc.frequency.value = 880;
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(0.2, t + 0.01);
+      env.gain.setValueAtTime(0.2, t + beepDur - 0.01);
+      env.gain.linearRampToValueAtTime(0, t + beepDur);
+      osc.connect(env); env.connect(this._sfxGain);
+      osc.start(t); osc.stop(t + beepDur + 0.01);
+    }
+  }
+
+  /** 새 웨이브 시작 — BPF 노이즈 드럼롤 버스트 4개 */
+  sfxWaveStart() {
+    if (!this._ctx) return;
+    const ctx = this._ctx;
+    const now = ctx.currentTime;
+    for (let i = 0; i < 4; i++) {
+      const t   = now + i * 0.05;
+      const buf = this._makeNoiseBuffer(0.1);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+
+      const filt = ctx.createBiquadFilter();
+      filt.type  = 'bandpass';
+      filt.frequency.value = 200 + i * 80; // 타격감 위해 약간씩 올림
+      filt.Q.value = 3.0;
+
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(0.4, t + 0.008);
+      env.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+
+      src.connect(filt); filt.connect(env); env.connect(this._sfxGain);
+      src.start(t); src.stop(t + 0.08);
+    }
   }
 
   // ── 게임 상태 전환 ──────────────────────────────────────────────
@@ -865,10 +1021,25 @@ export class AudioManager {
   }
 
   // ── 볼륨 제어 ────────────────────────────────────────────────────
+  setMasterVolume(v) {
+    this.masterVolume = Math.max(0, Math.min(1, v));
+    if (!this._ready || !this._master) return;
+    // 음소거 중이면 실제 게인은 건드리지 않음 (음소거 해제 시 반영)
+    if (!this._muted) {
+      this._master.gain.linearRampToValueAtTime(this.masterVolume, this._ctx.currentTime + 0.15);
+    }
+  }
+
   setMusicVolume(v) {
     this.musicVolume = Math.max(0, Math.min(1, v));
     if (!this._ready || !this._musicGain) return;
     this._musicGain.gain.linearRampToValueAtTime(this.musicVolume, this._ctx.currentTime + 0.15);
+  }
+
+  setAmbientVolume(v) {
+    this.ambientVolume = Math.max(0, Math.min(1, v));
+    if (!this._ready || !this._ambGain) return;
+    this._ambGain.gain.linearRampToValueAtTime(this.ambientVolume, this._ctx.currentTime + 0.15);
   }
 
   setSfxVolume(v) {

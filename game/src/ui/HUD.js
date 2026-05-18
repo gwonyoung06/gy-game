@@ -120,6 +120,10 @@ export class HUD {
   update(state, totalCoins, delta = 0, sessionScore = 0) {
     const t = state.timeRemaining;
     this.timer.textContent = t;
+    // 타이머 긴박감 클래스
+    this.timer.classList.toggle('timer-urgent',  t <= 10);
+    this.timer.classList.toggle('timer-warning', t > 10 && t <= 30);
+    this.timer.classList.toggle('timer-normal',  t > 30);
     this.timer.classList.toggle('urgent', t <= 10);
 
     // 포획 수 증가 시 바운스 애니메이션
@@ -141,6 +145,12 @@ export class HUD {
       // 색상: 청록(0%) → 금색(50%) → 주황(100%)
       const hue = Math.round(180 - pct * 1.5);
       this.captureBar.style.background = `hsl(${hue},90%,55%)`;
+      // 진행바 래퍼에 단계 클래스 적용
+      const barWrap = this.captureBar.parentElement;
+      if (barWrap) {
+        barWrap.classList.toggle('progress-near', pct >= 80);
+        barWrap.classList.toggle('progress-mid',  pct >= 50 && pct < 80);
+      }
     }
 
     const waveName = state.wave <= 3 ? `웨이브 ${state.wave}` : '⚡ 보스!';
@@ -216,6 +226,97 @@ export class HUD {
     this._fxTimeout = setTimeout(() => {
       this.captureFx.classList.add('hidden');
     }, 800);
+
+    // 코인 버스트 파티클
+    this.spawnCoinBurst(Math.min(coins, 12));
+  }
+
+  /**
+   * 화면 중앙(포획 지점)에서 코인 파티클을 흩뿌리고
+   * HUD 코인 카운터 방향으로 호 포물선을 그리며 수렴한다.
+   * @param {number} count  방출 파티클 수 (1~12)
+   */
+  spawnCoinBurst(count = 6) {
+    if (count <= 0) return;
+    // 동시 파티클 상한: DOM 폭탄 방지
+    const MAX_LIVE = 48;
+    const live = document.querySelectorAll('.coin-burst-particle').length;
+    if (live >= MAX_LIVE) return;
+    count = Math.min(count, MAX_LIVE - live);
+
+    const cx = window.innerWidth  / 2;
+    const cy = window.innerHeight / 2;
+
+    // HUD 코인 위치 (상단 우측)
+    const hudCoin = this.coins;
+    let tx = window.innerWidth  - 90;
+    let ty = 36;
+    if (hudCoin) {
+      const r = hudCoin.getBoundingClientRect();
+      tx = r.left + r.width  / 2;
+      ty = r.top  + r.height / 2;
+    }
+
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'coin-burst-particle';
+      el.textContent = '💰';
+      el.style.cssText = `
+        position:fixed;
+        left:${cx}px;top:${cy}px;
+        font-size:${14 + Math.random() * 8}px;
+        z-index:200;
+        pointer-events:none;
+        will-change:transform,opacity;
+        transform:translate(-50%,-50%);
+        user-select:none;
+      `;
+      document.body.appendChild(el);
+
+      // 랜덤 초기 폭발 벡터
+      const angle   = (Math.random() * Math.PI * 2);
+      const spread  = 60 + Math.random() * 80;
+      const bx      = Math.cos(angle) * spread;
+      const by      = Math.sin(angle) * spread - 40; // 위쪽 편향
+      const delay   = i * 35;                        // 시차
+
+      // CSS custom property로 키프레임에 값 주입
+      el.style.setProperty('--bx', `${bx}px`);
+      el.style.setProperty('--by', `${by}px`);
+      el.style.setProperty('--tx', `${tx - cx}px`);
+      el.style.setProperty('--ty', `${ty - cy}px`);
+
+      el.style.animationName      = 'coinBurst';
+      el.style.animationDuration  = `${600 + Math.random() * 250}ms`;
+      el.style.animationDelay     = `${delay}ms`;
+      el.style.animationTimingFunction = 'ease-in';
+      el.style.animationFillMode  = 'forwards';
+
+      el.addEventListener('animationend', () => el.remove());
+      // 안전망: 최대 1.2초 후 강제 제거
+      setTimeout(() => el.remove(), delay + 1200);
+    }
+  }
+
+  /** 포획 실패 팝업 — 화면 중앙에 짧게 "MISS" */
+  showMissPopup() {
+    // 너무 자주 나오면 방해됨 — 0.3s 쿨다운
+    const now = Date.now();
+    if (this._lastMiss && now - this._lastMiss < 300) return;
+    this._lastMiss = now;
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position:fixed;left:50%;top:46%;
+      transform:translate(-50%,-50%);
+      font-size:18px;font-weight:700;
+      color:rgba(255,255,255,0.55);
+      text-shadow:0 1px 6px rgba(0,0,0,0.5);
+      pointer-events:none;z-index:155;
+      animation:scoreFloat 0.55s ease-out forwards;
+    `;
+    el.textContent = 'MISS';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 600);
   }
 
   showWaveMessage(wave, isCountdown = false) {
@@ -270,6 +371,7 @@ export class HUD {
     }, 2000);
   }
 
+  /** 포획 시 점수 팝업 — 랜덤 위치에서 위로 떠오름 */
   showScorePopup(score) {
     if (!score || score <= 0) return;
     const el = document.createElement('div');
@@ -288,7 +390,9 @@ export class HUD {
     setTimeout(() => el.remove(), 1100);
   }
 
+  /** 피격 데미지 팝업 — 랜덤 위치에서 위로 떠오름 */
   showDamagePopup(damage) {
+    if (!damage || damage <= 0) return;
     const el = document.createElement('div');
     el.style.cssText = `
       position:fixed;
@@ -302,5 +406,57 @@ export class HUD {
     el.textContent = `-${damage}`;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 900);
+  }
+  // ── 포획 크리처 이름 팝업 ─────────────────────────────────────
+  showCaptureNamePopup(name, icon = '✨') {
+    const el = document.getElementById('capture-name-popup');
+    if (!el) return;
+    if (this._cnpTimer) clearTimeout(this._cnpTimer);
+    if (this._cnpExitTimer) clearTimeout(this._cnpExitTimer);
+    el.innerHTML = `
+      <div class="cnp-caught">CAUGHT!</div>
+      <div class="cnp-icon">${icon}</div>
+      <div class="cnp-name">${name}</div>
+    `;
+    el.classList.remove('hidden', 'cnp-exit');
+    el.offsetHeight;
+    el.classList.add('cnp-enter');
+    this._cnpTimer = setTimeout(() => {
+      el.classList.remove('cnp-enter');
+      el.classList.add('cnp-exit');
+      this._cnpExitTimer = setTimeout(() => el.classList.add('hidden'), 360);
+    }, 1200);
+  }
+
+  // ── 웨이브 업그레이드 카드 ────────────────────────────────────
+  showUpgradeCards(options, onSelect) {
+    const overlay = document.getElementById('upgrade-card-overlay');
+    if (!overlay) { onSelect(0); return; }
+    overlay.innerHTML = `
+      <div class="upgrade-card-title">⚡ WAVE CLEAR</div>
+      <div class="upgrade-card-sub">업그레이드를 선택하세요</div>
+      <div class="upgrade-cards-row">
+        ${options.map((opt, i) => `
+          <div class="upgrade-card" data-idx="${i}">
+            <div class="upgrade-card-icon">${opt.icon}</div>
+            <div class="upgrade-card-name">${opt.name}</div>
+            <div class="upgrade-card-desc">${opt.desc}</div>
+            <div class="upgrade-card-pick">선택하기 →</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    overlay.classList.remove('hidden');
+    overlay.querySelectorAll('.upgrade-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const idx = parseInt(card.dataset.idx, 10);
+        overlay.style.animation = 'upgradeFadeIn 0.2s ease reverse forwards';
+        setTimeout(() => {
+          overlay.classList.add('hidden');
+          overlay.style.animation = '';
+          onSelect(idx);
+        }, 200);
+      }, { once: true });
+    });
   }
 }
