@@ -34,6 +34,8 @@ function _mkMesh(geo, mat, props = {}) {
 
 // ?? Module-level reuse vectors ?????????????????????????????????????
 const _mv  = new THREE.Vector3();
+const _zero = new THREE.Vector3(0, 0, 0);
+const _vn   = new THREE.Vector3();
 const _vel = new THREE.Vector3();
 
 // ?? Color palette (explorer/hunter) ???????????????????????????????
@@ -707,16 +709,22 @@ export class Player {
 
     if (hasInput) {
       _mv.normalize();
-      _vel.lerp(_mv.clone().multiplyScalar(this.speed), Math.min(1, 10 * delta));
+      // 터치 조이스틱 아날로그 스케일 (키보드는 항상 1.0)
+      const analogScale = this._touchSpeedScale ?? 1.0;
+      // _zero 재사용: lerp는 인수를 수정하지 않으므로 _mv를 직접 스케일한 임시값 필요
+      // → _vn에 복사 후 스케일 → lerp 타겟으로 사용 (allocation 없음)
+      _vn.copy(_mv).multiplyScalar(this.speed * Math.max(0.25, analogScale));
+      _vel.lerp(_vn, Math.min(1, 10 * delta));
     } else {
-      _vel.lerp(new THREE.Vector3(0, 0, 0), Math.min(1, 13 * delta));
+      _vel.lerp(_zero, Math.min(1, 13 * delta));
     }
 
     const moveLen = _vel.length();
     if (moveLen > 0.05) {
       this.mesh.position.addScaledVector(_vel, delta);
-      const vn = _vel.clone().normalize();
-      const targetAngle = Math.atan2(vn.x, vn.z) + Math.PI;
+      // _vn 재사용: 방향 계산용 (lerp 후 재사용 안전)
+      _vn.copy(_vel).normalize();
+      const targetAngle = Math.atan2(_vn.x, _vn.z) + Math.PI;
       let diff = targetAngle - this.mesh.rotation.y;
       while (diff >  Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
@@ -745,8 +753,16 @@ export class Player {
       }
     }
 
-    const terrainY = world ? world.getHeight(this.mesh.position.x, this.mesh.position.z) : 0;
-    this.mesh.position.y += (terrainY - this.mesh.position.y) * Math.min(1, 18 * delta);
+    // getHeight 는 오목 지역에서 살짝 음수를 반환할 수 있음 → 0 이상으로 클램프
+    // +0.18 오프셋: 지형 보간 오차 + 발바닥 두께 고려 (0.12에서 상향)
+    const terrainY = Math.max(0, world ? world.getHeight(this.mesh.position.x, this.mesh.position.z) : 0) + 0.18;
+    if (this.mesh.position.y < terrainY) {
+      // 지형 아래로 클리핑 절대 금지 — 즉시 스냅
+      this.mesh.position.y = terrainY;
+    } else {
+      // 경사 위를 걸을 때 부드러운 정착 (중력감)
+      this.mesh.position.y += (terrainY - this.mesh.position.y) * Math.min(1, 14 * delta);
+    }
   }
 
   // ?? SWING with anticipation + follow-through ???????????????????
@@ -919,23 +935,36 @@ export class Player {
     }
   }
 
-  // ?? Public methods ?????????????????????????????????????????????
+
+  // ── Public API ─────────────────────────────────────────────────
+  /** 포획 동작: 팔 스윙 애니메이션 트리거 */
   swing() {
     if (this.isSwinging) return;
     this.isSwinging = true;
     this.swingTimer = 0;
-    this._swingFlash = 1.0; // 포획 시도 시 링 플래시
+    this._swingFlash = 1.0;
   }
 
-  get position() { return this.mesh.position; }
+  /** 카메라 기준 XZ 전방 벡터 반환 (WaveSystem.tryCapture 에서 사용) */
+  getForward(camCtrl) {
+    return camCtrl.getForwardXZ();
+  }
 
-  getForward(camCtrl) { return camCtrl.getForwardXZ(); }
+  /** 플레이어 월드 위치 (Three.js Vector3) */
+  get position() {
+    return this.mesh.position;
+  }
 
   dispose() {
     this.scene.remove(this.mesh);
+    this.mesh.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+        else obj.material.dispose();
+      }
+    });
     window.removeEventListener('keydown', this._keyDown);
     window.removeEventListener('keyup',   this._keyUp);
   }
 }
-
-

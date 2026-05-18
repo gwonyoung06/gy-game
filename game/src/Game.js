@@ -620,6 +620,11 @@ export class Game {
     this.scene = new THREE.Scene();
     this.world  = new World(this.scene, stageData, this.settings);
     this.player = new Player(this.scene);
+    // 스폰 직후 지형 Y 스냅 — 게임루프 첫 프레임 전에 미리 맞춰 함몰 방지
+    {
+      const spawnY = Math.max(0, this.world.getHeight(0, 0)) + 0.12;
+      this.player.mesh.position.set(0, spawnY, 0);
+    }
     this._applyShopEffects(save); // player 스탯 적용 (speed/range/swing)
     this.camCtrl = new CameraController(this.camera, this.renderer.domElement);
     const _s = JSON.parse(localStorage.getItem('gy_settings') || '{"sens":100}');
