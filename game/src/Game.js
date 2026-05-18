@@ -16,6 +16,7 @@ import { submitScore, fetchGlobalLeaderboard } from './utils/supabase.js';
 import { DebugOverlay } from './utils/DebugOverlay.js';
 
 // 스킬 쿨다운 테이블
+const _gv = new THREE.Vector3(); // danger indicator projection cache
 const SKILL_CD = {
   skill_slow: 30, skill_magnet: 45,
   skill_multi: 40, skill_vortex: 60,
