@@ -772,8 +772,10 @@ export class Game {
     // (timestamp=0 전달 시 getDelta()가 수천 초 음수 → 타이머 역행·캐릭터 함몰·shake 폭발)
     this.clock.update(performance.now());
 
+    this._frame = 0; // 게임 루프 프레임 카운터 초기화
     const loop = (timestamp) => {
       this.rafId = requestAnimationFrame(loop);
+      this._frame = (this._frame + 1) & 255;
       this.clock.update(timestamp);
       const rawDelta = Math.min(Math.max(0, this.clock.getDelta()), 0.05);
 
@@ -836,6 +838,12 @@ export class Game {
           const landmarks   = this.world?._zones?.landmarks ?? [];
           const structures  = this.world?._structures ?? [];
           this.minimap.update(this.player.position, creatures, landmarks, structures);
+          // 미니맵 레이블: 남은 생물 수 표시 (4프레임마다 갱신)
+          if ((this._frame & 3) === 0) {
+            const aliveCreatures = creatures.filter(c => c.alive && !c.captured).length;
+            const mmLabel = document.querySelector('.minimap-label');
+            if (mmLabel) mmLabel.textContent = `🐾 ${aliveCreatures}마리`;
+          }
         }
 
         // 생물 이름표 + 타이머 긴박감
@@ -1344,7 +1352,7 @@ export class Game {
       { icon: '🎯', name: '포획 범위 +20%',  desc: '포획 가능 거리가 넓어집니다',
         apply: () => { if (this.player) this.player.captureRange *= 1.2; } },
       { icon: '⚡', name: '이동 속도 +15%',  desc: '플레이어가 더 빠르게 달립니다',
-        apply: () => { if (this.player) this.player._speedBonus = (this.player._speedBonus ?? 1) * 1.15; } },
+        apply: () => { if (this.player) this.player.speed *= 1.15; } },
       { icon: '⏰', name: '시간 +20초',       desc: '스테이지 제한 시간이 증가합니다',
         apply: () => { this.waves?.addTime(20); } },
       { icon: '💰', name: '코인 +35%',        desc: '이번 스테이지 코인 획득량 증가',
