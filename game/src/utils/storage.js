@@ -25,10 +25,20 @@ const defaultSave = {
 export function loadSave() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { ...defaultSave };
-    return { ...defaultSave, ...JSON.parse(raw) };
+    if (!raw) return structuredClone(defaultSave);
+    const parsed = JSON.parse(raw);
+    // 중첩 객체는 별도 deep merge — 얕은 스프레드로 키가 유실되는 것 방지
+    return {
+      ...defaultSave,
+      ...parsed,
+      stats:      { ...defaultSave.stats,      ...(parsed.stats      || {}) },
+      itemLevels: { ...defaultSave.itemLevels,  ...(parsed.itemLevels || {}) },
+      equipment:  { ...defaultSave.equipment,   ...(parsed.equipment  || {}) },
+      skillSlots: { ...defaultSave.skillSlots,  ...(parsed.skillSlots || {}) },
+      capturedTypes: { ...(parsed.capturedTypes || {}) },
+    };
   } catch {
-    return { ...defaultSave };
+    return structuredClone(defaultSave);
   }
 }
 

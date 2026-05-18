@@ -166,7 +166,6 @@ export class HUD {
     });
 
     const glow = document.getElementById('combo-glow');
-    const multMap = { 10: '×2.0', 5: '×1.5', 3: '×1.2' };
     let multText = '', glowClass = '';
     if (state.combo >= 10) {
       this.comboEl.classList.remove('hidden');

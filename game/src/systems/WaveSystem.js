@@ -249,7 +249,7 @@ export class WaveSystem {
       this.comboTimer = 0;
       if (this.combo > this.maxCombo) this.maxCombo = this.combo;
 
-      const diff = DIFFICULTY[this.settings.difficulty];
+      const diff = DIFFICULTY[this.settings.difficulty] || DIFFICULTY.normal;
       const weatherMult = this.settings.weather === 'rain' ? 1.2
                         : this.settings.weather === 'fog'  ? 1.5 : 1;
       const timeMult = this.settings.timeOfDay === 'night' ? 1.4

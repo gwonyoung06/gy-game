@@ -54,7 +54,8 @@ export class Shop {
       const owned = save.ownedItems.includes(item.id);
       const level = save.itemLevels[item.id] || 0;
       const maxLevel = item.maxLevel || 1;
-      const atMax = owned && level >= maxLevel;
+      // 소모품(consumable:true)은 여러 번 구매 가능 → atMax 적용 안 함
+      const atMax = !item.consumable && owned && level >= maxLevel;
       const price = item.levelPrices ? (item.levelPrices[level] || item.price) : item.price;
       const canAfford = save.coins >= price;
 

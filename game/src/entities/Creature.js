@@ -1676,7 +1676,7 @@ export class Creature {
         this.mesh.position.addScaledVector(_tv0, speed * 1.2 * delta);
       }
     }
-    this.baseY = this.baseY || 2;
+    this.baseY = this.baseY ?? 2;
     this.mesh.position.y = this.baseY + Math.sin(this.time * 1.8) * 0.5 + Math.cos(this.time * 0.9) * 0.2;
     this.mesh.position.y = Math.max(0.8, this.mesh.position.y);
   }
@@ -1707,7 +1707,7 @@ export class Creature {
         this.mesh.position.addScaledVector(dir, speed * 2.5 * delta);
       }
     }
-    this.baseY = this.baseY || 2;
+    this.baseY = this.baseY ?? 2;
     this.mesh.position.y = this.baseY + Math.sin(this.time * 4) * 0.15;
     this.mesh.position.y = Math.max(1.0, this.mesh.position.y);
   }
@@ -1867,7 +1867,7 @@ export class Creature {
       }
     }
     // 펄스 위아래
-    this.baseY = this.baseY || 1.5;
+    this.baseY = this.baseY ?? 1.5;
     this.mesh.position.y = this.baseY + Math.sin(this.time * 2) * 0.6;
     this.mesh.position.y = Math.max(0.5, this.mesh.position.y);
   }

@@ -82,7 +82,7 @@ export class Game {
     // far 클리핑 2000 → 1000×1000 맵 전체 커버
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
 
-    window.addEventListener('resize', () => {
+    this._onResize = () => {
       this.renderer.setSize(window.innerWidth, window.innerHeight);
       this.camera.aspect = window.innerWidth / window.innerHeight;
       this.camera.updateProjectionMatrix();
@@ -90,7 +90,8 @@ export class Game {
         this._titleCamera.aspect = window.innerWidth / window.innerHeight;
         this._titleCamera.updateProjectionMatrix();
       }
-    });
+    };
+    window.addEventListener('resize', this._onResize);
   }
 
   // ── 화면 전환 ─────────────────────────────────────────────────
@@ -949,6 +950,8 @@ export class Game {
     clearTimeout(this._fovKickTimer);
     clearTimeout(this._captureFlashTimeout);
     clearTimeout(this._missVigTimeout);
+    clearTimeout(this._skillSlowTimer);   this._skillSlowTimer  = null;
+    clearTimeout(this._skillMultiTimer);  this._skillMultiTimer = null;
     // pointerlockchange 감시 리스너 제거 (게임 시작마다 새로 등록하므로 이전 것 제거)
     if (this._lockWatcher) {
       document.removeEventListener('pointerlockchange', this._lockWatcher);
@@ -1513,17 +1516,23 @@ export class Game {
       case 'skill_slow': {
         if (!this.waves) break;
         this.waves.creatures.forEach(c => { if (c.alive) c.config.speed *= 0.5; });
-        setTimeout(() => {
+        clearTimeout(this._skillSlowTimer);
+        this._skillSlowTimer = setTimeout(() => {
           if (this.waves) this.waves.creatures.forEach(c => { if (c.alive) c.config.speed *= 2; });
+          this._skillSlowTimer = null;
         }, 5000);
         this.hud.showWaveMessage('⏱️ 슬로우 타임!');
         break;
       }
       case 'skill_multi': {
-        // 분신 채망 — 3초간 포획 범위 3배
+        // 분신 채망 — 5초간 포획 범위 3배
         if (!this.player) break;
         this.player.captureRange *= 3;
-        setTimeout(() => { if (this.player) this.player.captureRange /= 3; }, 5000);
+        clearTimeout(this._skillMultiTimer);
+        this._skillMultiTimer = setTimeout(() => {
+          if (this.player) this.player.captureRange /= 3;
+          this._skillMultiTimer = null;
+        }, 5000);
         this.hud.showWaveMessage('👐 분신 채망!');
         break;
       }
@@ -1824,6 +1833,12 @@ export class Game {
       if (effect.moveSpeed)    this.player.speed        *= Math.pow(effect.moveSpeed,    effectiveLevel);
       if (effect.captureRange) this.player.captureRange *= Math.pow(effect.captureRange, effectiveLevel);
       if (effect.swingSpeed)   this.player.swingSpeed   *= Math.pow(effect.swingSpeed,   effectiveLevel);
+      if (effect.jumpPower)    this.player.jumpPower     = (this.player.jumpPower  || 1) * Math.pow(effect.jumpPower,  effectiveLevel);
+      if (effect.viewRange && this.scene?.fog) {
+        const mult = Math.pow(effect.viewRange, effectiveLevel);
+        this.scene.fog.near *= mult;
+        this.scene.fog.far  *= mult;
+      }
     }
     // noise_reduce는 WaveSystem creatures에 적용해야 하므로
     // waves 생성 후 _startGameImpl에서 처리 (여기서는 skip)

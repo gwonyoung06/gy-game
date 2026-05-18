@@ -42,8 +42,8 @@ export const SHOP_ITEMS = {
 };
 
 export const CONSUMABLES = [
-  { id: 'time_extend', name: '시간 연장 +30초', icon: '⏰', desc: '스테이지당 1회',       price: 500  },
-  { id: 'bait',        name: '미끼',            icon: '🍖', desc: '생물이 플레이어로 유인', price: 300  },
-  { id: 'radar_use',   name: '레이더',          icon: '📡', desc: '생물 위치 15초 표시',   price: 400  },
-  { id: 'super_bait',  name: '슈퍼 미끼',       icon: '💫', desc: '희귀 생물 출현율 2배',  price: 1000 },
+  { id: 'time_extend', name: '시간 연장 +30초', icon: '⏰', desc: '스테이지당 1회',            price: 500,  consumable: true },
+  { id: 'bait',        name: '미끼',            icon: '🍖', desc: '생물이 5초간 플레이어로 유인', price: 300,  consumable: true },
+  { id: 'radar_use',   name: '레이더',          icon: '📡', desc: '생물 위치 15초 표시',        price: 400,  consumable: true },
+  { id: 'super_bait',  name: '슈퍼 미끼',       icon: '💫', desc: '모든 생물 8초간 강제 유인',  price: 1000, consumable: true },
 ];

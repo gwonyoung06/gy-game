@@ -66,7 +66,7 @@ export const STAGES = [
       { type: 'salamander', name: '도롱뇽', count: 4, speed: 1.2, coins: 70, score: 700, color: 0xaa6633 },
     ],
     requiredTool: 'net_plus',
-    miniBoss: { type: 'giant_beetle', name: '👑 거대 장수풍뎅이', coins: 500, score: 5000, color: 0x332211 },
+    miniBoss: { type: 'giant_beetle', name: '👑 거대 장수풍뎅이', speed: 1.2, coins: 500, score: 5000, color: 0x332211 },
   },
   {
     id: 6, name: '강가', icon: '🐟',
@@ -136,7 +136,7 @@ export const STAGES = [
       { type: 'cheetah', name: '치타', count: 2, speed: 4.0, coins: 500, score: 5000, color: 0xddcc55 },
     ],
     requiredTool: 'trap_large',
-    miniBoss: { type: 'giant_shark', name: '👑 거대 상어', coins: 2000, score: 20000, color: 0x557788 },
+    miniBoss: { type: 'giant_shark', name: '👑 거대 상어', speed: 2.0, coins: 2000, score: 20000, color: 0x557788 },
   },
   {
     id: 11, name: '설산', icon: '🐻',
@@ -204,7 +204,7 @@ export const STAGES = [
       { type: 'debris', name: '우주선 파편', count: 3, speed: 4.0, coins: 6000, score: 60000, color: 0xaaaacc },
     ],
     requiredTool: 'em_catcher',
-    miniBoss: { type: 'ufo', name: '👾 UFO 본체', coins: 50000, score: 500000, color: 0x44ffff, phases: 3 },
+    miniBoss: { type: 'ufo', name: '👾 UFO 본체', speed: 3.5, coins: 50000, score: 500000, color: 0x44ffff, phases: 3 },
   },
 ];
 

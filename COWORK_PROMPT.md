@@ -11,7 +11,7 @@
 - **최고 퀄리티**: 기능 동작만이 아니라 UX(애니메이션 감도, 딜레이 타이밍, 폰트 크기) 세부 조정까지 포함.
 
 ---
-## 프로젝트 현황 (Batch 13 완료)
+## 프로젝트 현황 (Batch 14 완료)
 - 경로: `C:\Users\gwony\OneDrive\Desktop\GY-program\GY-game\`
 - 빌드: `cd game && npm run build`
 - 배포: `npx vercel --prod` (루트에서)
@@ -40,7 +40,8 @@
 **수중 생물 terrain 스냅 제외** (swim_curve·sidewalk → _FLYING_STYLES_WS에 추가),
 **index.html 누락 UI 요소 전부 추가** (Batch 13): fade-overlay·creature-labels·timer-urgency·combo-glow·capture-feed·streak-announcer·achievement-popup·touch-controls+joystick — 이제 스트릭 어나운서/업적/이름표/피드/모바일 조이스틱 실제 작동,
 **HUD.js dead code 제거** (showDamagePopup·showScorePopup 이중 정의 삭제, null guard 추가),
-**_cleanup() 강화** (combo-glow·timer-urgency 리셋 추가)
+**_cleanup() 강화** (combo-glow·timer-urgency 리셋 추가),
+**Batch 14 전체 점검**: storage.js 깊은 병합, stages.js miniBoss speed 추가, CONSUMABLES 재구매 버그 수정, WaveSystem DIFFICULTY null guard, Creature.js `??` 연산자, HUD.js 미사용 변수 제거, skill 타이머 누수 수정, resize 핸들러 저장, view_range/jump_power 효과 적용, index.html loading div 닫힘 수정
 
 ### 해커톤 제출물 현황
 - [x] 배포 URL
@@ -91,7 +92,7 @@ Remove-Item .git\HEAD.lock -ErrorAction SilentlyContinue
 $env:PATH = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 cd game; npm run build; cd ..
 git add -A
-git commit -m "feat: Batch 12 — terrain fix, HUD popups, collision expansion"
+git commit -m "fix: Batch 14 — storage deep merge, miniBoss speed, consumable repurchase, skill timer leak"
 git push origin main
 npx vercel --prod
 ```
