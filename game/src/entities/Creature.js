@@ -137,7 +137,7 @@ export const PROFILES = {
   // ─── 곤충류 ─────────────────────────────
   dragonfly:    { style:'erratic_hover', fleeRadius:9,  frontFleeBoost:3.5, captureChanceBack:0.65, captureChanceFront:0.05 },
   butterfly:    { style:'flap_drift',    fleeRadius:4,  frontFleeBoost:1.2, captureChanceBack:0.65, captureChanceFront:0.65 },
-  bee:          { style:'buzz_hover',    fleeRadius:6,  frontFleeBoost:1.8, captureChanceBack:0.65, captureChanceFront:0.30 },
+  bee:          { style:'buzz_hover',    fleeRadius:4,  frontFleeBoost:1.3, captureChanceBack:0.65, captureChanceFront:0.40 },
   cicada:       { style:'erratic_hover', fleeRadius:7,  frontFleeBoost:2.0, captureChanceBack:0.65, captureChanceFront:0.15 },
   ladybug:      { style:'walk_wander',   fleeRadius:3,  frontFleeBoost:1.2, captureChanceBack:0.65, captureChanceFront:0.65 },
   beetle:       { style:'walk_wander',   fleeRadius:3,  frontFleeBoost:1.0, captureChanceBack:0.65, captureChanceFront:0.65 },
@@ -1684,8 +1684,12 @@ export class Creature {
   // 꿀벌: 8자 패턴 호버
   _moveBuzzHover(delta, playerPos, distToPlayer, speed) {
     if (this._state === 'FLEE') {
-      const away = this.mesh.position.clone().sub(playerPos).normalize();
-      this.mesh.position.addScaledVector(away, speed * 3 * delta);
+      // XZ 평면에서만 도망 (Y 성분 제거 → 위로 솟지 않음)
+      const ax = this.mesh.position.x - playerPos.x;
+      const az = this.mesh.position.z - playerPos.z;
+      const aLen = Math.sqrt(ax * ax + az * az) || 1;
+      this.mesh.position.x += (ax / aLen) * speed * 2 * delta;
+      this.mesh.position.z += (az / aLen) * speed * 2 * delta;
     } else {
       this._wanderTimer += delta;
       if (this._wanderTimer > this._wanderInterval) {

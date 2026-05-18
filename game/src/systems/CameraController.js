@@ -71,8 +71,8 @@ export class CameraController {
     this._locked = document.pointerLockElement === this.canvas;
     // 잠금 획득 직후 첫 mousemove는 accumulated delta 가능 → 스킵
     if (this._locked && !wasLocked) this._skipMove = 2;
-    // 잠금 해제 시 커서 명시적 복원
-    if (!this._locked) document.body.style.cursor = '';
+    // 잠금 해제 시 커서 명시적 복원 ('auto' 명시 — '' 제거는 브라우저별로 동작 불일치)
+    if (!this._locked) document.body.style.cursor = 'auto';
   }
 
   _handleMouseMove(e) {

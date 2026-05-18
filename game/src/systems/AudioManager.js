@@ -440,10 +440,16 @@ export class AudioManager {
     src.buffer   = buf;
     src.loop     = true;
 
+    // Q = centerHz/bwHz 최소 8 이상으로 강제 → 협대역 통과로 백색소음 억제
     const filt   = ctx.createBiquadFilter();
     filt.type    = 'bandpass';
     filt.frequency.value = centerHz;
-    filt.Q.value = centerHz / bwHz;
+    filt.Q.value = Math.max(8, centerHz / bwHz);
+
+    // 추가 로우패스 필터로 고주파 잔류 노이즈 제거
+    const lpf = ctx.createBiquadFilter();
+    lpf.type  = 'lowpass';
+    lpf.frequency.value = Math.min(centerHz * 2, 2000);
 
     // LFO로 바람 세기 변화
     const lfo  = ctx.createOscillator();
@@ -457,11 +463,12 @@ export class AudioManager {
     lfo.connect(lfoG);
     lfoG.connect(env.gain);
     src.connect(filt);
-    filt.connect(env);
+    filt.connect(lpf);   // 협대역 통과 → 추가 로우패스
+    lpf.connect(env);
     env.connect(this._ambGain);
     lfo.start(); src.start();
 
-    this._ambNodes.push(src, filt, env, lfo, lfoG);
+    this._ambNodes.push(src, filt, lpf, env, lfo, lfoG);
   }
 
   _addWaterLayer(vol) {

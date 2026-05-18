@@ -754,7 +754,8 @@ export class Player {
     }
 
     // getHeight 는 오목 지역에서 살짝 음수를 반환할 수 있음 → 0 이상으로 클램프
-    const terrainY = Math.max(0, world ? world.getHeight(this.mesh.position.x, this.mesh.position.z) : 0);
+    // +0.12 오프셋: 지형 메시 보간 오차(오목 지역) 및 발 클리핑 방지
+    const terrainY = Math.max(0, world ? world.getHeight(this.mesh.position.x, this.mesh.position.z) : 0) + 0.12;
     if (this.mesh.position.y < terrainY) {
       // 지형 아래로 클리핑 절대 금지 — 즉시 스냅
       this.mesh.position.y = terrainY;

@@ -232,8 +232,11 @@ export class WaveSystem {
 
       if (dist > adjustedRange) continue;
 
-      // 플레이어가 생물을 향하고 있는가? (느슨하게 체크)
-      const dot = toCreature.normalize().dot(playerForward);
+      // 플레이어가 생물을 향하고 있는가? (XZ 평면 기준 — 공중 생물도 포획 가능)
+      const xzLen = Math.sqrt(toCreature.x * toCreature.x + toCreature.z * toCreature.z);
+      const dot = xzLen > 0.01
+        ? (toCreature.x * playerForward.x + toCreature.z * playerForward.z) / xzLen
+        : 1; // 생물이 바로 위에 있으면 항상 향하고 있는 것으로 간주
       if (dot < (creature.isBoss ? 0.0 : 0.1)) continue;
 
       // 종별 포획 확률 체크 + 럭키 보너스 (업그레이드 카드)

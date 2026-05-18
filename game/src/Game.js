@@ -96,6 +96,11 @@ export class Game {
   // ── 화면 전환 ─────────────────────────────────────────────────
   _showScreen(name) {
     const noFade = name === 'game' || name === 'pause';
+    // 게임 화면이 아닐 때 커서 항상 강제 복원 (포인터락 해제 직후 비동기 딜레이 대응)
+    if (name !== 'game') {
+      document.body.style.cursor = 'auto';
+      setTimeout(() => { document.body.style.cursor = 'auto'; }, 80);
+    }
     const fade = document.getElementById('fade-overlay');
     const doSwitch = () => {
       document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -281,7 +286,7 @@ export class Game {
           if (this.player) this.player.keys = {};
           this.camCtrl?.exitLock();
           if (this.camCtrl) this.camCtrl._shakeIntensity = 0;
-          document.body.style.cursor = '';
+          document.body.style.cursor = 'auto';
           this._stopLoop();
           this.hud.hide();
           this._showScreen('inventory');
@@ -293,7 +298,7 @@ export class Game {
           if (this.player) this.player.keys = {};
           this.camCtrl?.exitLock();
           if (this.camCtrl) this.camCtrl._shakeIntensity = 0;
-          document.body.style.cursor = '';
+          document.body.style.cursor = 'auto';
           this._stopLoop();
           this.hud.hide();
           this._showScreen('shop');
@@ -1575,7 +1580,7 @@ export class Game {
     this.camCtrl?.exitLock();
     if (this.camCtrl) this.camCtrl._shakeIntensity = 0; // 재개 시 흔들림 방지
     if (this.player) this.player.keys = {};             // keyup 누락 방지
-    document.body.style.cursor = '';                    // 커서 명시적 복원
+    document.body.style.cursor = 'auto';                // 커서 명시적 복원
     this._showLockHint(false);
     audioManager.setState('pause');
     this._showScreen('pause');
