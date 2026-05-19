@@ -310,6 +310,13 @@ export class Inventory {
       return;
     }
 
+    // 같은 슬롯 재클릭 → 선택 해제
+    if (sel.source === source && sel.idx === idx) {
+      this._selected = null;
+      this._refresh();
+      return;
+    }
+
     // 두 번째 클릭: 이동 수행
     this._moveItem(sel, { source, idx, slotId });
     this._selected = null;

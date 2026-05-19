@@ -1470,11 +1470,10 @@ export class Game {
   _flashSkillActivation(skillId) {
     // 스킬별 플래시 색상
     const colorMap = {
-      whirlwind: '#00cfff',
-      magnet:    '#f39c12',
-      freeze:    '#a8e6ff',
-      mimic:     '#9b59b6',
-      dash:      '#2ecc71',
+      skill_vortex: '#00cfff',   // 회오리 — 시원한 청록
+      skill_magnet: '#f39c12',   // 자석   — 주황
+      skill_slow:   '#a8e6ff',   // 슬로우 — 차가운 파랑
+      skill_multi:  '#9b59b6',   // 분신   — 보라
     };
     const color = colorMap[skillId] ?? '#ffffff';
 
