@@ -1298,8 +1298,8 @@ export class Game {
       this._addFeedEntry(result.creature?.config?.name || result.creature?.config?.type || '생물', result.coins);
       // 콤보 처리
       const combo = this.waves?.combo ?? 0;
-      // 콤보 버스트 (5× / 10×)
-      if (combo === 5 || combo === 10) this._showComboBurst(combo);
+      // 콤보 버스트 (5× / 10× / 15×)
+      if (combo === 5 || combo === 10 || combo === 15) this._showComboBurst(combo);
       // 스트릭 어나운서 (마일스톤 콤보)
       if (combo === 3 || combo === 5 || combo === 8 || combo === 10 || combo === 15 || combo === 20) {
         this._showStreakAnnouncer(combo);
@@ -1555,6 +1555,7 @@ export class Game {
     const timeMult = this.settings.timeOfDay === 'night' ? 1.4
                    : this.settings.timeOfDay === 'dusk'  ? 1.1 : 1;
     const comboMult = this.waves ? (
+      this.waves.combo >= 15 ? 2.5 :
       this.waves.combo >= 10 ? 2.0 :
       this.waves.combo >= 5  ? 1.5 :
       this.waves.combo >= 3  ? 1.2 : 1.0
@@ -2374,9 +2375,10 @@ export class Game {
 
   // ── 콤보 버스트 링 (5×/10× 콤보) ────────────────────────────
   _showComboBurst(combo) {
-    const color = combo >= 10 ? '#ffee00' : '#ff8844';
-    const rings  = combo >= 10 ? 5 : 3;
-    if (combo >= 10) this.camCtrl?.shake(0.18);
+    const color = combo >= 15 ? '#ff44ff' : combo >= 10 ? '#ffee00' : '#ff8844';
+    const rings  = combo >= 15 ? 7 : combo >= 10 ? 5 : 3;
+    if (combo >= 15) this.camCtrl?.shake(0.28);
+    else if (combo >= 10) this.camCtrl?.shake(0.18);
     for (let i = 0; i < rings; i++) {
       const r = document.createElement('div');
       r.style.cssText = `
