@@ -51,6 +51,11 @@ export function saveSave(data) {
 export function updateSave(partial) {
   const current = loadSave();
   const updated = { ...current, ...partial };
+  // 중첩 객체 deep merge (stats, skillSlots, equipment, itemLevels)
+  if (partial.stats)      updated.stats      = { ...current.stats,      ...partial.stats };
+  if (partial.skillSlots) updated.skillSlots = { ...current.skillSlots, ...partial.skillSlots };
+  if (partial.equipment)  updated.equipment  = { ...current.equipment,  ...partial.equipment };
+  if (partial.itemLevels) updated.itemLevels = { ...current.itemLevels, ...partial.itemLevels };
   saveSave(updated);
   return updated;
 }

@@ -784,7 +784,9 @@ body {
   pointer-events: none;
   backdrop-filter: blur(4px);
   letter-spacing: 0.5px;
+  transition: opacity 1.2s ease;
 }
+.hint-bar.hint-faded { opacity: 0; }
 
 /* 포획 이펙트 */
 .capture-fx {

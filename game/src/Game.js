@@ -747,6 +747,12 @@ export class Game {
     } else {
       this._showLockHint(true);
     }
+
+    // 힌트바 5초 후 자동 페이드 (베테랑 플레이어에게 방해 안 되도록)
+    clearTimeout(this._hintFadeTimer);
+    this._hintFadeTimer = setTimeout(() => {
+      document.getElementById('hint-bar')?.classList.add('hint-faded');
+    }, 5000);
   }
 
   // ── 게임 루프 ─────────────────────────────────────────────────
@@ -1010,6 +1016,8 @@ export class Game {
     clearTimeout(this._missVigTimeout);
     clearTimeout(this._skillSlowTimer);   this._skillSlowTimer  = null;
     clearTimeout(this._skillMultiTimer);  this._skillMultiTimer = null;
+    clearTimeout(this._hintFadeTimer);    this._hintFadeTimer   = null;
+    document.getElementById('hint-bar')?.classList.remove('hint-faded');
     // pointerlockchange 감시 리스너 제거 (게임 시작마다 새로 등록하므로 이전 것 제거)
     if (this._lockWatcher) {
       document.removeEventListener('pointerlockchange', this._lockWatcher);
@@ -1829,6 +1837,16 @@ export class Game {
     const stars = starScore >= 65 ? 3 : starScore >= 33 ? 2 : 1;
 
     markStageCleared(this.selectedStage, this.sessionScore, stars);
+    // 글로벌 통계 업데이트
+    {
+      const currentSave = loadSave();
+      const newStats = {
+        totalCaptured:    (currentSave.stats?.totalCaptured    || 0) + (result.captured || 0),
+        totalCoinsEarned: (currentSave.stats?.totalCoinsEarned || 0) + this.sessionCoins,
+        bestCombo:        Math.max(currentSave.stats?.bestCombo || 0, result.maxCombo || 0),
+      };
+      updateSave({ stats: newStats });
+    }
     audioManager.sfxStageComplete();
     this._launchConfetti();
 
@@ -1849,7 +1867,14 @@ export class Game {
 
     document.getElementById('result-emoji').textContent = '🎉';
     document.getElementById('result-title').textContent = `스테이지 ${this.selectedStage} 클리어!`;
-    document.getElementById('btn-next-stage').style.display = this.selectedStage < STAGES.length ? '' : 'none';
+    const nextStageData = STAGES.find(s => s.id === this.selectedStage + 1);
+    const nextBtn = document.getElementById('btn-next-stage');
+    if (this.selectedStage < STAGES.length && nextBtn) {
+      nextBtn.style.display = '';
+      nextBtn.textContent = nextStageData ? `${nextStageData.icon} ${nextStageData.name} →` : '다음 →';
+    } else if (nextBtn) {
+      nextBtn.style.display = 'none';
+    }
     document.getElementById('nickname-row').classList.remove('hidden');
 
     // 별점 상세 힌트
