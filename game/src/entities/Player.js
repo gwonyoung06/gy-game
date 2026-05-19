@@ -681,10 +681,11 @@ export class Player {
     if (this._swingFlash > 0) {
       this._swingFlash = Math.max(0, this._swingFlash - delta * 4);
     }
-    // 기본 맥동 + 스윙 플래시 합산
-    const pulse = 0.18 + Math.sin(Date.now() * 0.0025) * 0.06;
+    // 기본 맥동 + 스윙 플래시 합산 + 업그레이드 부스트
+    const boost = this._ringBoost ?? 0;
+    const pulse = 0.18 + boost + Math.sin(Date.now() * 0.0025) * (0.06 + boost * 0.5);
     const flash = this._swingFlash * 0.65;
-    this._rangeRingMat.opacity = Math.min(0.85, pulse + flash);
+    this._rangeRingMat.opacity = Math.min(0.92, pulse + flash);
     // 플래시 시 색상 전환 (흰색 → 청록)
     const f = this._swingFlash;
     this._rangeRingMat.color.setRGB(

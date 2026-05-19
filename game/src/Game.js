@@ -1306,10 +1306,46 @@ export class Game {
         if (this.waves.combo === 5)  this._checkAchievement('combo5',  '🔥', '5연속 콤보!');
         if (this.waves.combo === 10) this._checkAchievement('combo10', '💥', '10연속 콤보!');
       }
+      // 광역 포획 업그레이드: 포획 성공 시 추가 근처 생물 자동 포획
+      if ((this._bonusCapture ?? 0) > 0 && this.waves && this.player) {
+        this._applyBonusCapture(result);
+      }
     } else {
       audioManager.sfxCaptureFail();
       this.hud.showMissPopup?.();
       this._showMissVignette();
+    }
+  }
+
+  /** 광역 포획 업그레이드 — 성공 포획 후 가장 가까운 생물 추가 자동 포획 */
+  _applyBonusCapture(triggerResult) {
+    const pos   = this.player.position;
+    const range = this.player.captureRange * 1.8; // 일반 범위보다 1.8배 넓게
+    let remaining = this._bonusCapture;
+
+    // 거리순 정렬 후 nearest N 마리 포획
+    const candidates = this.waves.creatures
+      .filter(c => c.alive && !c.captured && c !== triggerResult.creature)
+      .map(c => ({ c, d: c.mesh.position.distanceTo(pos) }))
+      .filter(({ d }) => d <= range)
+      .sort((a, b) => a.d - b.d);
+
+    for (const { c } of candidates) {
+      if (remaining <= 0) break;
+      c.capture();
+      this.waves.capturedCount++;
+      this.waves.combo++;
+      if (this.waves.combo > this.waves.maxCombo) this.waves.maxCombo = this.waves.combo;
+
+      const coins = Math.floor(c.config.coins * (this._coinMult ?? 1));
+      const score = Math.floor(c.config.score * (this._scoreMult ?? 1));
+      this.sessionScore  += score;
+      this.sessionCoins  += coins;
+      this.totalCoins = addCoins(coins);
+      this.hud.showScorePopup(score);
+      this._addFeedEntry(c.config.name || c.config.type || '생물', coins);
+      recordCapturedType(c.config?.type);
+      remaining--;
     }
   }
 
@@ -1365,14 +1401,23 @@ export class Game {
         apply: () => { this._luckBonus = (this._luckBonus ?? 0) + 0.20; } },
       { icon: '🌟', name: '점수 배율 +25%',   desc: '획득 점수가 1.25배가 됩니다',
         apply: () => { this._scoreMult = (this._scoreMult ?? 1) * 1.25; } },
-      { icon: '💨', name: '대시 쿨다운 -30%', desc: '대시를 더 자주 사용할 수 있습니다',
-        apply: () => { if (this.player) this.player._dashCooldownMax = (this.player._dashCooldownMax ?? 1.2) * 0.7; } },
+      { icon: '💨', name: '스윙 속도 +20%',  desc: '채망 휘두르기가 20% 빨라집니다',
+        apply: () => { if (this.player) this.player.swingSpeed = (this.player.swingSpeed ?? 1) * 1.2; } },
       { icon: '🛡', name: '즉시 무적 5초',     desc: '잠시 동안 피해를 받지 않습니다',
         apply: () => { this._invincibleTimer = 5; } },
       { icon: '✨', name: '광역 포획 +1',      desc: '범위 내 생물 1마리 추가 자동 포획',
         apply: () => { this._bonusCapture = (this._bonusCapture ?? 0) + 1; } },
-      { icon: '🔮', name: '포획 확률 시각화',   desc: '크리처 머리 위 확률 게이지 강화',
-        apply: () => { this._showCaptureRadius = true; } },
+      { icon: '🔮', name: '포획 범위 +10% & 링 강화', desc: '범위가 넓어지고 포획 링이 밝아집니다',
+        apply: () => {
+          if (this.player) {
+            this.player.captureRange *= 1.10;
+            // 포획 링 밝기 영구 강화
+            if (this.player._rangeRingMat) {
+              this.player._rangeRingMat.color.set(0x88ffee);
+            }
+            this.player._ringBoost = (this.player._ringBoost ?? 0) + 0.15;
+          }
+        } },
     ];
     const pool = [...UPGRADES].sort(() => Math.random() - 0.5).slice(0, 3);
     if (document.pointerLockElement) document.exitPointerLock();
