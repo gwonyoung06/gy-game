@@ -212,7 +212,11 @@ export class HUD {
 
     const glow = document.getElementById('combo-glow');
     let multText = '', glowClass = '';
-    if (state.combo >= 10) {
+    if (state.combo >= 15) {
+      this.comboEl.classList.remove('hidden');
+      this.comboCount.textContent = state.combo;
+      multText = '×2.5'; glowClass = 'combo-glow-15';
+    } else if (state.combo >= 10) {
       this.comboEl.classList.remove('hidden');
       this.comboCount.textContent = state.combo;
       multText = '×2.0'; glowClass = 'combo-glow-10';
@@ -522,16 +526,27 @@ export class HUD {
       </div>
     `;
     overlay.classList.remove('hidden');
+
+    const pick = (idx) => {
+      if (idx < 0 || idx >= options.length) return;
+      document.removeEventListener('keydown', _kbHandler);
+      overlay.style.animation = 'upgradeFadeIn 0.2s ease reverse forwards';
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        overlay.style.animation = '';
+        onSelect(idx);
+      }, 200);
+    };
+
+    // 키보드 숫자 1~3으로 카드 선택 지원
+    const _kbHandler = (e) => {
+      const n = parseInt(e.key, 10);
+      if (n >= 1 && n <= options.length) { e.preventDefault(); pick(n - 1); }
+    };
+    document.addEventListener('keydown', _kbHandler);
+
     overlay.querySelectorAll('.upgrade-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const idx = parseInt(card.dataset.idx, 10);
-        overlay.style.animation = 'upgradeFadeIn 0.2s ease reverse forwards';
-        setTimeout(() => {
-          overlay.classList.add('hidden');
-          overlay.style.animation = '';
-          onSelect(idx);
-        }, 200);
-      }, { once: true });
+      card.addEventListener('click', () => pick(parseInt(card.dataset.idx, 10)), { once: true });
     });
   }
 }

@@ -1521,6 +1521,7 @@ body {
 .combo-glow-3  { box-shadow: inset 0 0 60px rgba(255,200,0,0.25); }
 .combo-glow-5  { box-shadow: inset 0 0 80px rgba(255,140,0,0.35); }
 .combo-glow-10 { box-shadow: inset 0 0 120px rgba(255,60,0,0.50); }
+.combo-glow-15 { box-shadow: inset 0 0 180px rgba(255,0,80,0.70), inset 0 0 60px rgba(255,200,0,0.35); animation: comboUrgentPulse 0.45s ease-in-out infinite alternate; }
 
 /* ══════════════════════════════════════════════
    Feature 4: 업적 팝업

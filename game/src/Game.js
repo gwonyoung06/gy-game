@@ -911,33 +911,42 @@ export class Game {
     const W = window.innerWidth, H = window.innerHeight;
     const playerPos = this.player.position;
     const LABEL_RANGE = 14;
-    const _v = new THREE.Vector3();
+    const _v = _gv; // 모듈 레벨 임시 벡터 재사용 (매 프레임 GC 방지)
 
-    const near = this.waves.creatures.filter(c =>
-      c.alive && !c.captured && c.mesh.position.distanceTo(playerPos) < LABEL_RANGE
-    );
+    // 임시 배열 재사용 (filter+forEach 대신 수동 루프로 GC 최소화)
+    const LABEL_SQ = LABEL_RANGE * LABEL_RANGE;
+    const near = [];
+    for (const c of this.waves.creatures) {
+      if (!c.alive || c.captured) continue;
+      const dx = c.mesh.position.x - playerPos.x;
+      const dz = c.mesh.position.z - playerPos.z;
+      if (dx * dx + dz * dz < LABEL_SQ) near.push(c);
+    }
 
     // 기존 레이블 재사용 (DOM 최소화)
-    const existing = [...container.children];
-    near.forEach((c, i) => {
+    const existing = container.children;
+    let labelIdx = 0;
+    const captureRange = this.player.captureRange;
+    const fwdLabel = this.player.getForward(this.camCtrl);
+
+    for (const c of near) {
       _v.copy(c.mesh.position).project(this.camera);
+      if (_v.z > 1) continue; // 카메라 뒤
       const sx = (_v.x + 1) / 2 * W;
       const sy = (-_v.y + 1) / 2 * H - 30;
-      if (_v.z > 1) return; // 카메라 뒤
 
-      let label = existing[i];
+      let label = existing[labelIdx];
       if (!label) {
         label = document.createElement('div');
         label.className = 'creature-label';
         container.appendChild(label);
       }
       const dist = c.mesh.position.distanceTo(playerPos);
-      const inRange = dist <= this.player.captureRange;
+      const inRange = dist <= captureRange;
       label.className = inRange ? 'creature-label creature-label--in-range' : 'creature-label';
       let gaugeHtml = '';
       if (inRange) {
-        const fwd = this.player.getForward(this.camCtrl);
-        const pct = Math.round(c.getCaptureChance(playerPos, fwd) * 100);
+        const pct = Math.round(c.getCaptureChance(playerPos, fwdLabel) * 100);
         const hue = pct < 40 ? 0 : pct < 70 ? 40 : 120;
         gaugeHtml = `<div class="label-chance-gauge"><div class="label-chance-fill" style="width:${pct}%;background:hsl(${hue},90%,52%)"></div></div>`
                   + `<div class="label-hint">포획확률 ${pct}%　클릭!</div>`;
@@ -947,11 +956,12 @@ export class Game {
         : `${c.config.name || c.config.type} 💰${c.config.coins}`;
       label.style.transform = `translate(${sx}px, ${sy}px)`;
       label.style.opacity = Math.max(0.4, 1 - dist / LABEL_RANGE);
-    });
+      labelIdx++;
+    }
 
-    // 남은 기존 레이블 숨기기
-    for (let i = near.length; i < existing.length; i++) {
-      existing[i].remove();
+    // 남은 기존 레이블 제거
+    while (container.children.length > labelIdx) {
+      container.removeChild(container.lastChild);
     }
   }
 
@@ -2160,12 +2170,14 @@ export class Game {
     const fwd   = this.player.getForward(this.camCtrl);
     const pos   = this.player.position;
     const range = this.player.captureRange;
+    const rangeSq = range * range;
     const canCapture = this.waves.creatures.some(c => {
       if (!c.alive || c.captured) return false;
       const dx = c.mesh.position.x - pos.x;
       const dz = c.mesh.position.z - pos.z;
-      const dist = Math.sqrt(dx * dx + dz * dz);
-      if (dist > range) return false;
+      const distSq = dx * dx + dz * dz;
+      if (distSq > rangeSq) return false;
+      const dist = Math.sqrt(distSq);
       return (dx / dist) * fwd.x + (dz / dist) * fwd.z >= 0.1;
     });
     el.classList.toggle('crosshair--target', canCapture);
