@@ -856,7 +856,7 @@ export class Game {
 
         // 생물 이름표 + 타이머 긴박감
         this._updateCreatureLabels();
-        this._updateTimerUrgency(this.waves.getState().timeRemaining);
+        this._updateTimerUrgency(state.timeRemaining); // state는 위에서 getState()로 이미 획득
         this._updateCrosshair();
         this._updateDangerIndicators();
 
