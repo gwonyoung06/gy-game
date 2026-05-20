@@ -303,7 +303,7 @@ export class Inventory {
 
     if (!sel) {
       // 첫 번째 클릭: 아이템이 있는 슬롯 선택
-      if (this._hasItem(source, idx)) {
+      if (this._hasItem(source, idx, slotId)) {
         this._selected = { source, idx, slotId };
         this._refresh();
       }
@@ -323,13 +323,13 @@ export class Inventory {
     this._refresh();
   }
 
-  _hasItem(source, idx) {
+  _hasItem(source, idx, slotId) {
     const save = loadSave();
     if (source === 'inv')    return !!(save.inventoryGrid?.[idx]);
     if (source === 'hotbar') return !!(save.hotbar?.[idx]);
     if (source === 'equip')  {
-      const slot = EQUIP_SLOTS.find((_, i) => i === idx);
-      return slot ? !!(save.equipment?.[slot.id]) : false;
+      // slotId ('head'/'chest'/…) 직접 사용 — 그리드 idx로 EQUIP_SLOTS 조회 시 잘못된 슬롯 참조 방지
+      return slotId ? !!(save.equipment?.[slotId]) : false;
     }
     if (source === 'skill')  return !!(save.skillSlots?.[idx]);
     if (source === 'pool')   return true; // 풀 아이템은 항상 있음
@@ -365,7 +365,8 @@ export class Inventory {
     if (source === 'inv')    return save.inventoryGrid?.[idx] ?? null;
     if (source === 'hotbar') return save.hotbar?.[idx] ?? null;
     if (source === 'equip')  {
-      const s = EQUIP_SLOTS[idx]; return s ? { id: save.equipment?.[s.id] } : null;
+      // slotId 직접 사용 — 그리드 idx로 EQUIP_SLOTS 조회 시 잘못된 슬롯 참조 방지
+      return slotId ? { id: save.equipment?.[slotId] } : null;
     }
     if (source === 'skill')  return { id: save.skillSlots?.[idx] };
     if (source === 'pool')   return { id: idx }; // pool: idx = itemId
@@ -373,10 +374,13 @@ export class Inventory {
   }
 
   _clearEntry(save, loc) {
-    const { source, idx } = loc;
+    const { source, idx, slotId } = loc;
     if (source === 'inv')    { if (save.inventoryGrid) save.inventoryGrid[idx] = null; }
     if (source === 'hotbar') { if (save.hotbar) save.hotbar[idx] = null; }
-    if (source === 'equip')  { const s = EQUIP_SLOTS[idx]; if (s && save.equipment) save.equipment[s.id] = null; }
+    if (source === 'equip')  {
+      // slotId 직접 사용 — 그리드 idx로 EQUIP_SLOTS 조회 시 잘못된 슬롯 참조 방지
+      if (slotId && save.equipment) save.equipment[slotId] = null;
+    }
     if (source === 'skill')  { if (save.skillSlots) save.skillSlots[idx] = null; }
     // pool: 원본 유지 (보유 목록에서 제거하지 않음)
   }
@@ -395,8 +399,8 @@ export class Inventory {
       save.hotbar[idx] = { id, count: entry.count ?? 1 };
     }
     if (source === 'equip') {
-      const s = EQUIP_SLOTS[idx];
-      if (s && save.equipment) save.equipment[s.id] = id;
+      // slotId 직접 사용 — 그리드 idx로 EQUIP_SLOTS 조회 시 잘못된 슬롯 참조 방지
+      if (slotId && save.equipment) save.equipment[slotId] = id;
     }
     if (source === 'skill') {
       if (!save.skillSlots) save.skillSlots = {};
