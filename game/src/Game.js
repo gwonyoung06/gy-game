@@ -2069,14 +2069,10 @@ export class Game {
     const stageData = STAGES.find(s => s.id === this.selectedStage);
 
     // ── 별점 계산 (4인수 가중 합산, 0~100점) ──────────────────────
-    // ① 시간 효율: 남은 시간 비율 × 30점
     const timeRatio    = result.timeLeft / (stageData?.timeLimit || 60);
-    // ② 포획 초과: 목표 초과분 / 목표치 (최대 1.0) × 25점
     const target       = stageData?.targetCount || 1;
     const captureBonus = Math.min(Math.max(result.captured - target, 0) / target, 1.0);
-    // ③ 콤보 성과: 최고 콤보 / 10 (최대 1.0) × 20점
     const comboScore   = Math.min((result.maxCombo || 0) / 10, 1.0);
-    // ④ 생존력: 무피해 25점 / 피격 1회당 -2.5점 (최소 0)
     const dmg          = this.totalDamageTaken || 0;
     const surviveScore = dmg === 0 ? 25 : Math.max(0, 10 - dmg * 2.5);
 
@@ -2084,7 +2080,6 @@ export class Game {
     const stars = starScore >= 65 ? 3 : starScore >= 33 ? 2 : 1;
 
     markStageCleared(this.selectedStage, this.sessionScore, stars);
-    // 글로벌 통계 업데이트
     {
       const currentSave = loadSave();
       const newStats = {
@@ -2094,24 +2089,17 @@ export class Game {
       };
       updateSave({ stats: newStats });
     }
-    audioManager.sfxStageComplete();
-    this._launchConfetti();
 
     // 무결 클리어 보너스 (피해 0)
     if (this.totalDamageTaken === 0 && result.captured > 0) {
-      const bonus = 500;
-      this.sessionCoins += bonus;
-      this.totalCoins = addCoins(bonus);
+      this.sessionCoins += 500;
+      this.totalCoins = addCoins(500);
       this._checkAchievement('no_damage', '💎', '완전 무결 클리어!');
-    }
-    if (stars === 3) {
-      // 퍼펙트 클리어 — 컨페티 두 번 더 터짐
-      setTimeout(() => this._launchConfetti(), 500);
-      setTimeout(() => this._launchConfetti(), 1050);
     }
     this._checkAchievement('first_clear', '🎉', '첫 스테이지 클리어!');
     if (stars === 3) this._checkAchievement('perfect_clear', '⭐', '완벽 클리어!');
 
+    // ── 결과 화면 사전 준비 (오버레이 뒤에 숨어서 세팅) ───────────
     document.getElementById('result-emoji').textContent = '🎉';
     document.getElementById('result-title').textContent = `스테이지 ${this.selectedStage} 클리어!`;
     const nextStageData = STAGES.find(s => s.id === this.selectedStage + 1);
@@ -2119,37 +2107,274 @@ export class Game {
     if (this.selectedStage < STAGES.length && nextBtn) {
       nextBtn.style.display = '';
       nextBtn.textContent = nextStageData ? `${nextStageData.icon} ${nextStageData.name} →` : '다음 →';
-    } else if (nextBtn) {
-      nextBtn.style.display = 'none';
-    }
+    } else if (nextBtn) { nextBtn.style.display = 'none'; }
     document.getElementById('nickname-row').classList.remove('hidden');
 
-    // 별점 상세 힌트
     const hintEl = document.getElementById('star-score-hint');
     if (hintEl) {
-      const t = Math.round(timeRatio * 100);
-      const c = Math.round(captureBonus * 100);
-      const k = Math.round(comboScore * 100);
-      const s = Math.round(surviveScore / 25 * 100);
+      const t = Math.round(timeRatio * 100), c = Math.round(captureBonus * 100);
+      const k = Math.round(comboScore * 100), s = Math.round(surviveScore / 25 * 100);
       hintEl.textContent =
         `⏱ 시간 ${t}%  🎯 포획 +${c}%  🔥 콤보 ${k}%  💚 생존 ${s}%  → 종합 ${Math.round(starScore)}점`;
     }
-
     this._setResultStars(stars);
-    // 별점에 따른 결과 카드 테두리 글로우
     const resultCard = document.querySelector('.result-card');
     if (resultCard) {
       resultCard.classList.remove('result-stars-1', 'result-stars-2', 'result-stars-3');
       resultCard.classList.add(`result-stars-${stars}`);
     }
-
-    // 마지막 닉네임 자동 채우기
     const savedNick = localStorage.getItem('gy_last_nickname') || '';
     const nickInput = document.getElementById('nickname-input');
     if (nickInput && savedNick) nickInput.value = savedNick;
 
-    this._showScreen('result');
-    this._animateResultNumbers(result.captured, result.timeLeft, result.maxCombo, this.totalDamageTaken || 0, result);
+    // ── 클리어 연출 → 완료 시 결과 화면 전환 ──────────────────────
+    audioManager.sfxStageComplete();
+    this._showStageClearOverlay(stars, stageData, () => {
+      this._showScreen('result');
+      this._animateResultNumbers(result.captured, result.timeLeft, result.maxCombo, this.totalDamageTaken || 0, result);
+    });
+  }
+
+  // ── 스테이지 클리어 풀스크린 연출 ────────────────────────────────
+  _showStageClearOverlay(stars, stageData, onDone) {
+    // ── CSS keyframes 주입 (최초 1회) ──────────────────────
+    if (!document.getElementById('_clearAnimStyle')) {
+      const s = document.createElement('style');
+      s.id = '_clearAnimStyle';
+      s.textContent = `
+        @keyframes clearZoomIn {
+          0%   { opacity:0; transform:scale(0.3) translateY(30px); }
+          60%  { opacity:1; transform:scale(1.08) translateY(-6px); }
+          100% { opacity:1; transform:scale(1)   translateY(0); }
+        }
+        @keyframes clearFadeUp {
+          0%   { opacity:0; transform:translateY(20px); }
+          100% { opacity:1; transform:translateY(0); }
+        }
+        @keyframes starPop {
+          0%   { opacity:0; transform:scale(0) rotate(-30deg); }
+          70%  { transform:scale(1.35) rotate(5deg); }
+          100% { opacity:1; transform:scale(1) rotate(0deg); }
+        }
+        @keyframes clearShockwave {
+          0%   { transform:scale(0.2); opacity:0.9; }
+          100% { transform:scale(3.5); opacity:0; }
+        }
+        @keyframes clearGlowPulse {
+          0%,100% { text-shadow: 0 0 20px #ffd700, 0 0 60px #ffd700; }
+          50%      { text-shadow: 0 0 40px #fff,   0 0 100px #ffd700, 0 0 140px #ff6b35; }
+        }
+        @keyframes clearOverlayFadeOut {
+          0%   { opacity:1; }
+          100% { opacity:0; }
+        }
+        @keyframes clearScorePop {
+          0%   { opacity:0; transform:scale(0.5); }
+          80%  { transform:scale(1.1); }
+          100% { opacity:1; transform:scale(1); }
+        }
+      `;
+      document.head.appendChild(s);
+    }
+
+    const ANIM_DURATION = 3000; // 3초
+
+    // ── 오버레이 컨테이너 ──────────────────────────────────
+    const overlay = document.createElement('div');
+    overlay.id = '_stageClearOverlay';
+    overlay.style.cssText = `
+      position:fixed; inset:0; z-index:1000;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      background:radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.75) 100%);
+      pointer-events:none; overflow:hidden;
+    `;
+
+    // ── 충격파 원 ──────────────────────────────────────────
+    const shock = document.createElement('div');
+    shock.style.cssText = `
+      position:absolute; width:200px; height:200px;
+      border-radius:50%; border:4px solid rgba(255,215,0,0.8);
+      animation:clearShockwave 0.7s ease-out forwards;
+    `;
+    overlay.appendChild(shock);
+
+    // ── 스테이지 이름 (서브타이틀) ─────────────────────────
+    const sub = document.createElement('div');
+    sub.textContent = stageData ? `${stageData.icon} ${stageData.name}` : '';
+    sub.style.cssText = `
+      font-size:1.4rem; color:rgba(255,255,255,0.85);
+      font-weight:600; letter-spacing:0.12em;
+      animation:clearFadeUp 0.5s 0.3s ease-out both;
+      margin-bottom:16px;
+    `;
+    overlay.appendChild(sub);
+
+    // ── 메인 타이틀 ────────────────────────────────────────
+    const title = document.createElement('div');
+    title.textContent = 'STAGE CLEAR!';
+    title.style.cssText = `
+      font-size:clamp(3rem,9vw,6rem); font-weight:900;
+      color:#ffd700; letter-spacing:0.06em;
+      animation:clearZoomIn 0.65s 0.1s cubic-bezier(0.22,1,0.36,1) both,
+                clearGlowPulse 1.5s 0.8s ease-in-out infinite;
+      line-height:1;
+    `;
+    overlay.appendChild(title);
+
+    // ── 별점 ───────────────────────────────────────────────
+    const starRow = document.createElement('div');
+    starRow.style.cssText = `
+      display:flex; gap:12px; margin-top:24px;
+      font-size:clamp(2.5rem,7vw,4.5rem);
+    `;
+    for (let i = 0; i < 3; i++) {
+      const star = document.createElement('span');
+      star.textContent = i < stars ? '⭐' : '☆';
+      star.style.cssText = `
+        opacity:0;
+        animation:starPop 0.5s ${0.65 + i * 0.22}s cubic-bezier(0.34,1.56,0.64,1) both;
+        filter:${i < stars ? 'drop-shadow(0 0 12px #ffd700)' : 'grayscale(1) opacity(0.35)'};
+      `;
+      starRow.appendChild(star);
+    }
+    overlay.appendChild(starRow);
+
+    // ── 점수 ───────────────────────────────────────────────
+    const scoreEl = document.createElement('div');
+    scoreEl.textContent = `${this.sessionScore.toLocaleString()} 점`;
+    scoreEl.style.cssText = `
+      margin-top:20px; font-size:clamp(1.3rem,4vw,2rem);
+      color:#fff; font-weight:700;
+      animation:clearScorePop 0.5s ${0.65 + 3 * 0.22 + 0.1}s ease-out both;
+    `;
+    overlay.appendChild(scoreEl);
+
+    // ── 힌트 ───────────────────────────────────────────────
+    const hint = document.createElement('div');
+    hint.textContent = stars === 3 ? '🏆 퍼펙트 클리어!' : stars === 2 ? '👏 훌륭해요!' : '💪 계속 도전!';
+    hint.style.cssText = `
+      margin-top:10px; font-size:1.05rem; color:rgba(255,255,255,0.7);
+      animation:clearFadeUp 0.4s ${1.4}s ease-out both;
+    `;
+    overlay.appendChild(hint);
+
+    document.body.appendChild(overlay);
+
+    // ── 컨페티 + 3D 파이어웍스 ────────────────────────────
+    this._launchConfetti();
+    if (stars >= 2) setTimeout(() => this._launchConfetti(), 400);
+    if (stars === 3) setTimeout(() => this._launchConfetti(), 900);
+    this._launchFireworks3D(ANIM_DURATION);
+
+    // ── 페이드아웃 후 결과 화면 전환 ──────────────────────
+    setTimeout(() => {
+      overlay.style.animation = `clearOverlayFadeOut 0.45s ease-out forwards`;
+      setTimeout(() => {
+        overlay.remove();
+        onDone();
+      }, 440);
+    }, ANIM_DURATION - 450);
+  }
+
+  // ── 3D 파이어웍스 — Three.js Points 기반 폭죽 파티클 ─────────────
+  _launchFireworks3D(durationMs = 3000) {
+    if (!this.scene || !this.renderer || !this.camera) return;
+
+    const bursts = [];
+    const COLORS = [0xffd700, 0xff6b35, 0x4ecdc4, 0xff88ff, 0x55aaff, 0xffffff, 0xaaff66];
+    const center = this.player?.position ?? new THREE.Vector3(0, 0, 0);
+    const BURST_COUNT = 7;
+
+    const spawnBurst = (idx) => {
+      const ox = (Math.random() - 0.5) * 60;
+      const oz = (Math.random() - 0.5) * 60;
+      const oy = 18 + Math.random() * 22;
+      const N  = 180;
+      const pos = new Float32Array(N * 3);
+      const vel = new Float32Array(N * 3);
+      for (let i = 0; i < N; i++) {
+        pos[i*3]   = center.x + ox;
+        pos[i*3+1] = center.y + oy;
+        pos[i*3+2] = center.z + oz;
+        const theta = Math.random() * Math.PI * 2;
+        const phi   = Math.acos(2 * Math.random() - 1);
+        const speed = 4 + Math.random() * 12;
+        vel[i*3]   = Math.sin(phi) * Math.cos(theta) * speed;
+        vel[i*3+1] = Math.cos(phi) * speed * 1.4; // 위로 더 강하게
+        vel[i*3+2] = Math.sin(phi) * Math.sin(theta) * speed;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos.slice(), 3));
+      const mat = new THREE.PointsMaterial({
+        color: COLORS[idx % COLORS.length],
+        size: 0.55, sizeAttenuation: true,
+        transparent: true, opacity: 1, depthWrite: false,
+      });
+      const pts = new THREE.Points(geo, mat);
+      this.scene.add(pts);
+      bursts.push({ pts, pos, vel, t: 0, alive: true });
+    };
+
+    // 시차를 두고 폭발
+    for (let i = 0; i < BURST_COUNT; i++) {
+      setTimeout(() => spawnBurst(i), i * (durationMs * 0.12));
+    }
+
+    // 전용 렌더 루프 (게임 루프 중단 후 scene 유지)
+    let startTs = null;
+    let rafId = null;
+    const loop = (ts) => {
+      if (!startTs) startTs = ts;
+      const elapsed = (ts - startTs) / 1000;
+      const dt = Math.min(0.05, elapsed - (this._fwLastElapsed ?? 0));
+      this._fwLastElapsed = elapsed;
+
+      for (const b of bursts) {
+        if (!b.alive) continue;
+        b.t += dt;
+        const fade = Math.max(0, 1 - b.t / 2.2);
+        b.pts.material.opacity = fade;
+        if (fade <= 0) { b.alive = false; continue; }
+        const posAttr = b.pts.geometry.getAttribute('position');
+        const arr = posAttr.array;
+        for (let i = 0; i < arr.length / 3; i++) {
+          arr[i*3]   += b.vel[i*3]   * dt;
+          arr[i*3+1] += b.vel[i*3+1] * dt - 9.8 * b.t * dt * 0.6; // 중력
+          arr[i*3+2] += b.vel[i*3+2] * dt;
+        }
+        posAttr.needsUpdate = true;
+      }
+
+      if (this.renderer && this.scene && this.camera) {
+        this.renderer.render(this.scene, this.camera);
+      }
+
+      if (elapsed < durationMs / 1000 + 0.5) {
+        rafId = requestAnimationFrame(loop);
+      } else {
+        // 정리
+        for (const b of bursts) {
+          this.scene.remove(b.pts);
+          b.pts.geometry.dispose();
+          b.pts.material.dispose();
+        }
+        bursts.length = 0;
+        this._fwLastElapsed = undefined;
+      }
+    };
+    rafId = requestAnimationFrame(loop);
+
+    // 안전망: duration+1s 후 강제 취소
+    setTimeout(() => {
+      if (rafId) cancelAnimationFrame(rafId);
+      for (const b of bursts) {
+        if (b.pts.parent) this.scene.remove(b.pts);
+        b.pts.geometry.dispose(); b.pts.material.dispose();
+      }
+      bursts.length = 0;
+      this._fwLastElapsed = undefined;
+    }, durationMs + 1000);
   }
 
   _onStageFail() {
