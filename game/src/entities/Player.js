@@ -918,7 +918,7 @@ export class Player {
       // HIPS ??subtle rotation + vertical bob
       if (j.hips) {
         j.hips.rotation.y = sw * 0.10 * w;
-        j.hips.position.y = Math.abs(sw2) * -0.038 * w; // pelvis dips each step
+        j.hips.position.y = 0.90 + Math.abs(sw2) * -0.038 * w; // 구조 오프셋(0.90) 유지 + 걸음 진폭
         j.hips.position.x = sw2 * 0.022 * w;            // side-to-side
       }
 
@@ -951,7 +951,7 @@ export class Player {
       if (j.ankleR) { j.ankleR.rotation.x = lerp(j.ankleR.rotation.x, -0.05, rs); }
       if (j.hips)   {
         j.hips.rotation.y = lerp(j.hips.rotation.y, 0, rs);
-        j.hips.position.y = lerp(j.hips.position.y, 0, rs);
+        j.hips.position.y = lerp(j.hips.position.y, 0.90, rs); // 구조 오프셋으로 복귀
       }
       if (j.spine0) { j.spine0.rotation.y = lerp(j.spine0.rotation.y, 0, rs); }
       if (j.spine1) { j.spine1.rotation.y = lerp(j.spine1.rotation.y, 0, rs); }
