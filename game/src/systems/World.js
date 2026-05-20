@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { assetLoader } from '../utils/AssetLoader.js';
+import { LANDMARK_MODELS, PROP_MODELS } from '../utils/ModelRegistry.js';
 
 const MAP_HALF   = 500;   // 지형 원복 — 오브젝트 좌표계 유지
 const SPAWN_HALF = 200;
@@ -122,6 +124,69 @@ export class World {
     this._pollenTimer  = 0;
 
     this._build();
+    // GLB 모델 비동기 프리로드 (빌드 후 백그라운드 — 첫 로드 시 폴백 자동 사용)
+    this._preloadModels();
+  }
+
+  // ── GLB 모델 프리로드 (비동기 — 게임 진행 블록하지 않음) ──────
+  _preloadModels() {
+    const id = this.stage.id;
+    // 스테이지에 필요한 랜드마크만 선택적 로드
+    const needed = [];
+    if (id <= 3)              needed.push('fountain');
+    if (id === 7 || id === 8) needed.push('lighthouse');
+    if (id === 13)            needed.push('volcano_hero');
+    if (id === 10)            needed.push('acacia_hero', 'water_hole');
+    if (id === 12)            needed.push('ancient_pine');
+    if (id === 11)            needed.push('glacial_peak');
+    if (id === 15)            needed.push('space_station');
+
+    // 나무 소품 (현재 스테이지에 존재하는 타입만)
+    if (id <= 10 || id === 12) needed.push('tree_oak');
+    if (id === 11 || id === 12) needed.push('tree_pine');
+    if (id === 7 || id === 9 || id === 14) needed.push('tree_palm');
+    if (id === 10) needed.push('tree_acacia');
+
+    const urls = [
+      ...needed.filter(k => LANDMARK_MODELS[k]).map(k => LANDMARK_MODELS[k].url),
+      ...needed.filter(k => PROP_MODELS[k]).map(k => PROP_MODELS[k].url),
+    ];
+    if (urls.length) assetLoader.preload(urls);
+  }
+
+  /**
+   * GLB 랜드마크 배치 헬퍼
+   * GLB 로드 성공 → 모델 배치 후 기존 절차적 메시를 씬에서 제거
+   * GLB 로드 실패 → null 반환 (호출부에서 절차적 폴백 그대로 유지)
+   *
+   * @param {string} key       LANDMARK_MODELS 또는 PROP_MODELS 키
+   * @param {object} registry  LANDMARK_MODELS | PROP_MODELS
+   * @param {number} x
+   * @param {number} z
+   * @param {THREE.Object3D[]} [fallbackMeshes]  교체 시 씬에서 제거할 절차적 오브젝트들
+   * @returns {Promise<THREE.Group|null>}
+   */
+  async _placeGLB(key, registry, x, z, fallbackMeshes = []) {
+    const cfg  = registry[key];
+    if (!cfg) return null;
+    const gltf = await assetLoader.load(cfg.url);
+    if (!gltf) return null;
+
+    const model = assetLoader.clone(gltf);
+    const y     = this.getHeight(x, z) + (cfg.yOffset ?? 0);
+    model.scale.setScalar(cfg.scale ?? 1.0);
+    model.position.set(x, y, z);
+
+    // 절차적 폴백 메시 제거 (GLB로 대체됐으므로)
+    for (const m of fallbackMeshes) {
+      this.scene.remove(m);
+      const idx = this.objects.indexOf(m);
+      if (idx !== -1) this.objects.splice(idx, 1);
+    }
+
+    this.scene.add(model);
+    this.objects.push(model);
+    return model;
   }
 
   // ── 공개: 지형 높이 쿼리 (스테이지별 고유 공식) ──────────────
@@ -1339,6 +1404,8 @@ export class World {
     glow.position.set(x, baseY + 110, z);
     this.scene.add(glow);
     this.objects.push(glow);
+    // GLB 교체 시도
+    this._placeGLB('volcano_hero', LANDMARK_MODELS, x, z, [g]);
   }
 
   // ── 소형 화산구 ────────────────────────────────────────────────
@@ -4409,8 +4476,12 @@ export class World {
     g.position.set(x, y, z);
     this.scene.add(g); this.objects.push(g);
     this._zones.landmarks.push({ x, z });
-    this._obstacles.push({ x, z, r: 14.5 }); // 분수 기반 외벽 반경 (14m base)
-    this._structures.push({ x, z, r: 14.5 }); // 미니맵 표시
+    this._obstacles.push({ x, z, r: 14.5 });
+    this._structures.push({ x, z, r: 14.5 });
+    // GLB 교체 시도 (비동기 — 폴백 유지)
+    this._placeGLB('fountain', LANDMARK_MODELS, x, z, [g]).then(m => {
+      if (m) { m.scale.setScalar(LANDMARK_MODELS.fountain.scale); }
+    });
     return { x, z };
   }
 
@@ -4450,6 +4521,7 @@ export class World {
     g.scale.setScalar(1.6); // 영웅 스케일
     this.scene.add(g); this.objects.push(g);
     this._zones.landmarks.push({ x, z });
+    this._placeGLB('acacia_hero', LANDMARK_MODELS, x, z, [g]);
     return { x, z };
   }
 
@@ -4494,6 +4566,7 @@ export class World {
     g.scale.setScalar(1.4);
     this.scene.add(g); this.objects.push(g);
     this._zones.landmarks.push({ x, z });
+    this._placeGLB('ancient_pine', LANDMARK_MODELS, x, z, [g]);
     return { x, z };
   }
 
@@ -4559,6 +4632,8 @@ export class World {
     this.scene.add(g);
     this.objects.push(g);
     this._zones.landmarks.push({ x, z });
+    // GLB 교체 시도
+    this._placeGLB('lighthouse', LANDMARK_MODELS, x, z, [g]);
     return { x, z };
   }
 
