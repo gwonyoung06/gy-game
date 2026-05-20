@@ -1311,9 +1311,10 @@ export class Game {
       const combo = this.waves?.combo ?? 0;
       // 콤보 버스트 (5× / 10× / 15×)
       if (combo === 5 || combo === 10 || combo === 15) this._showComboBurst(combo);
-      // 스트릭 어나운서 (마일스톤 콤보)
+      // 스트릭 어나운서 (마일스톤 콤보) + 콤보 피치업 음향
       if (combo === 3 || combo === 5 || combo === 8 || combo === 10 || combo === 15 || combo === 20) {
         this._showStreakAnnouncer(combo);
+        audioManager.sfxCombo?.(combo); // 마일스톤마다 피치 상승음 — 긴장감 강화
       }
       // 슬로우모션 (콤보 8+ 포획 시)
       if (combo >= 8) this._slowMoTimer = 0.45;
@@ -1452,7 +1453,7 @@ export class Game {
     if (document.pointerLockElement) document.exitPointerLock();
     this.hud.showUpgradeCards(pool, (idx) => {
       pool[idx].apply();
-      audioManager.sfxWaveStart?.(); // 업그레이드 선택 → 드럼롤 → 다음 웨이브 카운트다운 시작
+      audioManager.sfxLevelUp?.(); // 업그레이드 카드 선택 → 아르페지오 팡파르 (C4→E4→G4→C5)
       setTimeout(() => { this.camCtrl?.requestLock(); onDone(); }, 400);
     });
   }

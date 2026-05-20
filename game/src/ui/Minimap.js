@@ -252,7 +252,6 @@ export class Minimap {
     // 맵은 카메라 yaw 만큼 회전 → 나침반은 그 역방향 오프셋
     const labelR = cr - 8;
     ctx.save();
-    ctx.clip(); // 원형 클립 재적용은 save/restore 안에서
     ctx.beginPath(); ctx.arc(cr, cr, cr - 1, 0, Math.PI * 2); ctx.clip();
     compassLabels.forEach(({ text, worldAngle }) => {
       // 화면에서의 각도: 전방이 위(−π/2)가 되도록 보정
@@ -265,7 +264,9 @@ export class Minimap {
       ctx.textBaseline = 'middle';
       ctx.fillText(text, lx, ly);
     });
-    ctx.restore();
+    ctx.restore(); // 내부 컴패스 블록 restore
+
+    ctx.restore(); // 외부 원형 클립 restore (누적 방지)
   }
 
   // ── 별 그리기 ────────────────────────────────────────────────
