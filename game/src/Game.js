@@ -739,6 +739,7 @@ export class Game {
     this.hud.show(`스테이지 ${stageData.id} - ${stageData.name}`);
     this._showScreen('game');
     this._applyWeatherOverlay(this.settings.weather);
+    this._initBiomeEffects(stageData.id);
     this._startLoop();
     this._showCountdown(); // 3-2-1-GO! 오버레이
 
@@ -878,6 +879,8 @@ export class Game {
             this.player.position.z + (Math.random() - 0.5) * 0.4
           ), 0x9a8a72, 2);
         }
+        // 바이옴 효과 업데이트 (이동 모드·대미지·파티클)
+        this._updateBiomeEffects(delta);
         // 보스 경고 업데이트
         this._updateBossWarning(state);
         // PB 경신 체크
@@ -1026,6 +1029,10 @@ export class Game {
     if (crosshairEl) { crosshairEl.textContent = '+'; crosshairEl.className = 'crosshair'; }
     // 날씨 오버레이 제거
     document.getElementById('weather-overlay')?.remove();
+    // 바이옴 오버레이 제거
+    document.getElementById('biome-overlay')?.remove();
+    // 렌더러 CSS 필터 초기화 (밀림 블러 등)
+    if (this.renderer?.domElement) this.renderer.domElement.style.filter = '';
     // HP 위험 클래스 해제
     document.body.classList.remove('hp-danger');
     // 콤보 글로우 리셋 (body-level 요소 — hud.hide()로 안 숨겨짐)
@@ -1232,6 +1239,199 @@ export class Game {
       el.style.animation = 'fogDrift 8s ease-in-out infinite alternate';
     }
     document.body.appendChild(el);
+  }
+
+  // ── 바이옴 이동 모드 초기화 ───────────────────────────────────
+  _initBiomeEffects(stageId) {
+    // 기존 오버레이 제거 (재시작 안전)
+    document.getElementById('biome-overlay')?.remove();
+    if (this.renderer?.domElement) this.renderer.domElement.style.filter = '';
+
+    // 플레이어에 바이옴 모드 설정
+    if (!this.player) return;
+
+    // 타이머 초기화
+    this._lavaTimer  = 0;   // 화산 대미지 쿨다운
+    this._biomeStageId = stageId;
+
+    // 플레이어 바이옴 모드
+    const mode = stageId === 5  ? 'marsh'
+               : stageId === 11 ? 'ice'
+               : (stageId === 4 || stageId === 8) ? 'swim'
+               : stageId === 15 ? 'lowgrav'
+               : 'normal';
+    this.player.biomeMode = mode;
+
+    // 저중력 착지 먼지 콜백
+    if (mode === 'lowgrav') {
+      this.player._onLowGravLand = () => {
+        if (!this.player || !this.scene) return;
+        for (let i = 0; i < 5; i++) {
+          particlePool.emit(this.scene, new THREE.Vector3(
+            this.player.position.x + (Math.random()-0.5)*1.2,
+            this.player.position.y + 0.1,
+            this.player.position.z + (Math.random()-0.5)*1.2
+          ), 0xaaaaaa, 3);
+        }
+      };
+    }
+
+    // 화면 오버레이 생성
+    const el = document.createElement('div');
+    el.id = 'biome-overlay';
+    el.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:4;transition:opacity 1.2s;';
+
+    if (mode === 'swim') {
+      // 수중: 파란 색조 + 물 렌즈 왜곡
+      el.style.background = 'linear-gradient(180deg, rgba(0,60,140,0.18) 0%, rgba(0,100,180,0.08) 100%)';
+      el.style.boxShadow  = 'inset 0 0 80px rgba(0,80,200,0.22)';
+      el.style.animation  = 'swimRipple 3s ease-in-out infinite alternate';
+      // @keyframes 인라인 주입 (1회)
+      if (!document.getElementById('_biomeStyles')) {
+        const s = document.createElement('style');
+        s.id = '_biomeStyles';
+        s.textContent = `
+          @keyframes swimRipple {
+            0%   { opacity:0.55; transform:scaleX(1.000); }
+            100% { opacity:0.75; transform:scaleX(1.003); }
+          }
+          @keyframes heatShimmer {
+            0%   { opacity:0.45; filter:blur(0px);   }
+            50%  { opacity:0.65; filter:blur(0.8px); }
+            100% { opacity:0.50; filter:blur(0.3px); }
+          }
+        `;
+        document.head.appendChild(s);
+      }
+      document.body.appendChild(el);
+
+      // 수중 HUD 컬러 힌트 (상단 바)
+      const hint = document.createElement('div');
+      hint.id = 'swim-hint';
+      hint.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);' +
+        'color:rgba(180,230,255,0.85);font-size:12px;font-weight:600;pointer-events:none;z-index:20;' +
+        'text-shadow:0 1px 4px rgba(0,40,120,0.8);letter-spacing:0.05em;';
+      hint.textContent = '🌊  Space: 상승  |  Ctrl / Shift: 하강';
+      document.body.appendChild(hint);
+      setTimeout(() => hint.remove(), 5000);
+
+    } else if (stageId === 13) {
+      // 화산: 붉은 열기 오버레이 + 지글거리는 느낌
+      el.style.background = 'radial-gradient(ellipse at 50% 100%, rgba(200,50,0,0.18) 0%, transparent 70%)';
+      el.style.animation  = 'heatShimmer 1.8s ease-in-out infinite';
+      if (!document.getElementById('_biomeStyles')) {
+        const s = document.createElement('style');
+        s.id = '_biomeStyles';
+        s.textContent = `
+          @keyframes swimRipple {
+            0%   { opacity:0.55; transform:scaleX(1.000); }
+            100% { opacity:0.75; transform:scaleX(1.003); }
+          }
+          @keyframes heatShimmer {
+            0%   { opacity:0.45; filter:blur(0px);   }
+            50%  { opacity:0.65; filter:blur(0.8px); }
+            100% { opacity:0.50; filter:blur(0.3px); }
+          }
+        `;
+        document.head.appendChild(s);
+      }
+      document.body.appendChild(el);
+
+    } else if (stageId === 9 || stageId === 12) {
+      // 열대우림/밀림: 초록빛 엣지 비네팅 + 약한 블러
+      el.style.background = 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(10,40,8,0.28) 100%)';
+      document.body.appendChild(el);
+      // canvas 블러 (이동 중 동적 강도 조절은 _updateBiomeEffects에서)
+      if (this.renderer?.domElement) {
+        this.renderer.domElement.style.transition = 'filter 0.4s';
+      }
+
+    } else if (mode === 'marsh') {
+      // 습지: 연두빛 물안개 엣지
+      el.style.background = 'radial-gradient(ellipse at 50% 80%, rgba(60,100,20,0.12) 0%, transparent 60%)';
+      document.body.appendChild(el);
+
+    } else if (mode === 'lowgrav') {
+      // 저중력(우주): 별빛 가장자리 글로우
+      el.style.background = 'radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(20,10,60,0.30) 100%)';
+      document.body.appendChild(el);
+    }
+  }
+
+  // ── 바이옴 효과 매 프레임 업데이트 ────────────────────────────
+  _updateBiomeEffects(delta) {
+    if (!this.player || !this.world) return;
+    const id   = this._biomeStageId ?? 0;
+    const mode = this.player.biomeMode;
+
+    // ── 화산 (13): 낮은 지형(용암) 위에서 주기적 대미지 ─────────
+    if (id === 13) {
+      const px = this.player.position.x;
+      const pz = this.player.position.z;
+      const h  = this.world.getHeight(px, pz);
+      // 지형 높이가 낮으면 용암 지대 (화산 평원 ~0~2m)
+      const onLava = h < 2.5;
+      if (onLava) {
+        this._lavaTimer = (this._lavaTimer ?? 0) + delta;
+        if (this._lavaTimer > 2.0) { // 2초마다 대미지
+          this._lavaTimer = 0;
+          this._onDamage?.(8);  // 8 HP 대미지
+          // 용암 파티클
+          for (let i = 0; i < 4; i++) {
+            particlePool.emit(this.scene, new THREE.Vector3(
+              px + (Math.random()-0.5)*1.5,
+              this.player.position.y + 0.2,
+              pz + (Math.random()-0.5)*1.5
+            ), 0xff3300, 3);
+          }
+          // 화면 붉은 번쩍임
+          const flash = document.createElement('div');
+          flash.style.cssText = 'position:fixed;inset:0;background:rgba(220,40,0,0.28);pointer-events:none;z-index:30;animation:none;';
+          document.body.appendChild(flash);
+          setTimeout(() => flash.remove(), 200);
+        }
+      } else {
+        this._lavaTimer = Math.max(0, (this._lavaTimer ?? 0) - delta * 2);
+      }
+    }
+
+    // ── 습지 (5): 발자국 물튀김 파티클 ─────────────────────────
+    if (mode === 'marsh' && this.player._isMoving) {
+      this._marshSplashTimer = (this._marshSplashTimer ?? 0) + delta;
+      if (this._marshSplashTimer > 0.22) {
+        this._marshSplashTimer = 0;
+        // 물튀김: 위로 튀는 물 파티클 (청록 계열)
+        for (let i = 0; i < 2; i++) {
+          particlePool.emit(this.scene, new THREE.Vector3(
+            this.player.position.x + (Math.random()-0.5)*0.6,
+            this.player.position.y + 0.05,
+            this.player.position.z + (Math.random()-0.5)*0.6
+          ), 0x44aacc, 2);
+        }
+      }
+    }
+
+    // ── 수영 (4,8): 기포 파티클 ─────────────────────────────────
+    if (mode === 'swim') {
+      this._bubbleTimer = (this._bubbleTimer ?? 0) + delta;
+      if (this._bubbleTimer > 0.18) {
+        this._bubbleTimer = 0;
+        particlePool.emit(this.scene, new THREE.Vector3(
+          this.player.position.x + (Math.random()-0.5)*0.8,
+          this.player.position.y + 0.3 + Math.random()*0.5,
+          this.player.position.z + (Math.random()-0.5)*0.8
+        ), 0xaaddff, 2);
+      }
+    }
+
+    // ── 밀림/열대우림 (9,12): 이동 시 캔버스 블러 ─────────────
+    if ((id === 9 || id === 12) && this.renderer?.domElement) {
+      const targetBlur = this.player._isMoving ? 0.8 : 0;
+      const currentFilter = this.renderer.domElement.style.filter;
+      const currentBlur = parseFloat(currentFilter.replace('blur(', '').replace('px)', '')) || 0;
+      const newBlur = currentBlur + (targetBlur - currentBlur) * Math.min(1, 4 * delta);
+      this.renderer.domElement.style.filter = newBlur > 0.05 ? `blur(${newBlur.toFixed(2)}px)` : '';
+    }
   }
 
   // ── 컨페티 (스테이지 클리어 이펙트) ──────────────────────────

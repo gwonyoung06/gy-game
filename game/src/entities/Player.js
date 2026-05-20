@@ -88,6 +88,15 @@ export class Player {
     this._speedBlend = 0;   // 0 = fully idle, 1 = full run
     this._isMoving   = false;
 
+    // ── 바이옴 이동 모드 ──────────────────────────────────────────
+    // 'normal' | 'marsh' | 'ice' | 'swim' | 'lowgrav'
+    this.biomeMode    = 'normal';
+    this._swimVY      = 0;      // 수영 수직 속도
+    this._swimY       = 0;      // 수영 수직 오프셋 (지형 위 높이)
+    this._prevTerrainY = 0;     // 착지 감지용 이전 지형 Y
+    this._wasAboveTerrain = false; // 저중력 공중 상태 트래킹
+    this._iceDust     = 0;      // 얼음 슬라이딩 먼지 쿨다운
+
     // All joint groups, keyed by name
     this._j = {};
 
@@ -708,28 +717,41 @@ export class Player {
     const hasInput = _mv.lengthSq() > 0;
     this._isMoving = hasInput;
 
+    // ── 바이옴별 속도 배율 ──────────────────────────────────────
+    const isMarsh   = this.biomeMode === 'marsh';
+    const isIce     = this.biomeMode === 'ice';
+    const isSwim    = this.biomeMode === 'swim';
+    const isLowGrav = this.biomeMode === 'lowgrav';
+
+    const speedMult = isMarsh ? 0.70
+                    : isSwim  ? 0.80
+                    : 1.0;
+
+    // 가속 lerp: 설산은 낮은 가속으로 미끄러운 느낌
+    const accelLerp = isIce ? 5.5 : 10;
+    // 감속 lerp: 설산은 관성 유지 (미끄러움)
+    const decelLerp = isIce ? 2.5 : 13;
+
     if (hasInput) {
       _mv.normalize();
-      // 터치 조이스틱 아날로그 스케일 (키보드는 항상 1.0)
       const analogScale = this._touchSpeedScale ?? 1.0;
-      // _zero 재사용: lerp는 인수를 수정하지 않으므로 _mv를 직접 스케일한 임시값 필요
-      // → _vn에 복사 후 스케일 → lerp 타겟으로 사용 (allocation 없음)
-      _vn.copy(_mv).multiplyScalar(this.speed * Math.max(0.25, analogScale));
-      _vel.lerp(_vn, Math.min(1, 10 * delta));
+      _vn.copy(_mv).multiplyScalar(this.speed * speedMult * Math.max(0.25, analogScale));
+      _vel.lerp(_vn, Math.min(1, accelLerp * delta));
     } else {
-      _vel.lerp(_zero, Math.min(1, 13 * delta));
+      _vel.lerp(_zero, Math.min(1, decelLerp * delta));
     }
 
     const moveLen = _vel.length();
     if (moveLen > 0.05) {
       this.mesh.position.addScaledVector(_vel, delta);
-      // _vn 재사용: 방향 계산용 (lerp 후 재사용 안전)
       _vn.copy(_vel).normalize();
       const targetAngle = Math.atan2(_vn.x, _vn.z) + Math.PI;
       let diff = targetAngle - this.mesh.rotation.y;
       while (diff >  Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
-      this.mesh.rotation.y += diff * Math.min(1, 14 * delta);
+      // 설산 회전도 느리게
+      const turnSpeed = isIce ? 8 : 14;
+      this.mesh.rotation.y += diff * Math.min(1, turnSpeed * delta);
     }
 
     const boundary = 120;
@@ -758,35 +780,74 @@ export class Player {
     if (world) {
       const px = this.mesh.position.x;
       const pz = this.mesh.position.z;
-      const D  = 0.5; // 경사 샘플 간격
+      const D  = 0.5;
 
-      // 4방향 샘플로 경사 기울기 반영 (최댓값 기준으로 Y 스냅)
       const h0 = world.getHeight(px,     pz);
-      const hF = world.getHeight(px,     pz - D); // 앞
-      const hB = world.getHeight(px,     pz + D); // 뒤
-      const hL = world.getHeight(px - D, pz);     // 좌
-      const hR = world.getHeight(px + D, pz);     // 우
+      const hF = world.getHeight(px,     pz - D);
+      const hB = world.getHeight(px,     pz + D);
+      const hL = world.getHeight(px - D, pz);
+      const hR = world.getHeight(px + D, pz);
 
-      // 발 범위 안에서 가장 높은 지점을 기준으로 발이 뚫리지 않게
       const maxH = Math.max(h0, hF, hB, hL, hR);
       const terrainY = Math.max(0, maxH) + 0.22;
 
-      if (this.mesh.position.y < terrainY) {
-        // 지형 아래로 클리핑 절대 금지 — 즉시 스냅
-        this.mesh.position.y = terrainY;
-      } else {
-        // 경사 위를 걸을 때 부드러운 정착 (중력감)
-        this.mesh.position.y += (terrainY - this.mesh.position.y) * Math.min(1, 14 * delta);
+      // ── 수영 모드: 수직 이동 (Space=상승, Ctrl/Shift=하강) ─────
+      if (isSwim) {
+        const swimUp   = this.keys['Space'];
+        const swimDown = this.keys['ControlLeft'] || this.keys['ShiftLeft'];
+        const swimAcc  = 8;
+        if (swimUp)        this._swimVY = Math.min(this._swimVY + swimAcc * delta, 5);
+        else if (swimDown) this._swimVY = Math.max(this._swimVY - swimAcc * delta, -5);
+        else               this._swimVY *= (1 - Math.min(1, 6 * delta)); // 마찰
+
+        this._swimY += this._swimVY * delta;
+        // 수면 최대 높이 + 지형 바닥 클리핑
+        const swimFloor = terrainY - 0.22;
+        this._swimY = Math.max(swimFloor, Math.min(this._swimY, swimFloor + 7));
+        this.mesh.position.y = terrainY + this._swimY;
+      }
+      // ── 저중력 모드: 달 표면 부유 착지 ──────────────────────────
+      else if (isLowGrav) {
+        const aboveTerrain = this.mesh.position.y > terrainY + 0.15;
+        if (this.mesh.position.y < terrainY) {
+          this.mesh.position.y = terrainY;
+          // 착지 감지: 공중 → 지면
+          if (this._wasAboveTerrain) {
+            this._wasAboveTerrain = false;
+            this._onLowGravLand?.();
+          }
+          this._lowGravVY = 0;
+        } else if (aboveTerrain) {
+          this._wasAboveTerrain = true;
+          // 달 중력: 지구 중력의 1/6 느낌 (아주 천천히 내려옴)
+          this._lowGravVY = (this._lowGravVY ?? 0) - 2.5 * delta;
+          this.mesh.position.y += this._lowGravVY * delta;
+          if (this.mesh.position.y < terrainY) this.mesh.position.y = terrainY;
+        } else {
+          this._wasAboveTerrain = false;
+          this._lowGravVY = 0;
+          // 지형 따라가기 (부드럽게)
+          this.mesh.position.y += (terrainY - this.mesh.position.y) * Math.min(1, 8 * delta);
+        }
+      }
+      // ── 일반 모드 ────────────────────────────────────────────────
+      else {
+        if (this.mesh.position.y < terrainY) {
+          this.mesh.position.y = terrainY;
+        } else {
+          this.mesh.position.y += (terrainY - this.mesh.position.y) * Math.min(1, 14 * delta);
+        }
       }
 
-      // 경사에 맞게 캐릭터 기울기 (지형 법선 추정)
+      // 경사 기울기 (수영/저중력에선 약하게)
       const slopeX = (hR - hL) / (2 * D);
       const slopeZ = (hF - hB) / (2 * D);
-      const maxTilt = 0.40; // 최대 기울기 (라디안)
+      const maxTilt = isSwim ? 0.15 : 0.40;
+      const tiltLerp = isSwim ? 4 : 8;
       const targetRX = Math.max(-maxTilt, Math.min(maxTilt, -slopeZ));
       const targetRZ = Math.max(-maxTilt, Math.min(maxTilt, -slopeX));
-      this.mesh.rotation.x += (targetRX - this.mesh.rotation.x) * Math.min(1, 8 * delta);
-      this.mesh.rotation.z += (targetRZ - this.mesh.rotation.z) * Math.min(1, 8 * delta);
+      this.mesh.rotation.x += (targetRX - this.mesh.rotation.x) * Math.min(1, tiltLerp * delta);
+      this.mesh.rotation.z += (targetRZ - this.mesh.rotation.z) * Math.min(1, tiltLerp * delta);
     } else {
       const terrainY = 0.22;
       if (this.mesh.position.y < terrainY) this.mesh.position.y = terrainY;
