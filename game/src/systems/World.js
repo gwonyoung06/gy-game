@@ -197,6 +197,42 @@ export class World {
     return model;
   }
 
+  /**
+   * 반복 배치 소품 GLB 교체 헬퍼
+   * 절차적 InstancedMesh/Mesh를 GLB 클론으로 일괄 교체
+   * @param {string} key  PROP_MODELS 키
+   * @param {object} registry  PROP_MODELS / LANDMARK_MODELS
+   * @param {Array<{x,z,s?,ry?}>} posScales  배치 좌표+스케일+회전
+   * @param {THREE.Object3D[]} fallbackMeshes  교체 후 제거할 절차적 메시
+   */
+  async _spawnGLBProps(key, registry, posScales, fallbackMeshes = []) {
+    const cfg = registry[key];
+    if (!cfg) return;
+    const gltf = await assetLoader.load(cfg.url);
+    if (!gltf) return; // 로드 실패 → 폴백 유지
+
+    // 절차적 폴백 제거
+    for (const m of fallbackMeshes) {
+      this.scene.remove(m);
+      const idx = this.objects.indexOf(m);
+      if (idx !== -1) this.objects.splice(idx, 1);
+    }
+
+    // GLB 클론 배치
+    for (const { x, z, s = 1, ry = 0 } of posScales) {
+      const clone = assetLoader.clone(gltf);
+      const y = this.getHeight(x, z);
+      clone.position.set(x, y + (cfg.yOffset ?? 0), z);
+      clone.scale.setScalar(cfg.scale * s);
+      clone.rotation.y = ry;
+      clone.traverse(o => {
+        if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+      });
+      this.scene.add(clone);
+      this.objects.push(clone);
+    }
+  }
+
   // ── 공개: 지형 높이 쿼리 (스테이지별 고유 공식) ──────────────
   getHeight(x, z) {
     const id  = this.stage.id;
@@ -1006,6 +1042,7 @@ export class World {
     this.scene.add(g);
     this.objects.push(g);
     this._zones.landmarks.push({ x: -200, z: -200 });
+    this._placeGLB('glacial_peak', LANDMARK_MODELS, -200, -200, [g]);
   }
 
   // ── 빙판 호수 ────────────────────────────────────────────────────
@@ -1704,6 +1741,7 @@ export class World {
       const lI = new THREE.InstancedMesh(leafGeo, lMat, n);
       const l2I = new THREE.InstancedMesh(leaf2Geo, l2Mat, n);
       tI.castShadow = lI.castShadow = true;
+      const oakPS = [];
       for (let i = 0; i < n; i++) {
         const { x, z } = positions[i];
         const y  = this.getHeight(x, z);
@@ -1718,12 +1756,14 @@ export class World {
           lI.setColorAt(i, c);
           l2I.setColorAt(i, c.clone().offsetHSL(0, 0, 0.04));
         }
+        oakPS.push({ x, z, s: s * 0.5, ry: Math.random() * Math.PI * 2 });
       }
       tI.instanceMatrix.needsUpdate = lI.instanceMatrix.needsUpdate = l2I.instanceMatrix.needsUpdate = true;
       if (lI.instanceColor)  lI.instanceColor.needsUpdate  = true;
       if (l2I.instanceColor) l2I.instanceColor.needsUpdate = true;
       this.scene.add(tI, lI, l2I);
       this.objects.push(tI, lI, l2I);
+      this._spawnGLBProps('tree_oak', PROP_MODELS, oakPS, [tI, lI, l2I]);
 
     } else if (type === 'pine') {
       const tMat = new THREE.MeshLambertMaterial({ color: 0x3d2b1f });
@@ -1737,6 +1777,7 @@ export class World {
       const c2I = new THREE.InstancedMesh(cone2, lMat, n);
       const c3I = new THREE.InstancedMesh(cone3, lMat, n);
       tI.castShadow = c1I.castShadow = true;
+      const pinePS = [];
       for (let i = 0; i < n; i++) {
         const { x, z } = positions[i];
         const y = this.getHeight(x, z);
@@ -1751,12 +1792,14 @@ export class World {
           const c = new THREE.Color(0x1a5c1a).offsetHSL(0, (rng()-0.5)*0.06, (rng()-0.5)*0.12);
           c1I.setColorAt(i, c); c2I.setColorAt(i, c); c3I.setColorAt(i, c);
         }
+        pinePS.push({ x, z, s: s * 0.5, ry: Math.random() * Math.PI * 2 });
       }
       [tI, c1I, c2I, c3I].forEach(m => {
         m.instanceMatrix.needsUpdate = true;
         if (m.instanceColor) m.instanceColor.needsUpdate = true;
         this.scene.add(m); this.objects.push(m);
       });
+      this._spawnGLBProps('tree_pine', PROP_MODELS, pinePS, [tI, c1I, c2I, c3I]);
 
     } else if (type === 'acacia') {
       const tMat = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
@@ -1766,6 +1809,7 @@ export class World {
       const tI = new THREE.InstancedMesh(trunkGeo, tMat, n);
       const cI = new THREE.InstancedMesh(canopyGeo, lMat, n);
       tI.castShadow = cI.castShadow = true;
+      const acaciaPS = [];
       for (let i = 0; i < n; i++) {
         const { x, z } = positions[i];
         const y = this.getHeight(x, z);
@@ -1780,16 +1824,20 @@ export class World {
           const c = new THREE.Color(0x6b8e23).offsetHSL(0, (rng()-0.5)*0.1, (rng()-0.5)*0.12);
           cI.setColorAt(i, c);
         }
+        acaciaPS.push({ x, z, s: s * 0.5, ry: Math.random() * Math.PI * 2 });
       }
       tI.instanceMatrix.needsUpdate = cI.instanceMatrix.needsUpdate = true;
       if (cI.instanceColor) cI.instanceColor.needsUpdate = true;
       this.scene.add(tI, cI); this.objects.push(tI, cI);
+      this._spawnGLBProps('tree_acacia', PROP_MODELS, acaciaPS, [tI, cI]);
 
     } else if (type === 'palm') {
       const tMat = new THREE.MeshLambertMaterial({ color: 0xa07850 });
       const trunkGeo = new THREE.CylinderGeometry(0.2, 0.3, 6, 7);
       const tI = new THREE.InstancedMesh(trunkGeo, tMat, n);
       tI.castShadow = true;
+      const palmPS = [];
+      const palmLeaves = [];
       for (let i = 0; i < n; i++) {
         const { x, z } = positions[i];
         const y = this.getHeight(x, z);
@@ -1800,9 +1848,12 @@ export class World {
         leavesGroup.scale.setScalar(s);
         this.scene.add(leavesGroup);
         this.objects.push(leavesGroup);
+        palmLeaves.push(leavesGroup);
+        palmPS.push({ x, z, s: s * 0.55, ry: Math.random() * Math.PI * 2 });
       }
       tI.instanceMatrix.needsUpdate = true;
       this.scene.add(tI); this.objects.push(tI);
+      this._spawnGLBProps('tree_palm', PROP_MODELS, palmPS, [tI, ...palmLeaves]);
     }
   }
 
@@ -1955,6 +2006,21 @@ export class World {
     if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
     this.scene.add(inst);
     this.objects.push(inst);
+    // GLB 교체 — 바위 위치 수집 후 교체
+    { const rockPS = [];
+      const rng2 = mulberry32(color + 9999); // 별도 시드로 위치 재계산
+      let idx2 = 0;
+      for (let c = 0; c < clusters; c++) {
+        const cx = (rng2() - 0.5) * spread * 2, cz = (rng2() - 0.5) * spread * 2;
+        const n2 = 2 + Math.floor(rng2() * 4);
+        for (let i = 0; i < n2 && idx2 < clusters * 3; i++, idx2++) {
+          const r = minR + rng2() * (maxR - minR);
+          const rx = cx + (rng2()-0.5)*4.5, rz2 = cz + (rng2()-0.5)*4.5;
+          rockPS.push({ x: rx, z: rz2, s: r * 0.4, ry: Math.random() * Math.PI * 2 });
+        }
+      }
+      this._spawnGLBProps('rock', PROP_MODELS, rockPS, [inst]);
+    }
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -1997,6 +2063,10 @@ export class World {
     this.objects.push(g);
     this._structures.push({ x: bx, z: bz, r: 1.2 });
     this._obstacles.push({ x: bx, z: bz, r: 1.1 }); // 벤치 충돌 콜라이더
+    // GLB 교체 — 방향각 유지
+    this._placeGLB('bench', PROP_MODELS, bx, bz, [g]).then(m => {
+      if (m) m.rotation.y = angle;
+    });
     return g;
   }
 
@@ -2158,6 +2228,7 @@ export class World {
       this.scene.add(g);
       this.objects.push(g);
       this._obstacles.push({ x, z, r: 0.18 }); // 가로등 기둥 충돌 콜라이더
+      this._placeGLB('lamp_post', PROP_MODELS, x, z, [g]);
     }
   }
 
@@ -2405,6 +2476,7 @@ export class World {
     rim.position.set(x, y + 0.04, z);
     this.scene.add(water, rim);
     this.objects.push(water, rim);
+    this._placeGLB('water_hole', LANDMARK_MODELS, x, z, [water, rim]);
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -2446,10 +2518,24 @@ export class World {
     if (capI.instanceColor) capI.instanceColor.needsUpdate = true;
     this.scene.add(stemI, capI);
     this.objects.push(stemI, capI);
+    // GLB 교체 — 버섯 위치 재수집
+    { const mushPS = [];
+      const rng2 = this._rng;
+      const pts2 = clusterSpawn(Math.ceil(count / 4), 4, MAP_HALF * 0.85, 30, rng2);
+      for (let i = 0; i < count; i++) {
+        const { x, z } = pts2[i % pts2.length];
+        const jx = x + (rng2()-0.5)*5, jz = z + (rng2()-0.5)*5;
+        const h = 0.8 + rng2()*1.2;
+        mushPS.push({ x: jx, z: jz, s: h * 0.3, ry: Math.random() * Math.PI * 2 });
+      }
+      this._spawnGLBProps('mushroom', PROP_MODELS, mushPS, [stemI, capI]);
+    }
   }
 
   _spawnFallenLogs(count) {
     const mat = new THREE.MeshLambertMaterial({ color: 0x5c3d1e, flatShading: true });
+    const logMeshes = [];
+    const logPS = [];
     for (let i = 0; i < count; i++) {
       const x = (this._rng() - 0.5) * 900;
       const z = (this._rng() - 0.5) * 900;
@@ -2462,7 +2548,10 @@ export class World {
       log.castShadow = true;
       this.scene.add(log);
       this.objects.push(log);
+      logMeshes.push(log);
+      logPS.push({ x, z, s: len * 0.1, ry: Math.random() * Math.PI * 2 });
     }
+    this._spawnGLBProps('fallen_log', PROP_MODELS, logPS, logMeshes);
   }
 
   _spawnMossRocks(count) {
@@ -4023,6 +4112,7 @@ export class World {
     g.add(this._cyl(1.5, 1.5, 10, 8, metalMat.clone(), 0, 9, 0));
     g.position.set(x, y, z);
     this.scene.add(g); this.objects.push(g);
+    this._placeGLB('space_station', LANDMARK_MODELS, x, z, [g]);
   }
 
   _spawnCrashedSpaceship(count) {
