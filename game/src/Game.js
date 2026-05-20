@@ -65,8 +65,12 @@ export class Game {
     this._titleCamera  = null;
 
     logger.mark('Game constructor start');
+    // 로딩 바 단계별 진행 (렌더러 → 화면 → 완료)
+    { const b = document.getElementById('loading-bar-fill'); if (b) b.style.width = '20%'; }
     this._initRenderer();
+    { const b = document.getElementById('loading-bar-fill'); if (b) b.style.width = '60%'; }
     this._initScreens();
+    { const b = document.getElementById('loading-bar-fill'); if (b) b.style.width = '85%'; }
     this._initTouchControls();
 
     // Wrap _showScreen to manage title 3D scene lifecycle
@@ -107,9 +111,13 @@ export class Game {
 
   // ── 화면 전환 ─────────────────────────────────────────────────
   _showScreen(name) {
-    // 로딩 화면은 최초 화면 전환 시 1회 제거
+    // 로딩 화면은 최초 화면 전환 시 1회 제거 (바 채우기 → 300ms 후 숨김)
     const loadingEl = document.getElementById('loading');
-    if (loadingEl) loadingEl.style.display = 'none';
+    if (loadingEl) {
+      const bar = document.getElementById('loading-bar-fill');
+      if (bar) bar.style.width = '100%'; // transition: width 0.3s → 시각적 완료 애니
+      setTimeout(() => { loadingEl.style.display = 'none'; }, 350);
+    }
 
     const noFade = name === 'game' || name === 'pause';
     const fade = document.getElementById('fade-overlay');
