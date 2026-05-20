@@ -54,6 +54,32 @@ function ringSpawn(cx, cz, radius, count, jitter, rng) {
   });
 }
 
+// ── 경량 2D 스무스 노이즈 (외부 라이브러리 없음) ─────────────────
+// 격자 해시 + 바이리니어 인터폴레이션으로 Perlin-like 자연스러운 노이즈 생성
+function smoothNoise2D(x, z, seed = 0) {
+  const ix = Math.floor(x), iz = Math.floor(z);
+  const fx = x - ix, fz = z - iz;
+  // 3차 에르밋 보간 (부드러운 S커브)
+  const ux = fx * fx * (3 - 2 * fx);
+  const uz = fz * fz * (3 - 2 * fz);
+  // 격자 포인트 해시 → [-1, 1] 값
+  const h = (nx, nz) => {
+    let v = (nx * 7919 + nz * 5381 + seed * 1000003) | 0;
+    v ^= v << 13; v ^= v >> 17; v ^= v << 5;
+    return (v & 0xffff) / 32767.5 - 1.0;
+  };
+  const v00 = h(ix,   iz),   v10 = h(ix+1, iz);
+  const v01 = h(ix,   iz+1), v11 = h(ix+1, iz+1);
+  return v00*(1-ux)*(1-uz) + v10*ux*(1-uz) + v01*(1-ux)*uz + v11*ux*uz;
+}
+
+/** fBm (fractal Brownian motion) — smoothNoise2D 3옥타브 합성 */
+function fbm2D(x, z, seed = 0) {
+  return smoothNoise2D(x,       z,       seed)       * 0.500
+       + smoothNoise2D(x*2.02,  z*2.02,  seed+1000)  * 0.250
+       + smoothNoise2D(x*4.05,  z*4.05,  seed+2000)  * 0.125;
+}
+
 // ── 지형 높이 파라미터 (스테이지별) ──────────────────────────────
 // 자연스러운 기복 — 게임플레이 중심 시야 확보를 위해 낮게 유지
 const TERRAIN_SCALE = [
@@ -211,6 +237,30 @@ export class World {
       h = moonBase + crater1 + crater2 + crater3;
     }
 
+    // ── fBm 노이즈 디테일 레이어 (스테이지별 강도 조절) ──────────
+    // 기존 sin/cos 매크로 지형 위에 자연스러운 소규모 기복을 덧씌움
+    const noiseAmp = [
+      0,    // unused
+      1.2,  // 1  공원  — 미세 잔디 기복
+      1.2,  // 2
+      1.2,  // 3
+      0.5,  // 4  연못  — 거의 평탄
+      0.8,  // 5  습지
+      0.6,  // 6  강가
+      0.7,  // 7  바닷가
+      0.4,  // 8  깊은바다
+      2.5,  // 9  열대우림
+      2.0,  // 10 사바나
+      3.5,  // 11 설산  — 바위·능선 강조
+      3.0,  // 12 밀림
+      4.0,  // 13 화산  — 울퉁불퉁 용암지형
+      4.5,  // 14 공룡섬
+      0.3,  // 15 우주  — 달 표면 미세 크레이터
+    ];
+    const nAmp = (noiseAmp[id] ?? 1.0) * s;
+    const noise = fbm2D(x * 0.045, z * 0.045, id * 997) * nAmp;
+    h += noise;
+
     const soft = h >= 0 ? h : h * 0.07;
     return soft * fade;
   }
@@ -318,7 +368,8 @@ export class World {
     else if (id === 10)this._buildSavanna();
     else if (id === 11)this._buildSnowMtn();
     else if (id === 12)this._buildForest();
-    else if (id <= 14) this._buildDinoIsland();
+    else if (id === 13) this._buildVolcano();
+    else if (id === 14) this._buildDinoIsland();
     else               this._buildSpace();
 
     if (this.settings.weather === 'rain') this._buildRain();
@@ -808,6 +859,10 @@ export class World {
   _buildSnowMtn() {
     const rng = this._rng;
     this._spawnDistantSilhouettes('forest');
+
+    // ── 영웅 랜드마크: 빙하 봉우리 ────────────────────────────────
+    this._spawnHeroGlacialPeak();
+
     // 빙하 (중심 계곡)
     const iceMat = new THREE.MeshLambertMaterial({ color: 0x99ccee, transparent: true, opacity: 0.75 });
     for (let seg = -4; seg <= 4; seg++) {
@@ -818,22 +873,247 @@ export class World {
       ice.position.set(ox, 0.15, sz);
       this.scene.add(ice); this.objects.push(ice);
     }
+
+    // ── 빙판 호수 (중앙 저지대) ────────────────────────────────────
+    this._spawnFrozenLake();
+
     // 침엽수 (낮은 고도에만)
     const pineBase = poissonSpawn(90, MAP_HALF * 0.82, 9, rng)
-      .filter(p => {
-        const h = this.getHeight(p.x, p.z);
-        return h < 6; // 낮은 지역에만 나무
-      });
+      .filter(p => this.getHeight(p.x, p.z) < 6);
     this._spawnTrees(0, 0, 'pine', pineBase);
     this._spawnRockClusters(70, MAP_HALF * 0.85, 1.5, 6, 0x9aafbb);
     this._spawnMossRocks(40);
     this._spawnFallenLogs(25);
+
     // 눈 쌓인 바위
     this._spawnSnowCapRocks(50);
+
+    // ── 설산 전용 추가 오브젝트 ────────────────────────────────────
+    this._spawnFrozenWaterfalls(5);     // 얼어붙은 폭포
+    this._spawnIcicleGroups(35);        // 고드름 클러스터
+    this._spawnSnowDrifts(60);          // 눈더미
+    this._spawnAlpineCabins(3);         // 산장
+    this._spawnIceFormations(28);       // 빙하 침식 구조물
+    this._spawnFrozenPonds(6);          // 작은 얼음 웅덩이
+
     this._buildSnow();   // 눈 파티클
-    // 아이스 크리스탈 (장식)
     this._spawnIceCrystals(30);
     this._buildAtmosphereParticles({ count: 200, spread: 120, maxY: 20, color: 0xeef8ff, size: 0.060 });
+  }
+
+  // ── 영웅 빙하 봉우리 ────────────────────────────────────────────
+  _spawnHeroGlacialPeak() {
+    const g = new THREE.Group();
+    const snowMat = new THREE.MeshLambertMaterial({ color: 0xf0f6ff, flatShading: true });
+    const iceMat  = new THREE.MeshLambertMaterial({ color: 0x99ccee, flatShading: true });
+    const rockMat = new THREE.MeshLambertMaterial({ color: 0x8a9aaa, flatShading: true });
+
+    // 봉우리 3단 구조
+    const peak1 = new THREE.Mesh(new THREE.ConeGeometry(40, 65, 8, 1), rockMat);
+    peak1.position.set(-200, 32.5, -200);
+    g.add(peak1);
+    const snow1 = new THREE.Mesh(new THREE.ConeGeometry(22, 30, 7, 1), snowMat);
+    snow1.position.set(-200, 80, -200);
+    g.add(snow1);
+
+    // 보조 봉우리
+    const peak2 = new THREE.Mesh(new THREE.ConeGeometry(28, 45, 7, 1), rockMat);
+    peak2.position.set(180, 22.5, -230);
+    g.add(peak2);
+    const snow2 = new THREE.Mesh(new THREE.ConeGeometry(16, 22, 6, 1), snowMat);
+    snow2.position.set(180, 58, -230);
+    g.add(snow2);
+
+    // 빙하 능선 연결부
+    const ridge = new THREE.Mesh(new THREE.BoxGeometry(180, 18, 22), iceMat);
+    ridge.position.set(-10, 12, -215);
+    ridge.rotation.y = 0.08;
+    g.add(ridge);
+
+    this.scene.add(g);
+    this.objects.push(g);
+    this._zones.landmarks.push({ x: -200, z: -200 });
+  }
+
+  // ── 빙판 호수 ────────────────────────────────────────────────────
+  _spawnFrozenLake() {
+    const rng = this._rng;
+    const cx = (rng() - 0.5) * 80, cz = (rng() - 0.5) * 80;
+    const y  = this.getHeight(cx, cz);
+    // 빙판 (불투명 연파랑)
+    const lake = new THREE.Mesh(
+      new THREE.CircleGeometry(38 + rng() * 18, 18),
+      new THREE.MeshLambertMaterial({ color: 0xaaddee, transparent: true, opacity: 0.88 })
+    );
+    lake.rotation.x = -Math.PI / 2;
+    lake.position.set(cx, y + 0.05, cz);
+    this.scene.add(lake); this.objects.push(lake);
+    // 균열 선
+    for (let i = 0; i < 5; i++) {
+      const a = rng() * Math.PI * 2;
+      const len = 10 + rng() * 25;
+      const crack = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.8, len),
+        new THREE.MeshLambertMaterial({ color: 0x6699aa, transparent: true, opacity: 0.7 })
+      );
+      crack.rotation.x = -Math.PI / 2;
+      crack.rotation.z = a;
+      crack.position.set(cx + Math.cos(a) * len * 0.3, y + 0.1, cz + Math.sin(a) * len * 0.3);
+      this.scene.add(crack); this.objects.push(crack);
+    }
+    this._zones.landmarks.push({ x: cx, z: cz });
+  }
+
+  // ── 얼어붙은 폭포 ────────────────────────────────────────────────
+  _spawnFrozenWaterfalls(count) {
+    const rng = this._rng;
+    for (let i = 0; i < count; i++) {
+      const x = (rng() - 0.5) * MAP_HALF * 1.2;
+      const z = (rng() - 0.5) * MAP_HALF * 1.2;
+      const y = this.getHeight(x, z);
+      const h = 8 + rng() * 16;
+      const g = new THREE.Group();
+      // 빙하 폭포 본체 (불규칙 박스)
+      const mat = new THREE.MeshLambertMaterial({ color: 0x99ddee, transparent: true, opacity: 0.82 });
+      for (let j = 0; j < 3; j++) {
+        const col = new THREE.Mesh(new THREE.BoxGeometry(2 + rng()*2, h * (0.6 + rng()*0.5), 1.5 + rng()*1.5), mat.clone());
+        col.position.set((rng()-0.5)*4, h*0.4, (rng()-0.5)*2);
+        g.add(col);
+      }
+      g.position.set(x, y, z);
+      g.rotation.y = rng() * Math.PI * 2;
+      this.scene.add(g); this.objects.push(g);
+    }
+  }
+
+  // ── 고드름 클러스터 ────────────────────────────────────────────
+  _spawnIcicleGroups(count) {
+    const rng   = this._rng;
+    const dummy = new THREE.Object3D();
+    const mat   = new THREE.MeshLambertMaterial({ color: 0xbbeeff, transparent: true, opacity: 0.80 });
+    const geo   = new THREE.ConeGeometry(0.2, 1, 5);
+    const inst  = new THREE.InstancedMesh(geo, mat, count * 5);
+    let idx = 0;
+    for (let c = 0; c < count; c++) {
+      const cx = (rng() - 0.5) * MAP_HALF * 1.5;
+      const cz = (rng() - 0.5) * MAP_HALF * 1.5;
+      const cy = this.getHeight(cx, cz);
+      const n  = 3 + Math.floor(rng() * 5);
+      for (let i = 0; i < n && idx < count * 5; i++, idx++) {
+        const ox = cx + (rng()-0.5) * 3;
+        const oz = cz + (rng()-0.5) * 3;
+        const h  = 0.5 + rng() * 2.5;
+        // 아래로 향하는 고드름 (180도 회전)
+        dummy.position.set(ox, cy + h * 0.5 + 3, oz);
+        dummy.scale.set(0.3 + rng()*0.4, h, 0.3 + rng()*0.4);
+        dummy.rotation.set(Math.PI, rng()*6.28, (rng()-0.5)*0.2);
+        dummy.updateMatrix();
+        inst.setMatrixAt(idx, dummy.matrix);
+        if (inst.instanceColor) {
+          inst.setColorAt(idx, new THREE.Color(0xbbeeff).offsetHSL(0, (rng()-0.5)*0.08, (rng()-0.5)*0.12));
+        }
+      }
+    }
+    inst.count = idx;
+    inst.instanceMatrix.needsUpdate = true;
+    if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+    this.scene.add(inst); this.objects.push(inst);
+  }
+
+  // ── 눈더미 ────────────────────────────────────────────────────
+  _spawnSnowDrifts(count) {
+    const rng   = this._rng;
+    const dummy = new THREE.Object3D();
+    const mat   = new THREE.MeshLambertMaterial({ color: 0xf4f8ff, flatShading: true });
+    const geo   = new THREE.SphereGeometry(1, 7, 5);
+    const inst  = new THREE.InstancedMesh(geo, mat, count);
+    for (let i = 0; i < count; i++) {
+      const x = (rng() - 0.5) * MAP_HALF * 1.5;
+      const z = (rng() - 0.5) * MAP_HALF * 1.5;
+      const y = this.getHeight(x, z);
+      const r = 1.5 + rng() * 4;
+      dummy.position.set(x, y + r * 0.25, z);
+      dummy.scale.set(r * (1.0 + rng()*0.4), r * 0.28, r * (0.8 + rng()*0.4));
+      dummy.rotation.y = rng() * 6.28;
+      dummy.updateMatrix();
+      inst.setMatrixAt(i, dummy.matrix);
+    }
+    inst.instanceMatrix.needsUpdate = true;
+    this.scene.add(inst); this.objects.push(inst);
+  }
+
+  // ── 산장 ────────────────────────────────────────────────────────
+  _spawnAlpineCabins(count) {
+    const rng = this._rng;
+    for (let i = 0; i < count; i++) {
+      const x = 40 + (rng() - 0.5) * 160;
+      const z = 40 + (rng() - 0.5) * 160;
+      const y = this.getHeight(x, z);
+      const g = new THREE.Group();
+      const wallMat = new THREE.MeshLambertMaterial({ color: 0x8b5c30 });
+      const roofMat = new THREE.MeshLambertMaterial({ color: 0xeeeeee }); // 눈 쌓인 지붕
+      // 벽
+      g.add(this._box(7, 4, 6, wallMat, 0, 2, 0));
+      // 지붕 (삼각)
+      const roofGeo = new THREE.ConeGeometry(5.5, 3, 4);
+      const roof = new THREE.Mesh(roofGeo, roofMat);
+      roof.position.set(0, 5.5, 0);
+      roof.rotation.y = Math.PI / 4;
+      g.add(roof);
+      // 굴뚝
+      g.add(this._box(0.7, 2.5, 0.7, wallMat, 1.5, 6.5, -1));
+      g.position.set(x, y, z);
+      g.rotation.y = rng() * Math.PI * 2;
+      this.scene.add(g); this.objects.push(g);
+      this._obstacles.push({ x, z, r: 4 });
+      this._structures.push({ x, z, r: 5 });
+    }
+  }
+
+  // ── 빙하 침식 구조물 ───────────────────────────────────────────
+  _spawnIceFormations(count) {
+    const rng   = this._rng;
+    const dummy = new THREE.Object3D();
+    const colors = [0x99ccee, 0xaaddff, 0x77aacc];
+    const geos   = [
+      new THREE.OctahedronGeometry(1, 0),
+      new THREE.TetrahedronGeometry(1, 0),
+      new THREE.BoxGeometry(1, 1, 1),
+    ];
+    for (let ci = 0; ci < colors.length; ci++) {
+      const n   = Math.floor(count / 3);
+      const mat = new THREE.MeshLambertMaterial({ color: colors[ci], transparent: true, opacity: 0.72, flatShading: true });
+      const inst = new THREE.InstancedMesh(geos[ci], mat, n);
+      for (let i = 0; i < n; i++) {
+        const x = (rng()-0.5) * MAP_HALF * 1.4;
+        const z = (rng()-0.5) * MAP_HALF * 1.4;
+        const y = this.getHeight(x, z);
+        const s = 1.0 + rng() * 3.5;
+        dummy.position.set(x, y + s * 0.5, z);
+        dummy.scale.set(s * (0.5 + rng()*0.8), s * (0.8 + rng()*1.2), s * (0.5 + rng()*0.8));
+        dummy.rotation.set(rng()*3.14, rng()*6.28, rng()*3.14);
+        dummy.updateMatrix();
+        inst.setMatrixAt(i, dummy.matrix);
+      }
+      inst.instanceMatrix.needsUpdate = true;
+      this.scene.add(inst); this.objects.push(inst);
+    }
+  }
+
+  // ── 작은 얼음 웅덩이 ─────────────────────────────────────────
+  _spawnFrozenPonds(count) {
+    const rng = this._rng;
+    const mat = new THREE.MeshLambertMaterial({ color: 0xbbddee, transparent: true, opacity: 0.80 });
+    for (let i = 0; i < count; i++) {
+      const x = (rng()-0.5) * MAP_HALF * 1.3;
+      const z = (rng()-0.5) * MAP_HALF * 1.3;
+      const y = this.getHeight(x, z);
+      const r = 4 + rng() * 12;
+      const pond = new THREE.Mesh(new THREE.CircleGeometry(r, 10), mat.clone());
+      pond.rotation.x = -Math.PI / 2;
+      pond.position.set(x, y + 0.06, z);
+      this.scene.add(pond); this.objects.push(pond);
+    }
   }
 
   // ── 내부 전용: 눈 덮인 바위 ──────────────────────────────────
@@ -966,6 +1246,340 @@ export class World {
     this._spawnDinoSkeleton(5);
     // 화산 잔불 파티클 — 상승하는 불씨
     this._buildAtmosphereParticles({ count: 240, spread: 115, maxY: 20, color: 0xff5511, size: 0.060 });
+  }
+
+  // ── 화산지대 (13) ─────────────────────────────────────────────
+  _buildVolcano() {
+    const rng = this._rng;
+    this._spawnDistantSilhouettes('dino');
+
+    // ── 영웅 랜드마크: 중앙 대형 화산 ────────────────────────────
+    this._spawnHeroVolcano(0, 0);
+
+    // ── 위성 화산구 5개 ────────────────────────────────────────
+    const craterOffsets = [
+      { x: 180, z: -110 }, { x: -150, z: 130 }, { x: 220, z: 80 },
+      { x: -80,  z: -200 }, { x: 100, z: 200 },
+    ];
+    for (const { x, z } of craterOffsets) this._spawnSmallCrater(x, z);
+
+    // ── 용암 강줄기 (격자 세그먼트) ───────────────────────────────
+    this._buildLavaRivers();
+
+    // ── 기존 공유 스포너 재활용 ───────────────────────────────────
+    this._spawnLavaPools(14);
+    this._spawnTarPits(8);
+    this._spawnCaveEntrances(6);
+    this._spawnStoneCircles(4);
+
+    // ── 화산 전용 오브젝트 ────────────────────────────────────────
+    this._spawnVolcanicRocks(120);     // InstancedMesh 용암암
+    this._spawnAshPatches(30);         // 화산재 패치
+    this._spawnCharredTrees(40);       // 탄화 나무 그루터기
+    this._spawnLavaColumns(10);        // 현무암 기둥
+    this._spawnVolcanicVents(12);      // 증기 분출구
+    this._spawnSulfurDeposits(25);     // 유황 크리스탈
+    this._spawnCrackLines(16);         // 지면 균열 선
+
+    // ── 화산 불씨 + 연기 이중 파티클 ─────────────────────────────
+    this._buildAtmosphereParticles({ count: 320, spread: 130, maxY: 24, color: 0xff4400, size: 0.065 });
+    this._buildAtmosphereParticles({ count: 180, spread: 110, maxY: 30, color: 0x555555, size: 0.090 });
+  }
+
+  // ── 영웅 화산 ────────────────────────────────────────────────────
+  _spawnHeroVolcano(x, z) {
+    const rng = this._rng;
+    const g = new THREE.Group();
+    const baseY = this.getHeight(x, z);
+
+    // 화산 본체 (3단 콘)
+    const volMat  = new THREE.MeshLambertMaterial({ color: 0x2a1a0a, flatShading: true });
+    const lavaMat = new THREE.MeshLambertMaterial({ color: 0xff3300, emissive: 0x441100 });
+    const midMat  = new THREE.MeshLambertMaterial({ color: 0x3a2010, flatShading: true });
+
+    const base = new THREE.Mesh(new THREE.ConeGeometry(65, 55, 12, 1), volMat.clone());
+    base.position.set(0, 27.5, 0);
+    g.add(base);
+
+    const mid = new THREE.Mesh(new THREE.ConeGeometry(38, 35, 10, 1), midMat.clone());
+    mid.position.set(0, 65, 0);
+    g.add(mid);
+
+    const top = new THREE.Mesh(new THREE.ConeGeometry(18, 22, 9, 1), volMat.clone());
+    top.position.set(0, 92, 0);
+    g.add(top);
+
+    // 분화구 내부 (용암 원반)
+    const crater = new THREE.Mesh(new THREE.CircleGeometry(16, 14), lavaMat);
+    crater.rotation.x = -Math.PI / 2;
+    crater.position.set(0, 101, 0);
+    g.add(crater);
+
+    // 용암 흘러내리는 줄기 4개
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2 + rng() * 0.6;
+      const lStream = new THREE.Mesh(
+        new THREE.BoxGeometry(4 + rng() * 3, 2, 30 + rng() * 20),
+        new THREE.MeshLambertMaterial({ color: 0xdd2200, emissive: 0x330800 })
+      );
+      lStream.position.set(Math.cos(a) * 32, 72 - Math.abs(Math.cos(a)) * 10, Math.sin(a) * 32);
+      lStream.rotation.y = a;
+      lStream.rotation.z = -0.35;
+      g.add(lStream);
+    }
+
+    g.position.set(x, baseY, z);
+    this.scene.add(g);
+    this.objects.push(g);
+    this._zones.landmarks.push({ x, z });
+    this._obstacles.push({ x, z, r: 30 });
+
+    // 화산 주변 붉은 포인트 조명
+    const glow = new THREE.PointLight(0xff4400, 3.0, 350);
+    glow.position.set(x, baseY + 110, z);
+    this.scene.add(glow);
+    this.objects.push(glow);
+  }
+
+  // ── 소형 화산구 ────────────────────────────────────────────────
+  _spawnSmallCrater(x, z) {
+    const rng = this._rng;
+    const y   = this.getHeight(x, z);
+    const h   = 12 + rng() * 18;
+    const r   = 14 + rng() * 16;
+
+    const volMat = new THREE.MeshLambertMaterial({ color: 0x2a1505, flatShading: true });
+    const cone   = new THREE.Mesh(new THREE.ConeGeometry(r, h, 8, 1), volMat);
+    cone.position.set(x, y + h * 0.5, z);
+    cone.rotation.y = rng() * Math.PI * 2;
+    this.scene.add(cone);
+    this.objects.push(cone);
+
+    // 용암 입구
+    const lavaMat = new THREE.MeshLambertMaterial({ color: 0xff5500, emissive: 0x220800 });
+    const lip = new THREE.Mesh(new THREE.CircleGeometry(r * 0.45, 10), lavaMat);
+    lip.rotation.x = -Math.PI / 2;
+    lip.position.set(x, y + h + 0.2, z);
+    this.scene.add(lip);
+    this.objects.push(lip);
+    this._obstacles.push({ x, z, r: r * 0.7 });
+  }
+
+  // ── 용암 강줄기 ────────────────────────────────────────────────
+  _buildLavaRivers() {
+    const rng = this._rng;
+    const lavaMat = new THREE.MeshLambertMaterial({ color: 0xcc2200, emissive: 0x220500, transparent: true, opacity: 0.92 });
+    // 3개 용암 강 (대각선 방향)
+    const rivers = [
+      { ax: 0.012, az: 0.010, offsetX:  30, offsetZ: -15 },
+      { ax: -0.009,az: 0.013, offsetX: -25, offsetZ:  20 },
+      { ax: 0.014, az: -0.008,offsetX:  10, offsetZ:  35 },
+    ];
+    for (const r of rivers) {
+      for (let seg = -6; seg <= 6; seg++) {
+        const sz = seg * 55;
+        const ox = Math.sin(sz * r.ax + r.offsetX * 0.01) * 50 + r.offsetX;
+        const oz = Math.cos(sz * r.az + r.offsetZ * 0.01) * 20 + r.offsetZ;
+        const lava = new THREE.Mesh(
+          new THREE.PlaneGeometry(12 + rng() * 8, 58 + rng() * 15),
+          lavaMat
+        );
+        lava.rotation.x = -Math.PI / 2;
+        lava.position.set(ox, this.getHeight(ox, sz + oz) + 0.18, sz + oz);
+        this.scene.add(lava);
+        this.objects.push(lava);
+      }
+    }
+  }
+
+  // ── 화산암 (InstancedMesh) ────────────────────────────────────
+  _spawnVolcanicRocks(count) {
+    const rng   = this._rng;
+    const dummy = new THREE.Object3D();
+    // 3가지 색상 레이어: 검은 용암암 / 붉은 산화철 / 회색 화산재 도포
+    const colors   = [0x1a0e05, 0x3d1a08, 0x2a2018];
+    const geos     = [
+      new THREE.DodecahedronGeometry(1, 0),
+      new THREE.DodecahedronGeometry(1, 1),
+      new THREE.OctahedronGeometry(1, 0),
+    ];
+    for (let ci = 0; ci < colors.length; ci++) {
+      const n    = Math.floor(count / 3);
+      const mat  = new THREE.MeshLambertMaterial({ color: colors[ci], flatShading: true });
+      const inst = new THREE.InstancedMesh(geos[ci], mat, n);
+      inst.castShadow = true;
+      for (let i = 0; i < n; i++) {
+        const px = (rng() - 0.5) * MAP_HALF * 1.5;
+        const pz = (rng() - 0.5) * MAP_HALF * 1.5;
+        const py = this.getHeight(px, pz);
+        const r  = 0.5 + rng() * 2.8;
+        dummy.position.set(px, py + r * 0.45, pz);
+        dummy.scale.set(r * (0.7 + rng()*0.6), r * (0.5 + rng()*0.7), r * (0.7 + rng()*0.6));
+        dummy.rotation.set(rng()*3.14, rng()*6.28, rng()*3.14);
+        dummy.updateMatrix();
+        inst.setMatrixAt(i, dummy.matrix);
+        if (inst.instanceColor) {
+          inst.setColorAt(i, new THREE.Color(colors[ci]).offsetHSL(0, (rng()-0.5)*0.1, (rng()-0.5)*0.12));
+        }
+      }
+      inst.instanceMatrix.needsUpdate = true;
+      if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+      this.scene.add(inst);
+      this.objects.push(inst);
+    }
+  }
+
+  // ── 화산재 패치 ────────────────────────────────────────────────
+  _spawnAshPatches(count) {
+    const rng = this._rng;
+    const mat = new THREE.MeshLambertMaterial({ color: 0x2a2520, transparent: true, opacity: 0.88 });
+    for (let i = 0; i < count; i++) {
+      const x = (rng() - 0.5) * MAP_HALF * 1.6;
+      const z = (rng() - 0.5) * MAP_HALF * 1.6;
+      const r = 8 + rng() * 22;
+      const patch = new THREE.Mesh(new THREE.CircleGeometry(r, 10), mat.clone());
+      patch.rotation.x = -Math.PI / 2;
+      patch.position.set(x, this.getHeight(x, z) + 0.08, z);
+      this.scene.add(patch);
+      this.objects.push(patch);
+    }
+  }
+
+  // ── 탄화 나무 그루터기 (InstancedMesh) ───────────────────────
+  _spawnCharredTrees(count) {
+    const rng    = this._rng;
+    const dummy  = new THREE.Object3D();
+    const tMat   = new THREE.MeshLambertMaterial({ color: 0x0d0906, flatShading: true });
+    const trunkG = new THREE.CylinderGeometry(0.18, 0.30, 3.5, 6);
+    const inst   = new THREE.InstancedMesh(trunkG, tMat, count);
+    inst.castShadow = true;
+    for (let i = 0; i < count; i++) {
+      const x = (rng() - 0.5) * MAP_HALF * 1.4;
+      const z = (rng() - 0.5) * MAP_HALF * 1.4;
+      const y = this.getHeight(x, z);
+      const s = 0.5 + rng() * 1.8;
+      dummy.position.set(x, y + 1.75 * s, z);
+      dummy.scale.set(s, s * (0.4 + rng() * 1.0), s);   // 높이 다양
+      dummy.rotation.y = rng() * 6.28;
+      dummy.rotation.z = (rng() - 0.5) * 0.15;           // 약간 기울기
+      dummy.updateMatrix();
+      inst.setMatrixAt(i, dummy.matrix);
+    }
+    inst.instanceMatrix.needsUpdate = true;
+    this.scene.add(inst);
+    this.objects.push(inst);
+  }
+
+  // ── 현무암 기둥 ────────────────────────────────────────────────
+  _spawnLavaColumns(count) {
+    const rng   = this._rng;
+    const dummy = new THREE.Object3D();
+    const mat   = new THREE.MeshLambertMaterial({ color: 0x150e06, flatShading: true });
+    const geo   = new THREE.CylinderGeometry(0.5, 0.7, 1, 6);  // 단위 기둥, scale로 조절
+    const inst  = new THREE.InstancedMesh(geo, mat, count * 5); // 기둥 묶음
+    inst.castShadow = true;
+    let idx = 0;
+    for (let c = 0; c < count; c++) {
+      const cx = (rng() - 0.5) * MAP_HALF * 1.4;
+      const cz = (rng() - 0.5) * MAP_HALF * 1.4;
+      const n  = 3 + Math.floor(rng() * 4);
+      for (let i = 0; i < n && idx < count * 5; i++, idx++) {
+        const ox = cx + (rng() - 0.5) * 8;
+        const oz = cz + (rng() - 0.5) * 8;
+        const h  = 3 + rng() * 10;
+        const r  = 0.5 + rng() * 1.2;
+        dummy.position.set(ox, this.getHeight(ox, oz) + h * 0.5, oz);
+        dummy.scale.set(r, h, r);
+        dummy.rotation.y = rng() * 6.28;
+        dummy.updateMatrix();
+        inst.setMatrixAt(idx, dummy.matrix);
+        if (inst.instanceColor) {
+          inst.setColorAt(idx, new THREE.Color(0x150e06).offsetHSL(0, (rng()-0.5)*0.08, (rng()-0.5)*0.1));
+        }
+      }
+    }
+    inst.count = idx;
+    inst.instanceMatrix.needsUpdate = true;
+    if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+    this.scene.add(inst);
+    this.objects.push(inst);
+  }
+
+  // ── 화산 가스 분출구 ────────────────────────────────────────────
+  _spawnVolcanicVents(count) {
+    const rng = this._rng;
+    const rimMat  = new THREE.MeshLambertMaterial({ color: 0x1a1008, flatShading: true });
+    const steamMat = new THREE.MeshLambertMaterial({ color: 0x887766, transparent: true, opacity: 0.55 });
+    for (let i = 0; i < count; i++) {
+      const x = (rng() - 0.5) * MAP_HALF * 1.3;
+      const z = (rng() - 0.5) * MAP_HALF * 1.3;
+      const y = this.getHeight(x, z);
+      const r = 1.2 + rng() * 2.0;
+      // 테두리 링
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(r, 0.4, 6, 10), rimMat.clone());
+      rim.rotation.x = -Math.PI / 2;
+      rim.position.set(x, y + 0.35, z);
+      this.scene.add(rim);
+      this.objects.push(rim);
+      // 연기 기둥 (반투명 원뿔)
+      const steam = new THREE.Mesh(new THREE.ConeGeometry(r * 0.6, 8 + rng() * 12, 7), steamMat.clone());
+      steam.position.set(x, y + 6, z);
+      this.scene.add(steam);
+      this.objects.push(steam);
+    }
+  }
+
+  // ── 유황 크리스탈 군집 ────────────────────────────────────────
+  _spawnSulfurDeposits(count) {
+    const rng   = this._rng;
+    const dummy = new THREE.Object3D();
+    const mat   = new THREE.MeshLambertMaterial({ color: 0xddcc00, flatShading: true });
+    const geo   = new THREE.ConeGeometry(0.3, 1, 5);
+    const inst  = new THREE.InstancedMesh(geo, mat, count * 4);
+    let idx = 0;
+    for (let c = 0; c < count; c++) {
+      const cx = (rng() - 0.5) * MAP_HALF * 1.3;
+      const cz = (rng() - 0.5) * MAP_HALF * 1.3;
+      const n  = 2 + Math.floor(rng() * 5);
+      for (let i = 0; i < n && idx < count * 4; i++, idx++) {
+        const ox = cx + (rng() - 0.5) * 5;
+        const oz = cz + (rng() - 0.5) * 5;
+        const h  = 0.5 + rng() * 2.2;
+        dummy.position.set(ox, this.getHeight(ox, oz) + h * 0.5, oz);
+        dummy.scale.set(0.4 + rng()*0.5, h, 0.4 + rng()*0.5);
+        dummy.rotation.y = rng() * 6.28;
+        dummy.rotation.z = (rng()-0.5) * 0.3;
+        dummy.updateMatrix();
+        inst.setMatrixAt(idx, dummy.matrix);
+        if (inst.instanceColor) {
+          inst.setColorAt(idx, new THREE.Color(0xddcc00).offsetHSL(0.05*(rng()-0.5), 0.1*(rng()-0.5), 0.15*(rng()-0.5)));
+        }
+      }
+    }
+    inst.count = idx;
+    inst.instanceMatrix.needsUpdate = true;
+    if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+    this.scene.add(inst);
+    this.objects.push(inst);
+  }
+
+  // ── 지면 균열 선 ──────────────────────────────────────────────
+  _spawnCrackLines(count) {
+    const rng = this._rng;
+    const mat = new THREE.MeshLambertMaterial({ color: 0xff2200, emissive: 0x440000, transparent: true, opacity: 0.85 });
+    for (let i = 0; i < count; i++) {
+      const x = (rng() - 0.5) * MAP_HALF * 1.4;
+      const z = (rng() - 0.5) * MAP_HALF * 1.4;
+      const y = this.getHeight(x, z);
+      const len = 15 + rng() * 40;
+      const angle = rng() * Math.PI;
+      const crack = new THREE.Mesh(new THREE.PlaneGeometry(1.5 + rng()*2, len), mat.clone());
+      crack.rotation.x = -Math.PI / 2;
+      crack.rotation.z = angle;
+      crack.position.set(x, y + 0.12, z);
+      this.scene.add(crack);
+      this.objects.push(crack);
+    }
   }
 
   // ── 우주 (15) ─────────────────────────────────────────────────
