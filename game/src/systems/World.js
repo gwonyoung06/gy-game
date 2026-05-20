@@ -123,6 +123,14 @@ export class World {
     this._pollenDummy  = new THREE.Object3D();
     this._pollenTimer  = 0;
 
+    // ── 분수 물 애니메이션 ────────────────────────────────────
+    this._fountainTime     = 0;
+    this._fountainWaterMats = [];   // ShaderMaterial 배열 (uniform 갱신용)
+    this._fountainStreams   = [];   // 스트림 Mesh 배열
+    this._fountainSprayInst = null; // InstancedMesh (스프레이 파티클)
+    this._fountainSprayData = [];   // [{ angle, speed, t, height }]
+    this._fountainPos       = null; // { x, z, baseY }
+
     this._build();
     // GLB 모델 비동기 프리로드 (빌드 후 백그라운드 — 첫 로드 시 폴백 자동 사용)
     this._preloadModels();
@@ -4271,6 +4279,42 @@ export class World {
       }
       pos.needsUpdate = true;
     }
+    // ── 분수 물 애니메이션 ─────────────────────────────────
+    if (this._fountainWaterMats.length > 0) {
+      this._fountainTime += delta;
+      const ft = this._fountainTime;
+      // ShaderMaterial uniform 갱신 (수면 파동 + 스트림)
+      for (const mat of this._fountainWaterMats) {
+        mat.uniforms.uTime.value = ft;
+      }
+      // 스프레이 파티클 업데이트
+      if (this._fountainSprayInst && this._fountainPos) {
+        const { x: fx, z: fz, baseY } = this._fountainPos;
+        const sprayDummy = new THREE.Object3D();
+        const SPRAY_COUNT = this._fountainSprayData.length;
+        for (let i = 0; i < SPRAY_COUNT; i++) {
+          const d = this._fountainSprayData[i];
+          // 각 파티클은 개별 phase로 주기적으로 분사 → 낙하
+          const cycle = 1.8; // 초 단위 주기
+          const t = ((ft * 0.7 + d.phase * cycle) % cycle) / cycle; // 0→1
+          // 포물선: 상승(0~0.4) 후 낙하(0.4~1)
+          const upT    = Math.min(t / 0.4, 1.0);
+          const downT  = Math.max((t - 0.4) / 0.6, 0);
+          const horizR = d.speed * t * 0.9;            // 수평 거리
+          const vertY  = upT * 2.8 - downT * downT * 3.5; // 수직
+          const px = fx + Math.cos(d.angle) * horizR;
+          const py = baseY + 8.2 + vertY;
+          const pz = fz + Math.sin(d.angle) * horizR;
+          // 낙하 후 사라짐 (지면 아래 숨기기)
+          const alive = py > baseY + 0.3;
+          sprayDummy.position.set(px, alive ? py : baseY - 10, pz);
+          sprayDummy.scale.setScalar(alive ? 1 : 0);
+          sprayDummy.updateMatrix();
+          this._fountainSprayInst.setMatrixAt(i, sprayDummy.matrix);
+        }
+        this._fountainSprayInst.instanceMatrix.needsUpdate = true;
+      }
+    }
     // ── 대기 파티클 (꽃가루/먼지) ─────────────────────────
     if (this._pollens && this._pollenData.length > 0) {
       this._pollenTimer += delta;
@@ -4478,11 +4522,140 @@ export class World {
     this._zones.landmarks.push({ x, z });
     this._obstacles.push({ x, z, r: 14.5 });
     this._structures.push({ x, z, r: 14.5 });
+    // 물 애니메이션 효과 추가 (GLB 유무 무관하게 항상 동작)
+    this._addFountainWaterEffects(x, z, y);
     // GLB 교체 시도 (비동기 — 폴백 유지)
     this._placeGLB('fountain', LANDMARK_MODELS, x, z, [g]).then(m => {
       if (m) { m.scale.setScalar(LANDMARK_MODELS.fountain.scale); }
     });
     return { x, z };
+  }
+
+  /**
+   * 분수 물 애니메이션 효과 — ShaderMaterial 수면 + 낙수 스트림 + 스프레이 파티클
+   * @param {number} x  분수 월드 X
+   * @param {number} z  분수 월드 Z
+   * @param {number} baseY  지형 Y (분수 그룹 y)
+   */
+  _addFountainWaterEffects(x, z, baseY) {
+    this._fountainPos = { x, z, baseY };
+
+    // ── 1. 수면 파동 ShaderMaterial (3단 각각) ─────────────────
+    const waterVS = /* glsl */`
+      uniform float uTime;
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        vec3 p = position;
+        // 방사상 파동 — 중심에서 퍼져나가는 물결
+        float dist = length(p.xz);
+        p.y += sin(dist * 2.5 - uTime * 4.0) * 0.06
+             + sin(dist * 4.2 - uTime * 6.5) * 0.03;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+      }
+    `;
+    const waterFS = /* glsl */`
+      uniform float uTime;
+      varying vec2 vUv;
+      void main() {
+        // 동심원 패턴 + 가장자리 반투명
+        vec2 c = vUv - 0.5;
+        float r = length(c) * 2.0;
+        float wave = sin(r * 8.0 - uTime * 5.0) * 0.5 + 0.5;
+        float edge = 1.0 - smoothstep(0.7, 1.0, r);
+        vec3 col = mix(vec3(0.2, 0.6, 1.0), vec3(0.5, 0.85, 1.0), wave);
+        gl_FragColor = vec4(col, (0.55 + wave * 0.25) * edge);
+      }
+    `;
+
+    // 3단 물 높이 (분수 그룹 로컬 y → 월드 y)
+    const tierHeights = [baseY + 0.58, baseY + 3.85, baseY + 7.28];
+    const tierRadii   = [13.0, 5.5, 2.3];
+    tierHeights.forEach((ty, idx) => {
+      const mat = new THREE.ShaderMaterial({
+        vertexShader:   waterVS,
+        fragmentShader: waterFS,
+        uniforms: { uTime: { value: 0 } },
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      const geo  = new THREE.CircleGeometry(tierRadii[idx], 32);
+      geo.rotateX(-Math.PI / 2);
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x, ty + 0.05, z);
+      mesh.renderOrder = 1;
+      this.scene.add(mesh);
+      this._fountainWaterMats.push(mat);
+    });
+
+    // ── 2. 낙수 스트림 (2단→1단, 3단→2단, 꼭대기→3단) ────────
+    const streamVS = /* glsl */`
+      uniform float uTime;
+      varying float vAlpha;
+      void main() {
+        vec3 p = position;
+        // 아래로 흐르는 UV 스크롤
+        float scroll = mod(uv.y - uTime * 2.0, 1.0);
+        vAlpha = scroll * (1.0 - scroll) * 4.0; // 가운데 불투명, 끝 투명
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+      }
+    `;
+    const streamFS = /* glsl */`
+      varying float vAlpha;
+      void main() {
+        gl_FragColor = vec4(0.4, 0.75, 1.0, vAlpha * 0.7);
+      }
+    `;
+    // [fromY, toY, radius]
+    const streamDefs = [
+      [baseY + 7.8, baseY + 3.85, 0.25],  // 꼭대기→3단
+      [baseY + 4.2, baseY + 0.65, 0.55],  // 2단→1단
+    ];
+    streamDefs.forEach(([fromY, toY, r]) => {
+      const h = Math.abs(fromY - toY);
+      const streamMat = new THREE.ShaderMaterial({
+        vertexShader:   streamVS,
+        fragmentShader: streamFS,
+        uniforms: { uTime: { value: 0 } },
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      const geo  = new THREE.CylinderGeometry(r, r * 1.3, h, 8, 8, true);
+      const mesh = new THREE.Mesh(geo, streamMat);
+      mesh.position.set(x, (fromY + toY) / 2, z);
+      mesh.renderOrder = 1;
+      this.scene.add(mesh);
+      this._fountainStreams.push(mesh);
+      this._fountainWaterMats.push(streamMat);
+    });
+
+    // ── 3. 스프레이 파티클 (꼭대기에서 부채꼴 분사) ─────────────
+    const SPRAY_COUNT = 48;
+    const sprayGeo = new THREE.SphereGeometry(0.07, 4, 3);
+    const sprayMat = new THREE.MeshBasicMaterial({
+      color: 0x99ddff,
+      transparent: true,
+      opacity: 0.75,
+    });
+    const sprayInst = new THREE.InstancedMesh(sprayGeo, sprayMat, SPRAY_COUNT);
+    sprayInst.renderOrder = 2;
+    this.scene.add(sprayInst);
+    this._fountainSprayInst = sprayInst;
+
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < SPRAY_COUNT; i++) {
+      const angle  = (i / SPRAY_COUNT) * Math.PI * 2;
+      const speed  = 1.8 + Math.random() * 1.2;   // 분사 속도
+      const phase  = Math.random();                 // 시간 오프셋 (동시 분사 방지)
+      this._fountainSprayData.push({ angle, speed, phase });
+      // 초기 위치
+      dummy.position.set(x, baseY + 8.2, z);
+      dummy.updateMatrix();
+      sprayInst.setMatrixAt(i, dummy.matrix);
+    }
+    sprayInst.instanceMatrix.needsUpdate = true;
   }
 
   /** 사바나 영웅 아카시아 — 고사목, 높이 22, 우산형 가지 */
