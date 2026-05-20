@@ -669,9 +669,11 @@ export class Game {
     this.waves = new WaveSystem(
       this.scene, stageData, this.settings,
       (data)   => this._onCapture(data),
-      (wave, isCountdown) => {
-        this.hud.showWaveMessage(wave, isCountdown);
-        if (!isCountdown) {
+      (wave, isInitial) => {
+        // isInitial=true → wave 1 최초 스폰 (3-2-1-GO! 이후) — 배너 표시, sfx 스킵
+        // isInitial=false → wave 2/3/4 스폰 — 배너 + 웨이브 시작 sfx
+        this.hud.showWaveMessage(wave, false); // 항상 풀 배너 표시
+        if (!isInitial) {
           audioManager.sfxWaveComplete();
           if (wave > 3) this._bossFlash(); // 보스 웨이브 드라마틱 연출
         }
@@ -974,6 +976,14 @@ export class Game {
     const critical = timeRemaining <= 10 && timeRemaining > 0; // 10초 이하
     const warning  = timeRemaining <= 20 && !critical;          // 20초 이하
 
+    // 임계 상태 진입 시 1회만 경보음 (매 프레임 반복 방지)
+    if (critical && !this._timerAlertPlayed) {
+      this._timerAlertPlayed = true;
+      audioManager.sfxTimerAlert?.();
+    } else if (!critical) {
+      this._timerAlertPlayed = false; // 위기 해제 시 리셋 (연장 아이템 등)
+    }
+
     timerEl.classList.toggle('urgent', critical);
 
     if (urgencyEl) {
@@ -1036,6 +1046,7 @@ export class Game {
     // 타이머 긴박감 오버레이 리셋
     const urgEl = document.getElementById('timer-urgency');
     if (urgEl) { urgEl.style.opacity = '0'; urgEl.classList.remove('active'); }
+    this._timerAlertPlayed = false;
     // 보스 경고 / PB 숨기기
     document.getElementById('boss-warning')?.classList.add('hidden');
     document.getElementById('hud-pb')?.classList.add('hidden');
@@ -1441,6 +1452,7 @@ export class Game {
     if (document.pointerLockElement) document.exitPointerLock();
     this.hud.showUpgradeCards(pool, (idx) => {
       pool[idx].apply();
+      audioManager.sfxWaveStart?.(); // 업그레이드 선택 → 드럼롤 → 다음 웨이브 카운트다운 시작
       setTimeout(() => { this.camCtrl?.requestLock(); onDone(); }, 400);
     });
   }
@@ -1794,6 +1806,7 @@ export class Game {
       document.body.style.filter = 'brightness(1.8) saturate(2)';
       setTimeout(() => { document.body.style.filter = ''; }, 200);
       this.hud.showWaveMessage('\u{1F451} BOSS CAPTURED!', false);
+      audioManager.sfxBossCapture?.(); // 보스 전용 팡파르 + 딜레이 이펙트
     }
 
     // 콤보 10 이상 화면 펄스
