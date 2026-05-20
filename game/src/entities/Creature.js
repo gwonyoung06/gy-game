@@ -1697,14 +1697,14 @@ export class Creature {
         this._wanderTimer = 0;
         this._wanderInterval = 3 + Math.random() * 2;
       }
-      // 8자 패턴
+      // 8자 패턴 — _tv0 재사용으로 new Vector3() 방지
       const cx = this._targetPos.x, cz = this._targetPos.z;
       const figureX = cx + Math.sin(this.time * 1.5) * 1.5;
       const figureZ = cz + Math.sin(this.time * 3.0) * 0.75;
-      const dir = new THREE.Vector3(figureX - this.mesh.position.x, 0, figureZ - this.mesh.position.z);
-      if (dir.length() > 0.1) {
-        dir.normalize();
-        this.mesh.position.addScaledVector(dir, speed * 2.5 * delta);
+      _tv0.set(figureX - this.mesh.position.x, 0, figureZ - this.mesh.position.z);
+      if (_tv0.length() > 0.1) {
+        _tv0.normalize();
+        this.mesh.position.addScaledVector(_tv0, speed * 2.5 * delta);
       }
     }
     this.baseY = this.baseY ?? 2;
@@ -1910,8 +1910,9 @@ export class Creature {
   // 익룡: 원선 비행
   _moveSoarCircle(delta, playerPos, distToPlayer, speed) {
     if (this._state === 'FLEE') {
-      const away = this.mesh.position.clone().sub(playerPos).normalize();
-      this.mesh.position.addScaledVector(away, speed * 3 * delta);
+      // _tv0 재사용 — clone() 방지
+      _tv0.copy(this.mesh.position).sub(playerPos).normalize();
+      this.mesh.position.addScaledVector(_tv0, speed * 3 * delta);
     } else {
       // 플레이어 중심 원선 비행 (크게)
       this._circleAngle += delta * speed * 0.6;
@@ -2126,11 +2127,12 @@ export class Creature {
       this._wanderTimer = 0;
       this._wanderInterval = 4 + Math.random() * 6;
     }
-    const dir = this._targetPos.clone().sub(this.mesh.position);
-    dir.y = 0;
-    if (dir.length() > 2) {
-      dir.normalize();
-      this.mesh.position.addScaledVector(dir, speed * 1.5 * delta);
+    // _tv0 재사용 — clone() 방지
+    _tv0.copy(this._targetPos).sub(this.mesh.position);
+    _tv0.y = 0;
+    if (_tv0.length() > 2) {
+      _tv0.normalize();
+      this.mesh.position.addScaledVector(_tv0, speed * 1.5 * delta);
     }
     this.baseY = 5 + Math.sin(this.time * 0.5) * 1.5;
     this.mesh.position.y = this.baseY;
@@ -2201,7 +2203,8 @@ export class Creature {
       }
       if (child.material) {
         const mats = Array.isArray(child.material) ? child.material : [child.material];
-        mats.forEach(m => m.dispose());
+        // 캐시 공유 재질은 스킵 — 다른 스테이지 생물이 재사용하므로 dispose 금지
+        mats.forEach(m => { if (!_cachedMats.has(m)) m.dispose(); });
       }
     });
     this.mesh = null;
