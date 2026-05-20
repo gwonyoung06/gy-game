@@ -984,6 +984,13 @@ export class Game {
       this._timerAlertPlayed = false; // 위기 해제 시 리셋 (연장 아이템 등)
     }
 
+    // 타이머 긴장 상태 → AudioManager 상태 연동 (tension 모드: 음악↓ 앰비언트↑)
+    if (critical || warning) {
+      audioManager.setState?.('tension');
+    } else {
+      audioManager.setState?.('exploration');
+    }
+
     timerEl.classList.toggle('urgent', critical);
 
     if (urgencyEl) {

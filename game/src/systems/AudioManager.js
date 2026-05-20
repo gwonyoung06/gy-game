@@ -627,9 +627,10 @@ export class AudioManager {
       osc.connect(filt); filt.connect(env); env.connect(this._ambGain);
       osc.start(now); osc.stop(now + 0.15);
 
-      setTimeout(play, 1200 + Math.random() * 3000);
+      // _ambNodes에 등록해 _stopAllAmbient()로 취소 가능하게 함 (바이옴 변경 시 누수 방지)
+      this._ambNodes.push({ _birdTimeout: setTimeout(play, 1200 + Math.random() * 3000) });
     };
-    setTimeout(play, 2000);
+    this._ambNodes.push({ _birdTimeout: setTimeout(play, 2000) });
   }
 
   /** 화이트 노이즈 버퍼 생성 */
