@@ -695,7 +695,7 @@ export class Game {
     const noiseLevel = save.itemLevels['noise_reduce'] || 0;
     if (noiseItem && noiseLevel > 0) {
       const mult = Math.pow(noiseItem.effect.noiseReduce, noiseLevel);
-      this.waves.creatures.forEach(c => { c.profile.fleeRadius *= mult; });
+      this.waves.creatures.forEach(c => { if (c.profile) c.profile.fleeRadius *= mult; });
     }
 
     const minimapCanvas = document.getElementById('minimap-canvas');
@@ -2021,8 +2021,14 @@ export class Game {
       if (effect.jumpPower)    this.player.jumpPower     = (this.player.jumpPower  || 1) * Math.pow(effect.jumpPower,  effectiveLevel);
       if (effect.viewRange && this.scene?.fog) {
         const mult = Math.pow(effect.viewRange, effectiveLevel);
-        this.scene.fog.near *= mult;
-        this.scene.fog.far  *= mult;
+        if (this.scene.fog.isFogExp2) {
+          // FogExp2: density 낮출수록 멀리 보임 (World.js 기본값)
+          this.scene.fog.density /= mult;
+        } else {
+          // FogLinear: near/far 확장
+          this.scene.fog.near *= mult;
+          this.scene.fog.far  *= mult;
+        }
       }
     }
     // noise_reduce는 WaveSystem creatures에 적용해야 하므로
