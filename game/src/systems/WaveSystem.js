@@ -101,8 +101,9 @@ export class WaveSystem {
       this._emitSpawnRing(boss.mesh.position, true); // 보스 링 (빨간색, 크고 오래)
     }
 
-    if (this.onWaveComplete) {
-      this.onWaveComplete(wave, this.currentWave === 1 ? null : wave);
+    // 웨이브 1 초기 스폰은 3-2-1-GO! 카운트다운이 담당 → 불필요한 sfxWaveComplete 호출 방지
+    if (this.onWaveComplete && wave > 1) {
+      this.onWaveComplete(wave, wave); // isCountdown=wave(truthy) → 배너만 표시, 음향 미재생
     }
   }
 

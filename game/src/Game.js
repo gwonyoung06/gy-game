@@ -1248,7 +1248,7 @@ export class Game {
     const nickInput = document.getElementById('nickname-input');
     const btn       = document.getElementById('btn-register');
     if (!nickInput || !btn) return;
-    const nick = nickInput.value.trim();
+    const nick = nickInput.value.trim().slice(0, 16); // 최대 16자
     if (!nick) { nickInput.placeholder = '닉네임을 입력해주세요'; nickInput.focus(); return; }
 
     btn.disabled = true;
@@ -1610,6 +1610,8 @@ export class Game {
           this.waves.comboTimer = 0;
           if (this.waves.combo > this.waves.maxCombo) this.waves.maxCombo = this.waves.combo;
           this._applySkillCapture(c);
+          // 보스 포획 이펙트·콤보 글로우 — 일반 포획과 동일하게 처리
+          this._onCapture({ creature: c, combo: this.waves.combo });
           caught++;
         });
         if (caught > 0) this.hud.showWaveMessage(`🌀 회오리! ${caught}마리 포획!`);
@@ -1628,6 +1630,8 @@ export class Game {
             this.waves.comboTimer = 0;
             if (this.waves.combo > this.waves.maxCombo) this.waves.maxCombo = this.waves.combo;
             this._applySkillCapture(c);
+            // 보스 포획 이펙트·콤보 글로우 — 일반 포획과 동일하게 처리
+            this._onCapture({ creature: c, combo: this.waves.combo });
             caught++;
           }
         });
@@ -1636,10 +1640,14 @@ export class Game {
       }
       case 'skill_slow': {
         if (!this.waves) break;
-        this.waves.creatures.forEach(c => { if (c.alive) c.config.speed *= 0.5; });
+        // 스냅샷: 슬로우 적용 시점의 생물 목록만 저장 → undo 시 이후 스폰된 생물에 영향 없음
+        const _slowSnap = [];
+        this.waves.creatures.forEach(c => {
+          if (c.alive && !c.captured) { c.config.speed *= 0.5; _slowSnap.push(c); }
+        });
         clearTimeout(this._skillSlowTimer);
         this._skillSlowTimer = setTimeout(() => {
-          if (this.waves) this.waves.creatures.forEach(c => { if (c.alive) c.config.speed *= 2; });
+          _slowSnap.forEach(c => { if (c.alive) c.config.speed *= 2; }); // 원래 속도 복구
           this._skillSlowTimer = null;
         }, 5000);
         this.hud.showWaveMessage('⏱️ 슬로우 타임!');
