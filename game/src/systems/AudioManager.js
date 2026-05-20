@@ -862,22 +862,6 @@ export class AudioManager {
     osc.start(now); osc.stop(now + 0.15);
   }
 
-  /** 포획 실패 — 짧은 하강 글리산도 (400→150Hz, 0.15초) */
-  sfxMiss() {
-    if (!this._ctx) return;
-    const ctx = this._ctx;
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const env = ctx.createGain();
-    osc.type  = 'sine';
-    osc.frequency.setValueAtTime(400, now);
-    osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
-    env.gain.setValueAtTime(0.25, now);
-    env.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-    osc.connect(env); env.connect(this._sfxGain);
-    osc.start(now); osc.stop(now + 0.22);
-  }
-
   /** 업그레이드 카드 선택 — 밝은 상승 아르페지오 (C4→E4→G4→C5) */
   sfxLevelUp() {
     if (!this._ctx) return;

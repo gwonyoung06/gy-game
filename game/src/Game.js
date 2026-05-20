@@ -1579,8 +1579,8 @@ export class Game {
       this.waves.combo >= 5  ? 1.5 :
       this.waves.combo >= 3  ? 1.2 : 1.0
     ) : 1.0;
-    const coins = Math.floor(creature.config.coins * diff.coinMult * weatherMult * timeMult);
-    const score = Math.floor(creature.config.score * diff.scoreMult * comboMult);
+    const coins = Math.floor(creature.config.coins * diff.coinMult * weatherMult * timeMult * (this._coinMult  ?? 1));
+    const score = Math.floor(creature.config.score * diff.scoreMult * comboMult            * (this._scoreMult ?? 1));
     this.sessionScore += score;
     this.sessionCoins += coins;
     this.totalCoins = addCoins(coins);
