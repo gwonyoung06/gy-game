@@ -13,10 +13,13 @@
  */
 
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 
 class AssetLoader {
   constructor() {
     this._loader = new GLTFLoader();
+    // EXT_meshopt_compression 지원 (gltf-transform optimize 결과물 로드용)
+    this._loader.setMeshoptDecoder(MeshoptDecoder);
     /** @type {Map<string, Promise<import('three/examples/jsm/loaders/GLTFLoader.js').GLTF | null>>} */
     this._cache  = new Map();
   }
