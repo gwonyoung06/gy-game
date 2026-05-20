@@ -1662,20 +1662,7 @@ body {
   50%       { transform: scale(1.12); text-shadow: 0 0 24px rgba(255,50,50,0.9); }
 }
 
-/* ── 스테이지 클리어 컨페티 ── */
-.confetti-piece {
-  position: fixed;
-  top: -12px;
-  pointer-events: none;
-  z-index: 9999;
-  border-radius: 50%;
-  animation: confettiFall linear forwards;
-}
-@keyframes confettiFall {
-  0%   { transform: translateY(0) rotate(0deg) scale(1);   opacity: 1; }
-  80%  { opacity: 1; }
-  100% { transform: translateY(110vh) rotate(900deg) scale(0.6); opacity: 0; }
-}
+/* ── 스테이지 클리어 컨페티 (JS가 .confetti-p 클래스와 @keyframes confettiFall을 동적 주입) ── */
 
 /* ══════════════════════════════════════════════
    콤보 스트릭 어나운서
@@ -1930,7 +1917,6 @@ body {
   text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 0 24px rgba(255,255,255,0.2);
   letter-spacing: 1px;
 }
-.cnp-type { font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 1.5px; }
 @keyframes cnpIn {
   0%   { opacity: 0; transform: translate(-50%,-60%) scale(0.6); }
   60%  { opacity: 1; transform: translate(-50%,-50%) scale(1.06); }
@@ -2045,14 +2031,10 @@ body {
 }
 
 /* ══════════════════════════════════════════════
-   UI/UX 개선 — 업그레이드 카드 hover & selected 강화
+   UI/UX 개선 — 업그레이드 카드 hover 강화 (box-shadow 오버라이드)
 ══════════════════════════════════════════════ */
 .upgrade-card:hover {
   box-shadow: 0 0 24px rgba(78,205,196,0.6) !important;
-}
-.upgrade-card.selected {
-  border-color: #00ff88 !important;
-  box-shadow: 0 0 28px rgba(0,255,136,0.55) !important;
 }
 
 /* ══════════════════════════════════════════════
