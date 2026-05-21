@@ -2646,6 +2646,55 @@ export class Game {
   }
 
   // ── 크리처 도감 렌더링 ────────────────────────────────────────
+
+  // 타입별 이모지
+  static _DEX_EMOJI = {
+    dragonfly:'🦗',butterfly:'🦋',bee:'🐝',ladybug:'🐞',cicada:'🦟',
+    beetle:'🪲',grasshopper:'🦗',mantis:'🦗',cricket:'🦗',stag:'🪲',
+    worm:'🪱',mole:'🐭',snail:'🐌',pill_bug:'🐛',centipede:'🐛',
+    frog:'🐸',tadpole:'🫧',water_strider:'🦟',water_beetle:'🪲',larvae:'🐛',
+    firefly:'✨',leech:'🪱',crayfish:'🦞',salamander:'🦎',giant_beetle:'👑',
+    crucian:'🐟',loach:'🐟',catfish:'🐟',soft_turtle:'🐢',heron:'🦢',
+    crab:'🦀',conch:'🐚',abalone:'🐚',octopus:'🐙',starfish:'⭐',
+    shark:'🦈',puffer:'🐡',jellyfish:'🎐',ray:'🐟',whale:'🐋',giant_shark:'👑',
+    parrot:'🦜',chameleon:'🦎',sloth:'🦥',iguana:'🦎',spider:'🕷️',
+    zebra:'🦓',ostrich:'🦤',hyena:'🐺',croc:'🐊',cheetah:'🐆',
+    snow_leopard:'🐆',polar_bear:'🐻',penguin:'🐧',reindeer:'🦌',mammoth:'🦣',
+    gorilla:'🦍',cobra:'🐍',jaguar:'🐆',elephant:'🐘',rhino:'🦏',
+    pteranodon:'🦕',stegosaurus:'🦕',triceratops:'🦕',brachiosaurus:'🦕',raptor:'🦖',
+    t_rex:'🦖',spinosaurus:'🦖',ankylosaurus:'🦕',parasaurolophus:'🦕',giganotosaurus:'🦖',
+    drone:'🤖',alien:'👽',debris:'🛸',ufo:'👾',
+  };
+
+  // 타입별 설명
+  static _DEX_DESC = {
+    dragonfly:'빠른 날갯짓으로 공원을 누비는 하늘의 사냥꾼',butterfly:'꽃밭을 수놓는 아름다운 날개무늬',bee:'부지런히 꿀을 모으는 공원의 일꾼',ladybug:'붉은 점무늬로 행운을 전하는 작은 딱정벌레',cicada:'한여름 매미 소리의 주인공',
+    beetle:'초록 광택 날개를 자랑하는 꽃밭의 보석',grasshopper:'높이 뛰어오르는 메뚜기떼',mantis:'전광석화 앞발 공격의 포식자',cricket:'가을밤을 울리는 귀뚜라미',stag:'뿔 모양 큰 턱을 가진 왕의 딱정벌레',
+    worm:'비 온 뒤 땅 위로 올라오는 분홍빛 지렁이',mole:'땅굴 전문가 두더지',snail:'뿔 두 개 달린 느림보 달팽이',pill_bug:'위험하면 공처럼 구르는 공벌레',centipede:'수십 개의 다리로 재빠르게 기어다니는 지네',
+    frog:'점프 하나로 연못을 지배하는 개구리',tadpole:'개구리가 되기 전의 귀여운 올챙이',water_strider:'물 위를 걷는 기적의 소금쟁이',water_beetle:'물속을 자유롭게 헤엄치는 물방개',larvae:'무언가로 변태할 신비로운 유충',
+    firefly:'밤하늘을 수놓는 빛의 요정',leech:'물속에서 조용히 기다리는 거머리',crayfish:'집게발로 모든 것을 잡는 민물 가재',salamander:'촉촉한 피부를 가진 양서류의 신사',giant_beetle:'거대한 뿔로 모든 것을 제압하는 전설적 존재',
+    crucian:'강가의 낚시꾼이 가장 사랑하는 붕어',loach:'진흙 속을 빠르게 헤집는 미꾸라지',catfish:'수염으로 먹이를 탐지하는 메기',soft_turtle:'딱딱하지 않은 껍데기가 특징인 자라',heron:'물가의 우아한 사냥꾼 왜가리',
+    crab:'옆으로 걷는 게의 집게발 위협',conch:'아름다운 소용돌이 껍데기 소라',abalone:'바위에 단단히 붙은 해산물의 왕 전복',octopus:'8개의 팔로 모든 것을 잡는 문어',starfish:'바다 밑바닥을 천천히 기어다니는 불가사리',
+    shark:'바다의 최상위 포식자 상어',puffer:'위협받으면 몸을 부풀리는 복어',jellyfish:'바닷속을 우아하게 떠다니는 해파리',ray:'납작한 몸체로 해저를 미끄러지는 가오리',whale:'바다 최대 생물의 웅장한 고래',giant_shark:'전설 속의 거대 상어',
+    parrot:'형형색색 깃털과 쉴 새 없는 수다쟁이 앵무새',chameleon:'주변 색에 맞춰 변하는 카멜레온',sloth:'하루 20시간 자는 느림보 나무늘보',iguana:'울창한 나무 위의 도마뱀 이구아나',spider:'거대한 독니를 가진 타란툴라',
+    zebra:'흑백 줄무늬의 사바나 주민 얼룩말',ostrich:'세계에서 가장 빠른 새 타조',hyena:'무리 지어 사냥하는 영리한 하이에나',croc:'강과 육지를 오가는 최강 포식자 악어',cheetah:'세상에서 가장 빠른 육상 동물 치타',
+    snow_leopard:'설산의 유령 눈표범',polar_bear:'얼음 위의 최강자 북극곰',penguin:'뒤뚱뒤뚱 걷지만 수영은 최고 펭귄',reindeer:'뿔 달린 순록은 겨울의 상징',mammoth:'빙하기를 살아남은 털투성이 매머드',
+    gorilla:'정글의 왕 고릴라',cobra:'목을 펼쳐 위협하는 코브라',jaguar:'빠르고 강한 정글의 포식자 재규어',elephant:'기억력이 뛰어난 거대한 코끼리',rhino:'두꺼운 피부와 강력한 뿔의 코뿔소',
+    pteranodon:'하늘을 지배했던 익룡 프테라노돈',stegosaurus:'등에 판이 솟은 스테고사우루스',triceratops:'세 개의 뿔로 방어하는 트리케라톱스',brachiosaurus:'긴 목으로 나무 꼭대기를 먹는 브라키오사우루스',raptor:'무리 지어 사냥하는 영리한 랩터',
+    t_rex:'공룡의 제왕 티라노사우루스',spinosaurus:'척추 지느러미를 가진 거대 포식자 스피노사우루스',ankylosaurus:'꼬리 철퇴로 방어하는 안킬로사우루스',parasaurolophus:'독특한 볏을 가진 초식공룡',giganotosaurus:'T-Rex보다 큰 기가노토사우루스',
+    drone:'미지의 행성을 탐사하는 드론',alien:'우주에서 온 신비로운 외계 생명체',debris:'우주선이 충돌하며 만들어진 파편',ufo:'우주를 떠돌며 지구를 관찰하는 UFO',
+  };
+
+  // 등급 계산 (coins 기반)
+  static _getDexRarity(coins, isBoss) {
+    if (isBoss)       return { label:'BOSS', stars:'👑', color:'#ffd700', bg:'rgba(255,180,0,0.18)' };
+    if (coins > 10000)return { label:'전설',  stars:'★★★★★', color:'#ff9900', bg:'rgba(255,153,0,0.15)' };
+    if (coins > 2000) return { label:'영웅',  stars:'★★★★',  color:'#cc66ff', bg:'rgba(204,102,255,0.13)' };
+    if (coins > 500)  return { label:'레어',  stars:'★★★',   color:'#4499ff', bg:'rgba(68,153,255,0.13)' };
+    if (coins > 100)  return { label:'고급',  stars:'★★',    color:'#44cc88', bg:'rgba(68,204,136,0.11)' };
+    return             { label:'일반',  stars:'★',     color:'#888888', bg:'rgba(255,255,255,0.05)' };
+  }
+
   _renderDex() {
     const content  = document.getElementById('dex-content');
     const countEl  = document.getElementById('dex-count');
@@ -2653,73 +2702,204 @@ export class Game {
     const fillEl   = document.getElementById('dex-bar-fill');
     if (!content) return;
 
-    const save = loadSave();
+    const save     = loadSave();
     const captured = save.capturedTypes || {};
+    const EMOJI    = Game._DEX_EMOJI;
+    const DESC     = Game._DEX_DESC;
 
-    // 전 스테이지 크리처를 type 기준으로 중복 제거 (보스 포함)
-    const seen = new Map(); // type → { name, color, coins, stageIcon, isBoss }
+    // ── 전체 크리처 목록 빌드 (type 중복 제거) ───────────────
+    const allCreatures = [];   // { type, name, color, coins, score, speed, stageId, stageIcon, stageName, isBoss }
     STAGES.forEach(stage => {
       stage.creatures.forEach(c => {
-        if (!seen.has(c.type)) seen.set(c.type, { ...c, stageIcon: stage.icon });
+        if (!allCreatures.find(x => x.type === c.type)) {
+          allCreatures.push({ ...c, stageId: stage.id, stageIcon: stage.icon, stageName: stage.name, isBoss: false });
+        }
       });
-      if (stage.miniBoss && !seen.has(stage.miniBoss.type)) {
-        seen.set(stage.miniBoss.type, { ...stage.miniBoss, stageIcon: stage.icon, isBoss: true });
+      if (stage.miniBoss) {
+        const b = stage.miniBoss;
+        if (!allCreatures.find(x => x.type === b.type)) {
+          allCreatures.push({ ...b, stageId: stage.id, stageIcon: stage.icon, stageName: stage.name, isBoss: true });
+        }
       }
     });
 
-    const total = seen.size;
-    const discoveredCount = [...seen.keys()].filter(t => (captured[t] || 0) > 0).length;
+    const total          = allCreatures.length;
+    const discoveredCount = allCreatures.filter(c => (captured[c.type] || 0) > 0).length;
+    const pct            = total > 0 ? Math.round(discoveredCount / total * 100) : 0;
 
     if (countEl) countEl.textContent = `${discoveredCount} / ${total}`;
-    const pct = total > 0 ? Math.round(discoveredCount / total * 100) : 0;
-    if (pctEl)  pctEl.textContent  = `${pct}%`;
-    if (fillEl) fillEl.style.width = `${pct}%`;
+    if (pctEl)   pctEl.textContent   = `${pct}%`;
+    if (fillEl)  fillEl.style.width  = `${pct}%`;
 
+    // ── 상태 (필터/정렬) ────────────────────────────────────
+    if (!this._dexFilter)     this._dexFilter     = 0;      // 0=전체, n=stageId
+    if (!this._dexSortMode)   this._dexSortMode   = 'stage';
+    if (!this._dexCaughtOnly) this._dexCaughtOnly = false;
+
+    // ── 컨테이너 재빌드 ─────────────────────────────────────
     content.innerHTML = '';
+
+    // ── 필터 탭 ──────────────────────────────────────────────
+    const filterRow = document.createElement('div');
+    filterRow.className = 'dex-filter-row';
+    const filterBtns = [
+      { id: 0, label: '전체' },
+      ...STAGES.map(s => ({ id: s.id, label: `${s.icon}${s.id}` })),
+    ];
+    filterBtns.forEach(fb => {
+      const btn = document.createElement('button');
+      btn.className = 'dex-filter-btn' + (this._dexFilter === fb.id ? ' active' : '');
+      btn.textContent = fb.label;
+      btn.addEventListener('click', () => {
+        this._dexFilter = fb.id;
+        this._renderDex();
+      });
+      filterRow.appendChild(btn);
+    });
+    content.appendChild(filterRow);
+
+    // ── 정렬 / 포획 토글 ─────────────────────────────────────
+    const sortRow = document.createElement('div');
+    sortRow.className = 'dex-sort-row';
+    const sorts = [{ v:'stage', t:'스테이지순' }, { v:'rarity', t:'등급순' }, { v:'name', t:'이름순' }];
+    sorts.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'dex-sort-btn' + (this._dexSortMode === s.v ? ' active' : '');
+      btn.textContent = s.t;
+      btn.addEventListener('click', () => { this._dexSortMode = s.v; this._renderDex(); });
+      sortRow.appendChild(btn);
+    });
+    const caughtBtn = document.createElement('button');
+    caughtBtn.className = 'dex-sort-btn dex-caught-toggle' + (this._dexCaughtOnly ? ' active' : '');
+    caughtBtn.textContent = this._dexCaughtOnly ? '✅ 포획만' : '🔍 포획만';
+    caughtBtn.addEventListener('click', () => { this._dexCaughtOnly = !this._dexCaughtOnly; this._renderDex(); });
+    sortRow.appendChild(caughtBtn);
+    content.appendChild(sortRow);
+
+    // ── 필터링 & 정렬 ────────────────────────────────────────
+    let list = allCreatures.filter(c => {
+      if (this._dexFilter > 0 && c.stageId !== this._dexFilter) return false;
+      if (this._dexCaughtOnly && !(captured[c.type] > 0)) return false;
+      return true;
+    });
+    if (this._dexSortMode === 'rarity') {
+      list = [...list].sort((a, b) => b.coins - a.coins);
+    } else if (this._dexSortMode === 'name') {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    } else {
+      list = [...list].sort((a, b) => a.stageId - b.stageId);
+    }
+
+    // ── 카드 그리드 ───────────────────────────────────────────
     const grid = document.createElement('div');
     grid.className = 'dex-grid';
 
-    seen.forEach((c, type) => {
-      const cnt   = captured[type] || 0;
-      const found = cnt > 0;
-      const clr = typeof c.color === 'number'
-        ? `#${c.color.toString(16).padStart(6, '0')}`
-        : (c.color || '#888');
+    list.forEach(c => {
+      const cnt    = captured[c.type] || 0;
+      const found  = cnt > 0;
+      const rarity = Game._getDexRarity(c.coins, c.isBoss);
+      const emoji  = EMOJI[c.type] || '❓';
+      const clr    = typeof c.color === 'number'
+        ? `#${c.color.toString(16).padStart(6, '0')}` : (c.color || '#888');
 
       const card = document.createElement('div');
       card.className = `dex-card${found ? ' dex-caught' : ' dex-unknown'}`;
+      card.style.background = found ? rarity.bg : 'rgba(255,255,255,0.03)';
+      card.style.borderColor = found ? rarity.color + '60' : 'rgba(255,255,255,0.08)';
 
+      // 이모지 아바타
       const avatar = document.createElement('div');
-      avatar.className = found ? 'dex-avatar' : 'dex-avatar dex-avatar-unknown';
-      avatar.style.borderColor = found ? clr : 'rgba(255,255,255,0.12)';
-      avatar.style.color = found ? clr : 'rgba(255,255,255,0.25)';
-      avatar.textContent = found ? '' : '?';
+      avatar.className = 'dex-avatar';
+      avatar.style.borderColor = found ? rarity.color : 'rgba(255,255,255,0.10)';
       if (found) {
-        const dot = document.createElement('div');
-        dot.style.cssText = `width:28px;height:28px;border-radius:50%;background:${clr};opacity:0.85;box-shadow:0 0 10px ${clr}66;`;
-        avatar.appendChild(dot);
+        avatar.style.boxShadow  = `0 0 12px ${rarity.color}44`;
+        avatar.style.background = `radial-gradient(circle, ${rarity.color}18 0%, transparent 70%)`;
       }
-      if (c.isBoss && found) {
-        const crown = document.createElement('div');
-        crown.className = 'dex-boss-crown';
-        crown.textContent = '\u{1F451}';
-        avatar.appendChild(crown);
+      avatar.textContent = found ? emoji : '?';
+      if (!found) avatar.style.cssText += ';color:rgba(255,255,255,0.2);font-size:1.2rem;';
+
+      // 포획 수 배지
+      if (found && cnt > 1) {
+        const badge = document.createElement('div');
+        badge.className = 'dex-count-badge';
+        badge.textContent = `×${cnt}`;
+        avatar.appendChild(badge);
       }
 
+      // 이름
       const nameEl = document.createElement('div');
       nameEl.className = `dex-name${found ? '' : ' dex-name-unknown'}`;
       nameEl.textContent = found ? c.name : '???';
 
-      const metaEl = document.createElement('div');
-      metaEl.className = 'dex-meta';
-      if (found) {
-        metaEl.innerHTML = `${c.stageIcon} ×${cnt}<br><span style="color:rgba(255,215,0,0.6)">💰${c.coins}</span>`;
-      }
+      // 등급
+      const rarityEl = document.createElement('div');
+      rarityEl.className = 'dex-rarity';
+      rarityEl.style.color = found ? rarity.color : 'rgba(255,255,255,0.2)';
+      rarityEl.textContent = found ? rarity.stars : '·';
 
-      card.append(avatar, nameEl, metaEl);
+      card.append(avatar, nameEl, rarityEl);
       grid.appendChild(card);
+
+      // 클릭 → 상세 모달
+      if (found) {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => this._showDexModal(c, cnt, rarity, emoji, DESC[c.type] || ''));
+      }
     });
+
+    // 빈 결과
+    if (list.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.35);padding:40px 0;font-size:0.95rem;';
+      empty.textContent = this._dexCaughtOnly ? '아직 포획한 생물이 없습니다' : '생물이 없습니다';
+      grid.appendChild(empty);
+    }
+
     content.appendChild(grid);
+  }
+
+  // ── 도감 상세 모달 ─────────────────────────────────────────────
+  _showDexModal(c, cnt, rarity, emoji, desc) {
+    document.getElementById('_dexModal')?.remove();
+
+    const clr = typeof c.color === 'number'
+      ? `#${c.color.toString(16).padStart(6, '0')}` : (c.color || '#888');
+
+    const overlay = document.createElement('div');
+    overlay.id = '_dexModal';
+    overlay.style.cssText = `
+      position:fixed;inset:0;z-index:900;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(0,0,0,0.72);
+    `;
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    const card = document.createElement('div');
+    card.style.cssText = `
+      background:linear-gradient(145deg,rgba(18,24,36,0.98),rgba(10,16,28,0.98));
+      border:1.5px solid ${rarity.color}55;
+      border-radius:20px;padding:32px 28px 24px;
+      max-width:340px;width:90%;
+      box-shadow:0 8px 40px ${rarity.color}30, 0 0 0 1px rgba(255,255,255,0.06);
+      position:relative;text-align:center;
+    `;
+
+    card.innerHTML = `
+      <button style="position:absolute;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.3rem;cursor:pointer;line-height:1;" onclick="this.closest('#_dexModal').remove()">✕</button>
+      <div style="font-size:4rem;line-height:1;margin-bottom:10px;filter:drop-shadow(0 0 16px ${clr}88);">${emoji}</div>
+      <div style="font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:4px;">${c.name}</div>
+      <div style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:10px;">${c.stageIcon} ${c.stageName} (ST.${c.stageId})${c.isBoss ? ' &nbsp;👑 BOSS' : ''}</div>
+      <div style="font-size:1.1rem;color:${rarity.color};font-weight:700;margin-bottom:14px;letter-spacing:0.05em;">${rarity.stars} ${rarity.label}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+        <div class="dex-stat-box"><div class="dex-stat-val">💰${c.coins.toLocaleString()}</div><div class="dex-stat-lbl">코인</div></div>
+        <div class="dex-stat-box"><div class="dex-stat-val">⚡${c.speed}</div><div class="dex-stat-lbl">속도</div></div>
+        <div class="dex-stat-box"><div class="dex-stat-val" style="color:#ffd700">×${cnt}</div><div class="dex-stat-lbl">포획 횟수</div></div>
+      </div>
+      <div style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.55;background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 12px;">${desc || '신비로운 생물'}</div>
+    `;
+
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
   }
 
   // ── 스마트 조준선 ──────────────────────────────────────────────
