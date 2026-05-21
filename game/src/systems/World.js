@@ -380,8 +380,14 @@ export class World {
     else if (id === 14) this._buildDinoIsland();
     else               this._buildSpace();
 
-    if (this.settings.weather === 'rain') this._buildRain();
-    else if (id === 11)                   this._buildSnow();
+    // ── 날씨 파티클 ───────────────────────────────────────────────
+    if (this.settings.weather === 'rain')       this._buildRain();
+    else if (this.settings.weather === 'snow')  this._buildSnow();
+    else if (id === 11)                         this._buildSnow();
+
+    if (this.settings.weather === 'fog')        this._buildFogWisps();
+    if (this.settings.weather === 'sunny' || (!this.settings.weather || this.settings.weather === 'sunny'))
+                                                this._buildDustMotes();
   }
 
   // ── horizon 색: 대기 산란 — 하늘색을 유지하면서 살짝 밝게
@@ -4105,65 +4111,140 @@ export class World {
 
   // ── 날씨 ──────────────────────────────────────────────────────
   _buildRain() {
-    const count  = 6000;
-    const pos    = new Float32Array(count * 3);
-    // 개별 속도 변이 (빗줄기마다 다른 낙하 속도)
+    const count = 7000;
+    const pos   = new Float32Array(count * 3);
     this._rainSpeeds = new Float32Array(count);
+    this._rainPhases = new Float32Array(count); // 바람 흔들림 위상
     for (let i = 0; i < count; i++) {
-      pos[i * 3]     = (this._rng() - 0.5) * 220;
-      pos[i * 3 + 1] = this._rng() * 65;
-      pos[i * 3 + 2] = (this._rng() - 0.5) * 220;
-      this._rainSpeeds[i] = 22 + this._rng() * 16; // 22~38 m/s 랜덤
+      pos[i*3]   = (this._rng()-0.5) * 240;
+      pos[i*3+1] = this._rng() * 70;
+      pos[i*3+2] = (this._rng()-0.5) * 240;
+      this._rainSpeeds[i] = 24 + this._rng() * 18;   // 24~42 m/s
+      this._rainPhases[i] = this._rng() * Math.PI * 2;
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     this.rain = new THREE.Points(geo, new THREE.PointsMaterial({
-      color: 0x9ab0d8, size: 0.18, transparent: true, opacity: 0.55,
+      color: 0xaac8e8, size: 0.2, transparent: true, opacity: 0.6, depthWrite: false,
     }));
     this.scene.add(this.rain);
     this.objects.push(this.rain);
 
-    // 번개 주기 타이머
-    this._lightningTimer = 4 + this._rng() * 6; // 4~10초마다 첫 번개
-    this._lightningFlash = null; // 번개 조명 노드
+    // ── 낙수 파문 (지면 튀기는 물방울) ──────────────────────────
+    this._splashPool = [];
+    const splashMat = new THREE.MeshBasicMaterial({
+      color: 0xaaccee, transparent: true, opacity: 0.45,
+      side: THREE.DoubleSide, depthWrite: false,
+    });
+    for (let i = 0; i < 30; i++) {
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.05, 0.22, 10),
+        splashMat.clone()
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(
+        (this._rng()-0.5)*200, 0.05, (this._rng()-0.5)*200
+      );
+      ring.visible = true;
+      this.scene.add(ring);
+      this.objects.push(ring);
+      this._splashPool.push({ mesh: ring, t: this._rng(), maxR: 0.4 + this._rng()*0.5 });
+    }
+
+    // 번개 타이머
+    this._lightningTimer = 3 + this._rng() * 5;
+    this._rainTime = 0;
   }
 
   _buildSnow() {
-    const count = 2000;
+    const count = 2800;
     const pos   = new Float32Array(count * 3);
+    this._snowPhases = new Float32Array(count);
+    this._snowSpeeds = new Float32Array(count);
     for (let i = 0; i < count; i++) {
-      pos[i * 3]     = (this._rng() - 0.5) * 200;
-      pos[i * 3 + 1] = this._rng() * 40;
-      pos[i * 3 + 2] = (this._rng() - 0.5) * 200;
+      pos[i*3]   = (this._rng()-0.5) * 220;
+      pos[i*3+1] = this._rng() * 45;
+      pos[i*3+2] = (this._rng()-0.5) * 220;
+      this._snowPhases[i] = this._rng() * Math.PI * 2;
+      this._snowSpeeds[i] = 1.8 + this._rng() * 2.4; // 낙하 속도 개별 변이
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    this.snow = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.22 }));
+    this.snow = new THREE.Points(geo, new THREE.PointsMaterial({
+      color: 0xeef6ff, size: 0.28, transparent: true, opacity: 0.88, depthWrite: false,
+    }));
     this.scene.add(this.snow);
     this.objects.push(this.snow);
+    this._snowTime = 0;
   }
 
-  /** 번개 플래시: 강한 흰색 PointLight + HUD 화면 플래시 */
+  /** 안개 — 지면 근처 부유하는 위스프 파티클 */
+  _buildFogWisps() {
+    const count = 160;
+    const pos = new Float32Array(count * 3);
+    this._fogWispVels = new Float32Array(count * 2); // xz velocity
+    for (let i = 0; i < count; i++) {
+      pos[i*3]   = (this._rng()-0.5) * 220;
+      pos[i*3+1] = 0.5 + this._rng() * 9; // 지면 ~ 9m
+      pos[i*3+2] = (this._rng()-0.5) * 220;
+      this._fogWispVels[i*2]   = (this._rng()-0.5) * 1.2;
+      this._fogWispVels[i*2+1] = (this._rng()-0.5) * 1.2;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    this.fogWisps = new THREE.Points(geo, new THREE.PointsMaterial({
+      color: 0xd0dde8, size: 14, sizeAttenuation: true,
+      transparent: true, opacity: 0.13, depthWrite: false,
+    }));
+    this.fogWisps.renderOrder = 0;
+    this.scene.add(this.fogWisps);
+    this.objects.push(this.fogWisps);
+  }
+
+  /** 맑음 — 빛 속 부유 먼지 입자 */
+  _buildDustMotes() {
+    const count = 1400;
+    const pos = new Float32Array(count * 3);
+    this._dustVels = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      pos[i*3]   = (this._rng()-0.5) * 180;
+      pos[i*3+1] = 0.5 + this._rng() * 28;
+      pos[i*3+2] = (this._rng()-0.5) * 180;
+      this._dustVels[i*3]   = (this._rng()-0.5) * 0.4;
+      this._dustVels[i*3+1] = (this._rng()-0.5) * 0.08; // 약한 상하 부유
+      this._dustVels[i*3+2] = (this._rng()-0.5) * 0.4;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    this.dustMotes = new THREE.Points(geo, new THREE.PointsMaterial({
+      color: 0xffe8b0, size: 0.07, sizeAttenuation: true,
+      transparent: true, opacity: 0.55, depthWrite: false,
+    }));
+    this.scene.add(this.dustMotes);
+    this.objects.push(this.dustMotes);
+  }
+
+  /** 번개 플래시: 강한 흰색 PointLight + HUD 화면 플래시 + 천둥 사운드 */
   _triggerLightning() {
     if (!this.scene) return;
     // 3D 번개 조명 (하늘 위 랜덤 위치)
-    const light = new THREE.PointLight(0xddeeff, 80, 800);
+    const light = new THREE.PointLight(0xddeeff, 120, 1000);
     light.position.set(
-      (Math.random() - 0.5) * 200,
-      120 + Math.random() * 80,
-      (Math.random() - 0.5) * 200
+      (Math.random()-0.5)*220, 130 + Math.random()*80, (Math.random()-0.5)*220
     );
     this.scene.add(light);
-    // 2단 플래시: 밝게 → 잠깐 어둡게 → 다시 밝게 → 소멸
-    setTimeout(() => { light.intensity = 20;  }, 60);
-    setTimeout(() => { light.intensity = 60;  }, 100);
-    setTimeout(() => { light.intensity = 0; this.scene?.remove(light); light.dispose?.(); }, 220);
+    // 3단 플래시: 밝게 → 어둡게 → 다시 밝게 → 소멸
+    setTimeout(() => { light.intensity = 30;  }, 55);
+    setTimeout(() => { light.intensity = 90;  }, 95);
+    setTimeout(() => { light.intensity = 15;  }, 145);
+    setTimeout(() => { light.intensity = 0; this.scene?.remove(light); light.dispose?.(); }, 280);
 
-    // 화면 HUD 플래시 (CSS)
+    // 화면 플래시 (2단)
     const flash = document.createElement('div');
-    flash.style.cssText = 'position:fixed;inset:0;background:rgba(200,220,255,0.22);pointer-events:none;z-index:25;';
+    flash.style.cssText = 'position:fixed;inset:0;background:rgba(200,225,255,0.28);pointer-events:none;z-index:25;transition:opacity 0.18s;';
     document.body.appendChild(flash);
-    setTimeout(() => flash.remove(), 180);
+    setTimeout(() => { flash.style.opacity = '0.6'; }, 55);
+    setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 200); }, 170);
   }
 
   // ── 게임 루프 업데이트 ────────────────────────────────────────
@@ -4172,19 +4253,19 @@ export class World {
     if (this.rain) {
       const pos    = this.rain.geometry.attributes.position;
       const speeds = this._rainSpeeds;
-      const WIND_X = -6;   // 바람 방향 (x축 드리프트)
-      const WIND_Z =  3;
+      const WIND_X = -7;   // 바람 방향
+      const WIND_Z =  3.5;
       const n = pos.count;
       for (let i = 0; i < n; i++) {
-        const spd = speeds ? speeds[i] : 28;
+        const spd = speeds ? speeds[i] : 30;
         let y = pos.getY(i) - spd * delta;
         let x = pos.getX(i) + WIND_X * delta;
         let z = pos.getZ(i) + WIND_Z * delta;
-        if (y < 0)    { y = 65; }
-        if (x < -110) { x = 110; }
-        if (x >  110) { x = -110; }
-        if (z < -110) { z = 110; }
-        if (z >  110) { z = -110; }
+        if (y < 0)    { y = 70; }
+        if (x < -120) { x = 120; }
+        if (x >  120) { x = -120; }
+        if (z < -120) { z = 120; }
+        if (z >  120) { z = -120; }
         pos.setXYZ(i, x, y, z);
       }
       pos.needsUpdate = true;
@@ -4194,20 +4275,76 @@ export class World {
         this._lightningTimer -= delta;
         if (this._lightningTimer <= 0) {
           this._triggerLightning();
-          this._lightningTimer = 6 + this._rng() * 10; // 6~16초 후 다음 번개
+          this._lightningTimer = 5 + this._rng() * 9; // 5~14초 후 다음 번개
+        }
+      }
+
+      // ── 낙수 파문 (튀기는 물방울 링) ──────────────────────
+      if (this._splashPool) {
+        this._rainTime = (this._rainTime ?? 0) + delta;
+        for (const sp of this._splashPool) {
+          sp.t += delta * (0.6 + Math.random() * 0.4);
+          if (sp.t > 1.0) {
+            // 리스폰
+            sp.t = 0;
+            sp.mesh.position.set(
+              (Math.random()-0.5)*180,
+              this.getHeight((Math.random()-0.5)*180, (Math.random()-0.5)*180) + 0.05,
+              (Math.random()-0.5)*180
+            );
+            sp.maxR = 0.35 + Math.random() * 0.55;
+          }
+          const r = sp.t * sp.maxR;
+          sp.mesh.scale.setScalar(r * 5 + 0.1);
+          sp.mesh.material.opacity = (1 - sp.t) * 0.5;
         }
       }
     }
     // ── 눈 ─────────────────────────────────────────────────
     if (this.snow) {
       this._snowTime = (this._snowTime ?? 0) + delta;
-      const t = this._snowTime;
+      const t   = this._snowTime;
       const pos = this.snow.geometry.attributes.position;
+      const ph  = this._snowPhases;
+      const sp  = this._snowSpeeds;
       for (let i = 0; i < pos.count; i++) {
-        let y = pos.getY(i) - 3.5 * delta;
-        let x = pos.getX(i) + Math.sin(t * 0.8 + i * 0.37) * 0.05;
-        let z = pos.getZ(i) + Math.cos(t * 0.6 + i * 0.19) * 0.03;
-        if (y < 0) y = 40;
+        const phase = ph ? ph[i] : i * 0.37;
+        const spd   = sp ? sp[i] : 2.2;
+        let y = pos.getY(i) - spd * delta;
+        // 좌우 플러터 (위상 개별화)
+        let x = pos.getX(i) + Math.sin(t * 1.1 + phase)       * 0.06;
+        let z = pos.getZ(i) + Math.cos(t * 0.85 + phase*0.7)  * 0.05;
+        if (y < -0.5) { y = 44; }
+        if (x < -110) x = 110; if (x > 110) x = -110;
+        if (z < -110) z = 110; if (z > 110) z = -110;
+        pos.setXYZ(i, x, y, z);
+      }
+      pos.needsUpdate = true;
+    }
+    // ── 안개 위스프 ────────────────────────────────────────
+    if (this.fogWisps) {
+      const pos = this.fogWisps.geometry.attributes.position;
+      const vel = this._fogWispVels;
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i) + vel[i*2]   * delta;
+        let z = pos.getZ(i) + vel[i*2+1] * delta;
+        if (x < -110) x = 110; if (x > 110) x = -110;
+        if (z < -110) z = 110; if (z > 110) z = -110;
+        pos.setXY(i, x, z);
+      }
+      pos.needsUpdate = true;
+    }
+    // ── 먼지 부유물 (맑음) ────────────────────────────────
+    if (this.dustMotes) {
+      const pos = this.dustMotes.geometry.attributes.position;
+      const vel = this._dustVels;
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i) + vel[i*3]   * delta;
+        let y = pos.getY(i) + vel[i*3+1] * delta;
+        let z = pos.getZ(i) + vel[i*3+2] * delta;
+        if (x < -90)  x = 90;  if (x > 90)  x = -90;
+        if (y <  0.5) y = 28;  if (y > 28)  y = 0.5;
+        if (z < -90)  z = 90;  if (z > 90)  z = -90;
         pos.setXYZ(i, x, y, z);
       }
       pos.needsUpdate = true;

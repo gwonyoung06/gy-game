@@ -259,6 +259,7 @@ export class WaveSystem {
 
       const diff = DIFFICULTY[this.settings.difficulty] || DIFFICULTY.normal;
       const weatherMult = this.settings.weather === 'rain' ? 1.2
+                        : this.settings.weather === 'snow' ? 1.3
                         : this.settings.weather === 'fog'  ? 1.5 : 1;
       const timeMult = this.settings.timeOfDay === 'night' ? 1.4
                      : this.settings.timeOfDay === 'dusk'  ? 1.1 : 1;

@@ -1224,20 +1224,68 @@ export class Game {
   _applyWeatherOverlay(weather) {
     document.getElementById('weather-overlay')?.remove();
     if (!weather || weather === 'sunny') return;
+
+    // ── CSS keyframes 주입 (최초 1회) ──────────────────────
+    if (!document.getElementById('_weatherStyle')) {
+      const s = document.createElement('style');
+      s.id = '_weatherStyle';
+      s.textContent = `
+        @keyframes rainStreaks {
+          0%   { background-position:0 0; }
+          100% { background-position:-8px 28px; }
+        }
+        @keyframes snowFall {
+          0%   { background-position:0 0,   40px 20px, 80px 5px; }
+          100% { background-position:10px 100vh, 55px calc(100vh + 20px), 95px calc(100vh + 5px); }
+        }
+        @keyframes fogDrift {
+          0%   { opacity:0.7; background-position:0% 50%; }
+          50%  { opacity:1.0; background-position:100% 50%; }
+          100% { opacity:0.7; background-position:0% 50%; }
+        }
+      `;
+      document.head.appendChild(s);
+    }
+
     const el = document.createElement('div');
     el.id = 'weather-overlay';
     el.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:5;';
+
     if (weather === 'rain') {
-      el.style.background = `repeating-linear-gradient(-60deg,
-        transparent,transparent 2px,rgba(174,214,241,0.12) 2px,rgba(174,214,241,0.12) 3px)`;
-      el.style.backgroundSize = '6px 18px';
-      el.style.animation = 'rainStreaks 0.18s linear infinite';
-    } else if (weather === 'fog') {
+      // 빗줄기 레이어 (비스듬한 줄 + 반투명 파란 틴트)
       el.style.background = `
-        radial-gradient(ellipse at 20% 50%, rgba(200,210,220,0.18) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 30%, rgba(180,200,215,0.14) 0%, transparent 55%)`;
-      el.style.animation = 'fogDrift 8s ease-in-out infinite alternate';
+        repeating-linear-gradient(-65deg,
+          transparent 0px, transparent 2px,
+          rgba(160,205,240,0.10) 2px, rgba(160,205,240,0.10) 3px),
+        linear-gradient(180deg, rgba(30,50,80,0.08) 0%, rgba(20,40,70,0.12) 100%)
+      `;
+      el.style.backgroundSize = '8px 22px, 100% 100%';
+      el.style.animation = 'rainStreaks 0.14s linear infinite';
+
+    } else if (weather === 'snow') {
+      // 눈송이 도트 패턴 (3레이어 엇갈림)
+      el.style.background = `
+        radial-gradient(circle, rgba(255,255,255,0.75) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,255,255,0.55) 1px, transparent 1px),
+        radial-gradient(circle, rgba(230,240,255,0.45) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(220,235,255,0.06) 0%, rgba(200,220,250,0.10) 100%)
+      `;
+      el.style.backgroundSize = '60px 60px, 40px 40px, 80px 80px, 100% 100%';
+      el.style.backgroundPosition = '0 0, 20px 15px, 50px 30px, 0 0';
+      el.style.animation = 'snowFall 4.5s linear infinite';
+
+    } else if (weather === 'fog') {
+      // 안개 — 큰 반투명 그라디언트 레이어
+      el.style.background = `
+        radial-gradient(ellipse 80% 40% at 20% 55%, rgba(195,210,225,0.20) 0%, transparent 70%),
+        radial-gradient(ellipse 70% 35% at 80% 35%, rgba(180,200,218,0.16) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 30% at 55% 70%, rgba(190,208,222,0.14) 0%, transparent 60%),
+        linear-gradient(180deg, transparent 60%, rgba(180,200,220,0.08) 100%)
+      `;
+      el.style.backgroundSize = '100% 100%';
+      el.style.animation = 'fogDrift 10s ease-in-out infinite';
     }
+
     document.body.appendChild(el);
   }
 
@@ -1778,6 +1826,7 @@ export class Game {
   _applySkillCapture(creature) {
     const diff = DIFFICULTY[this.settings.difficulty] || DIFFICULTY.normal;
     const weatherMult = this.settings.weather === 'rain' ? 1.2
+                      : this.settings.weather === 'snow' ? 1.3
                       : this.settings.weather === 'fog'  ? 1.5 : 1;
     const timeMult = this.settings.timeOfDay === 'night' ? 1.4
                    : this.settings.timeOfDay === 'dusk'  ? 1.1 : 1;
