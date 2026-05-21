@@ -232,6 +232,10 @@ export class Game {
       this.shop.open(this.selectedStage);
     });
 
+    document.getElementById('btn-pause-tutorial')?.addEventListener('click', () => {
+      this._showTutorial();
+    });
+
     document.getElementById('btn-quit-to-title').addEventListener('click', () => {
       this._stopLoop();
       this._cleanup();
@@ -1813,20 +1817,150 @@ export class Game {
     setTimeout(() => { el.style.opacity = '0'; }, 180);
   }
 
-  // ── 튜토리얼 오버레이 ─────────────────────────────────────────
+  // ── 튜토리얼 멀티스텝 오버레이 ───────────────────────────────
   _showTutorial() {
     const overlay = document.getElementById('tutorial-overlay');
     if (!overlay) return;
+
+    // ── 5개 스텝 정의 ────────────────────────────────────────────
+    const STEPS = [
+      {
+        icon: '🕹️',
+        title: '이동 & 시점 조작',
+        desc: '맵을 자유롭게 탐험하며 생물을 찾아보세요.',
+        keys: [
+          ['WASD', '이동'],
+          ['마우스', '시점 회전'],
+          ['Shift', '달리기 (스태미나 소모)'],
+          ['Space', '점프'],
+        ],
+        tip: '💡 늪지에서는 이동이 느려지고, 빙판에서는 미끄러집니다.',
+      },
+      {
+        icon: '🎯',
+        title: '생물 포획',
+        desc: '생물을 조준하고 클릭해서 포획하세요. 거리와 방향이 성공률에 영향을 줍니다.',
+        keys: [
+          ['클릭', '포획 시도 (범위 내)'],
+          ['Q / E / R', '스킬 사용'],
+          ['1 ~ 9', '인벤토리 아이템'],
+        ],
+        tip: '💡 희귀 생물일수록 포획 확률이 낮습니다. 가까이 접근할수록 유리해요!',
+      },
+      {
+        icon: '🔥',
+        title: '콤보 시스템',
+        desc: '3초 안에 연속으로 포획하면 콤보가 쌓입니다. 콤보가 높을수록 점수·코인 배율이 올라갑니다.',
+        keys: [
+          ['콤보 ×3', '점수 ×1.2'],
+          ['콤보 ×5', '점수 ×1.5'],
+          ['콤보 ×10', '점수 ×2.0'],
+          ['콤보 ×15', '점수 ×2.5'],
+        ],
+        tip: '💡 콤보 타이머는 HUD 상단에 표시됩니다. 빠르게 포획할수록 유리!',
+      },
+      {
+        icon: '🌊',
+        title: '웨이브 시스템',
+        desc: '각 스테이지는 최대 3 웨이브로 구성됩니다. 일부 스테이지에는 강력한 미니보스가 등장합니다!',
+        keys: [
+          ['웨이브 1', '기본 스폰'],
+          ['웨이브 2', '개체 수 ×1.5'],
+          ['웨이브 3', '개체 수 ×2 + 속도 ↑'],
+          ['웨이브 4', '👑 미니보스 등장'],
+        ],
+        tip: '💡 목표 포획 수를 채우면 웨이브가 끝나기 전에도 스테이지 클리어!',
+      },
+      {
+        icon: '🗺️',
+        title: 'HUD & 미니맵',
+        desc: '상단 HUD에서 타이머·포획 수·코인을 확인하고, 우하단 미니맵으로 생물 위치를 파악하세요.',
+        keys: [
+          ['ESC', '일시정지 / 상점'],
+          ['I', '인벤토리'],
+          ['P', '상점 바로가기'],
+          ['Tab', '스코어보드'],
+        ],
+        tip: '💡 날씨와 시간대를 바꾸면 희귀 생물 출현 확률과 보상이 달라집니다!',
+      },
+    ];
+
+    let step = 0;
+
+    const dotsEl = document.getElementById('tut-dots');
+    const wrapEl = document.getElementById('tut-step-wrap');
+    const prevBtn = document.getElementById('btn-tut-prev');
+    const nextBtn = document.getElementById('btn-tut-next');
+    const skipCheck = document.getElementById('tut-skip-check');
+
+    // 닫기 공통 로직
+    const closeTutorial = () => {
+      overlay.classList.add('hidden');
+      if (skipCheck?.checked) localStorage.setItem('gy_tutorial_seen', '1');
+      this._showLockHint(true);
+      this.camCtrl?.requestLock();
+    };
+
+    // 도트 렌더
+    const renderDots = () => {
+      dotsEl.innerHTML = '';
+      STEPS.forEach((_, i) => {
+        const d = document.createElement('div');
+        d.className = 'tut-dot' + (i === step ? ' active' : '');
+        dotsEl.appendChild(d);
+      });
+    };
+
+    // 스텝 렌더
+    const renderStep = (idx, dir = 1) => {
+      step = idx;
+      const s = STEPS[idx];
+
+      // 이전 스텝 exit 애니
+      const old = wrapEl.querySelector('.tut-step');
+      if (old) {
+        old.classList.add('exit');
+        setTimeout(() => old.remove(), 200);
+      }
+
+      const div = document.createElement('div');
+      div.className = 'tut-step';
+
+      const keysHTML = s.keys.map(([k, v]) =>
+        `<div class="tut-row"><span class="tut-key">${k}</span><span>${v}</span></div>`
+      ).join('');
+
+      div.innerHTML = `
+        <div class="tut-icon">${s.icon}</div>
+        <div class="tut-step-title">${s.title}</div>
+        <div class="tut-step-desc">${s.desc}</div>
+        <div class="tutorial-grid">${keysHTML}</div>
+        ${s.tip ? `<div class="tut-tip">${s.tip}</div>` : ''}
+      `;
+      wrapEl.appendChild(div);
+
+      // 버튼 상태
+      prevBtn.classList.toggle('hidden', idx === 0);
+      nextBtn.textContent = idx === STEPS.length - 1 ? '시작하기 🎮' : '다음 →';
+
+      renderDots();
+    };
+
+    // 이벤트 (중복 방지: 새 onclick 할당)
+    prevBtn.onclick = () => { if (step > 0) renderStep(step - 1, -1); };
+    nextBtn.onclick = () => {
+      if (step < STEPS.length - 1) {
+        renderStep(step + 1, 1);
+      } else {
+        closeTutorial();
+      }
+    };
+
+    // 초기화
     overlay.classList.remove('hidden');
-    const btn = document.getElementById('btn-tutorial-ok');
-    if (btn) {
-      btn.onclick = () => {
-        overlay.classList.add('hidden');
-        localStorage.setItem('gy_tutorial_seen', '1');
-        this._showLockHint(true);
-        this.camCtrl?.requestLock();
-      };
-    }
+    wrapEl.innerHTML = '';
+    if (skipCheck) skipCheck.checked = false;
+    renderStep(0);
   }
 
   // ── 포인터락 힌트 표시/숨김 ───────────────────────────────────

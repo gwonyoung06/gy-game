@@ -107,19 +107,21 @@
     </div>
   </div>
 
-  <!-- 첫 플레이 튜토리얼 오버레이 -->
+  <!-- 첫 플레이 튜토리얼 오버레이 (멀티스텝) -->
   <div id="tutorial-overlay" class="hidden">
     <div class="tutorial-box">
-      <div class="tutorial-title">🎯 조작법</div>
-      <div class="tutorial-grid">
-        <div class="tut-row"><span class="tut-key">WASD</span><span>이동</span></div>
-        <div class="tut-row"><span class="tut-key">마우스</span><span>시점 조작</span></div>
-        <div class="tut-row"><span class="tut-key">클릭</span><span>생물 포획</span></div>
-        <div class="tut-row"><span class="tut-key">Q/E/R</span><span>스킬 사용</span></div>
-        <div class="tut-row"><span class="tut-key">1~9</span><span>아이템 사용</span></div>
-        <div class="tut-row"><span class="tut-key">ESC</span><span>일시정지</span></div>
+      <!-- 진행 도트 -->
+      <div class="tut-dots" id="tut-dots"></div>
+      <!-- 스텝 내용 (JS로 주입) -->
+      <div class="tut-step-wrap" id="tut-step-wrap"></div>
+      <!-- 하단 버튼 행 -->
+      <div class="tut-nav">
+        <button class="btn btn-ghost tut-btn-prev" id="btn-tut-prev">← 이전</button>
+        <button class="btn btn-primary tut-btn-next" id="btn-tut-next">다음 →</button>
       </div>
-      <button class="btn btn-primary" id="btn-tutorial-ok">시작하기 🎮</button>
+      <label class="tut-skip-label">
+        <input type="checkbox" id="tut-skip-check"> 다시 보지 않기
+      </label>
     </div>
   </div>
 
@@ -268,6 +270,7 @@
         <button class="btn btn-secondary pause-btn" id="btn-pause-shop">🛒 상점 열기 (P)</button>
         <button class="btn btn-secondary pause-btn" id="btn-pause-inventory">🎒 인벤토리 (I)</button>
         <button class="btn btn-secondary pause-btn" id="btn-pause-settings">⚙️ 설정</button>
+        <button class="btn btn-secondary pause-btn" id="btn-pause-tutorial">📖 조작법 보기</button>
         <button class="btn btn-secondary pause-btn" id="btn-quit-to-title">🏠 타이틀로 돌아가기</button>
       </div>
       <p class="pause-hint">ESC 또는 계속하기를 눌러 재개</p>

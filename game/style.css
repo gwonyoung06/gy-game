@@ -521,7 +521,7 @@ body {
   50%       { opacity: 1;   transform: scale(1.025); }
 }
 
-/* 튜토리얼 */
+/* ── 튜토리얼 멀티스텝 ─────────────────────────────────────────── */
 #tutorial-overlay {
   position: fixed;
   inset: 0;
@@ -537,10 +537,10 @@ body {
   background: linear-gradient(160deg, rgba(14,22,36,0.96), rgba(8,12,20,0.98));
   border: 1px solid var(--border2);
   border-radius: 22px;
-  padding: 40px 52px;
+  padding: 32px 44px 28px;
   text-align: center;
-  max-width: 440px;
-  width: 92%;
+  max-width: 460px;
+  width: 93%;
   box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05);
   animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -550,28 +550,92 @@ body {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.tutorial-title {
-  font-size: 22px;
-  font-weight: 900;
-  margin-bottom: 24px;
-  color: var(--gold);
-  text-shadow: 0 0 20px rgba(255,215,0,0.4);
-  letter-spacing: 1px;
+/* 진행 도트 */
+.tut-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.tut-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  transition: background 0.25s, transform 0.25s;
+}
+.tut-dot.active {
+  background: var(--primary);
+  transform: scale(1.35);
+  box-shadow: 0 0 8px var(--primary);
 }
 
+/* 스텝 래퍼 */
+.tut-step-wrap {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 스텝 슬라이드 전환 */
+.tut-step {
+  width: 100%;
+  animation: tutSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tut-step.exit {
+  animation: tutSlideOut 0.2s ease-in forwards;
+}
+@keyframes tutSlideIn {
+  from { opacity: 0; transform: translateX(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes tutSlideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-28px); }
+}
+
+/* 스텝 아이콘 */
+.tut-icon {
+  font-size: 54px;
+  line-height: 1;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 16px rgba(78,205,196,0.35));
+}
+
+/* 스텝 제목 */
+.tut-step-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 0 18px rgba(255,215,0,0.35);
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* 설명 텍스트 */
+.tut-step-desc {
+  font-size: 13.5px;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+
+/* 키 힌트 그리드 */
 .tutorial-grid {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 28px;
+  gap: 8px;
+  margin-bottom: 10px;
   text-align: left;
+  width: 100%;
 }
 
 .tut-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  font-size: 14px;
+  gap: 12px;
+  font-size: 13px;
   color: rgba(255,255,255,0.85);
 }
 
@@ -579,14 +643,57 @@ body {
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 8px;
-  padding: 5px 12px;
+  padding: 4px 11px;
   font-weight: 700;
-  font-size: 12px;
-  min-width: 82px;
+  font-size: 11.5px;
+  min-width: 78px;
   text-align: center;
   color: var(--secondary);
   letter-spacing: 0.5px;
+  flex-shrink: 0;
 }
+
+/* 하이라이트 박스 (팁) */
+.tut-tip {
+  background: rgba(78,205,196,0.1);
+  border: 1px solid rgba(78,205,196,0.3);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 12.5px;
+  color: var(--primary);
+  margin-top: 8px;
+  text-align: left;
+  line-height: 1.55;
+}
+
+/* 하단 네비 버튼 */
+.tut-nav {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 22px;
+}
+.tut-btn-prev, .tut-btn-next {
+  min-width: 110px;
+}
+.tut-btn-prev { opacity: 0.7; }
+.tut-btn-prev:hover { opacity: 1; }
+
+/* 다시 보지 않기 */
+.tut-skip-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+.tut-skip-label:hover { color: rgba(255,255,255,0.65); }
+.tut-skip-label input { accent-color: var(--primary); cursor: pointer; }
 
 /* 데미지 팝업 */
 @keyframes dmgFloat {
