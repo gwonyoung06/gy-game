@@ -954,6 +954,200 @@ export class AudioManager {
     }
   }
 
+  /**
+   * 발소리 — 서피스별 절차적 합성
+   * surface: 'grass' | 'dirt' | 'sand' | 'water' | 'mud' |
+   *          'snow' | 'ice' | 'stone' | 'wood' | 'space'
+   */
+  sfxFootstep(surface = 'grass') {
+    if (!this._ready) return;
+    const ctx = this._ctx;
+    const now = ctx.currentTime;
+    // 살짝 랜덤 피치 변이 (자연스러운 보행감)
+    const pr = 0.88 + Math.random() * 0.24;
+
+    switch (surface) {
+
+      case 'grass': {
+        // 부드러운 낮은 스침 — 좁은 로우패스 노이즈
+        const buf = this._makeNoiseBuffer(0.12);
+        const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = pr;
+        const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 420;
+        const e = ctx.createGain();
+        e.gain.setValueAtTime(0.22, now);
+        e.gain.exponentialRampToValueAtTime(0.001, now + 0.10);
+        src.connect(f); f.connect(e); e.connect(this._sfxGain);
+        src.start(now); src.stop(now + 0.12);
+        break;
+      }
+
+      case 'dirt': {
+        // 흙 탁 — 중역 노이즈 + 짧은 저역 펄스
+        const buf = this._makeNoiseBuffer(0.14);
+        const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = pr * 0.9;
+        const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 320; f.Q.value = 1.5;
+        const e = ctx.createGain();
+        e.gain.setValueAtTime(0.28, now);
+        e.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        src.connect(f); f.connect(e); e.connect(this._sfxGain);
+        src.start(now); src.stop(now + 0.14);
+        // 추가 저역 둔탁함
+        const osc = ctx.createOscillator(); osc.type = 'sine';
+        osc.frequency.setValueAtTime(90 * pr, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.08);
+        const oe = ctx.createGain();
+        oe.gain.setValueAtTime(0.12, now);
+        oe.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.connect(oe); oe.connect(this._sfxGain);
+        osc.start(now); osc.stop(now + 0.10);
+        break;
+      }
+
+      case 'sand': {
+        // 건조한 모래 쓸림 — 하이패스 쉬익
+        const buf = this._makeNoiseBuffer(0.11);
+        const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = pr * 1.3;
+        const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1800;
+        const e = ctx.createGain();
+        e.gain.setValueAtTime(0.14, now);
+        e.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+        src.connect(f); f.connect(e); e.connect(this._sfxGain);
+        src.start(now); src.stop(now + 0.11);
+        break;
+      }
+
+      case 'water': {
+        // 첨벙 — 밴드패스 노이즈 (중간 공명)
+        const buf = this._makeNoiseBuffer(0.18);
+        const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = pr * 0.75;
+        const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 500; f.Q.value = 2.8;
+        const e = ctx.createGain();
+        e.gain.setValueAtTime(0.28, now);
+        e.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+        src.connect(f); f.connect(e); e.connect(this._sfxGain);
+        src.start(now); src.stop(now + 0.18);
+        break;
+      }
+
+      case 'mud': {
+        // 질척 — 느린 저역 스퀠치
+        const buf = this._makeNoiseBuffer(0.20);
+        const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = pr * 0.65;
+        const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 200; f.Q.value = 3.5;
+        const e = ctx.createGain();
+        e.gain.setValueAtTime(0.32, now);
+        e.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        src.connect(f); f.connect(e); e.connect(this._sfxGain);
+        src.start(now); src.stop(now + 0.20);
+        break;
+      }
+
+      case 'snow': {
+        // 뽀드득 — 밴드패스 + 고역 크런치
+        const buf = this._makeNoiseBuffer(0.10);
+        const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = pr * 1.5;
+        const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1100; f.Q.value = 4.0;
+        const e = ctx.createGain();
+        e.gain.setValueAtTime(0.18, now);
+        e.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+        src.connect(f); f.connect(e); e.connect(this._sfxGain);
+        src.start(now); src.stop(now + 0.10);
+        // 추가 저음 압축감
+        const buf2 = this._makeNoiseBuffer(0.08);
+        const src2 = ctx.createBufferSource(); src2.buffer = buf2; src2.playbackRate.value = pr * 0.9;
+        const f2 = ctx.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = 280;
+        const e2 = ctx.createGain();
+        e2.gain.setValueAtTime(0.14, now);
+        e2.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        src2.connect(f2); f2.connect(e2); e2.connect(this._sfxGain);
+        src2.start(now); src2.stop(now + 0.08);
+        break;
+      }
+
+      case 'ice': {
+        // 미끌 클릭 — 짧은 사인 + 하이패스 클릭
+        const osc = ctx.createOscillator(); osc.type = 'triangle';
+        osc.frequency.setValueAtTime(380 * pr, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.05);
+        const oe = ctx.createGain();
+        oe.gain.setValueAtTime(0.10, now);
+        oe.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.connect(oe); oe.connect(this._sfxGain);
+        osc.start(now); osc.stop(now + 0.06);
+        // 고주파 크리스피
+        const buf = this._makeNoiseBuffer(0.06);
+        const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = pr * 2.0;
+        const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 3500;
+        const e = ctx.createGain();
+        e.gain.setValueAtTime(0.08, now);
+        e.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        src.connect(f); f.connect(e); e.connect(this._sfxGain);
+        src.start(now); src.stop(now + 0.06);
+        break;
+      }
+
+      case 'stone': {
+        // 단단한 클릭 — 사인 임팩트 + 중고역 클랙
+        const osc = ctx.createOscillator(); osc.type = 'sine';
+        osc.frequency.setValueAtTime(260 * pr, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.06);
+        const oe = ctx.createGain();
+        oe.gain.setValueAtTime(0.18, now);
+        oe.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        osc.connect(oe); oe.connect(this._sfxGain);
+        osc.start(now); osc.stop(now + 0.07);
+        const buf = this._makeNoiseBuffer(0.07);
+        const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = pr * 2.2;
+        const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2200; f.Q.value = 2.0;
+        const e = ctx.createGain();
+        e.gain.setValueAtTime(0.10, now);
+        e.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        src.connect(f); f.connect(e); e.connect(this._sfxGain);
+        src.start(now); src.stop(now + 0.07);
+        break;
+      }
+
+      case 'wood': {
+        // 목재 울림 — 낮은 사인 + 중역 클릭
+        const osc = ctx.createOscillator(); osc.type = 'triangle';
+        osc.frequency.setValueAtTime(160 * pr, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.09);
+        const oe = ctx.createGain();
+        oe.gain.setValueAtTime(0.16, now);
+        oe.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+        osc.connect(oe); oe.connect(this._sfxGain);
+        osc.start(now); osc.stop(now + 0.10);
+        break;
+      }
+
+      case 'space':
+      default: {
+        // 우주: 거의 소리 없음 — 매우 낮은 노이즈
+        if (surface === 'space') {
+          const buf = this._makeNoiseBuffer(0.14);
+          const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = pr * 0.4;
+          const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 120;
+          const e = ctx.createGain();
+          e.gain.setValueAtTime(0.05, now);
+          e.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          src.connect(f); f.connect(e); e.connect(this._sfxGain);
+          src.start(now); src.stop(now + 0.14);
+        } else {
+          // 기본 (dirt 유사)
+          const buf = this._makeNoiseBuffer(0.12);
+          const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = pr;
+          const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 550;
+          const e = ctx.createGain();
+          e.gain.setValueAtTime(0.18, now);
+          e.gain.exponentialRampToValueAtTime(0.001, now + 0.10);
+          src.connect(f); f.connect(e); e.connect(this._sfxGain);
+          src.start(now); src.stop(now + 0.12);
+        }
+        break;
+      }
+    }
+  }
+
   /** 새 웨이브 시작 — BPF 노이즈 드럼롤 버스트 4개 */
   sfxWaveStart() {
     if (!this._ctx) return;

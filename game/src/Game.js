@@ -653,6 +653,7 @@ export class Game {
     this._slowMoTimer = 0;
     this.totalDamageTaken = 0;
     this._footstepTimer = 0;
+    this._footstepSoundTimer = 0;
     // 업그레이드 배율 명시 초기화 (_cleanup에서도 리셋되지만 여기서도 명확히)
     this._coinMult = 1; this._scoreMult = 1;
     this._luckBonus = 0; this._bonusCapture = 0;
@@ -878,6 +879,12 @@ export class Game {
             0.18,
             this.player.position.z + (Math.random() - 0.5) * 0.4
           ), 0x9a8a72, 2);
+        }
+        // 발소리 (이동 중 ~0.35s 마다, 서피스별 다른 음색)
+        this._footstepSoundTimer = (this._footstepSoundTimer ?? 0) + delta;
+        if (this.player._isMoving && this._footstepSoundTimer > (0.32 + Math.random() * 0.10)) {
+          this._footstepSoundTimer = 0;
+          audioManager.sfxFootstep(this._getFootstepSurface());
         }
         // 바이옴 효과 업데이트 (이동 모드·대미지·파티클)
         this._updateBiomeEffects(delta);
@@ -1218,6 +1225,41 @@ export class Game {
       else setTimeout(() => wrap.remove(), 820);
     };
     next();
+  }
+
+  // ── 발소리 서피스 감지 ────────────────────────────────────────────
+  // 바이옴 모드 > 날씨 > 스테이지 순으로 우선순위 결정
+  _getFootstepSurface() {
+    const mode  = this.player?.biomeMode ?? 'normal';
+    const id    = this._biomeStageId ?? this.selectedStage;
+    const wx    = this.settings?.weather;
+
+    // 바이옴 모드 우선
+    if (mode === 'swim')    return 'water';
+    if (mode === 'marsh')   return 'mud';
+    if (mode === 'ice')     return 'ice';
+    if (mode === 'lowgrav') return 'space';
+
+    // 눈 날씨 선택 시 → 눈 소리
+    if (wx === 'snow') return 'snow';
+    // 비 날씨 + 잔디/흙 → 물기 있는 흙 (mud)
+    if (wx === 'rain' && (id <= 3 || id === 9 || id === 12 || id === 14)) return 'mud';
+
+    // 스테이지별 기본 서피스
+    if (id <= 3)  return 'grass';           // 1-3: 공원·꽃밭·잔디
+    if (id === 4) return 'mud';             // 4: 연못
+    if (id === 5) return 'mud';             // 5: 습지
+    if (id === 6) return 'sand';            // 6: 강가
+    if (id === 7) return 'sand';            // 7: 해변
+    if (id === 8) return 'water';           // 8: 해저
+    if (id === 9) return 'dirt';            // 9: 밀림
+    if (id === 10) return 'grass';          // 10: 사바나 (건조)
+    if (id === 11) return 'snow';           // 11: 설산
+    if (id === 12) return 'dirt';           // 12: 숲
+    if (id === 13) return 'stone';          // 13: 화산
+    if (id === 14) return 'dirt';           // 14: 공룡섬
+    if (id === 15) return 'space';          // 15: 우주
+    return 'grass';
   }
 
   // ── 날씨 오버레이 적용 ─────────────────────────────────────────
