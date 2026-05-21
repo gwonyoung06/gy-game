@@ -195,16 +195,17 @@ export const STAGES = [
     miniBoss: null,
   },
   {
-    id: 15, name: '우주', icon: '👾',
-    env: { sky: 0x000011, ground: 0x111122, fog: 0x000022, fogDensity: 0.005, space: true },
+    id: 15, name: '달 표면', icon: '🌙',
+    env: { sky: 0x000008, ground: 0x999999, fog: 0x000008, fogDensity: 0.002, space: true },
     timeLimit: 105, targetCount: 12,
     creatures: [
-      { type: 'drone', name: '탐사 드론', count: 4, speed: 3.5, coins: 8000, score: 80000, color: 0x88ccff },
-      { type: 'alien', name: '외계인', count: 3, speed: 2.8, coins: 10000, score: 100000, color: 0x44ff88 },
-      { type: 'debris', name: '우주선 파편', count: 3, speed: 4.0, coins: 6000, score: 60000, color: 0xaaaacc },
+      { type: 'jade_rabbit', name: '옥토끼', count: 5, speed: 2.0, coins: 8000, score: 80000, color: 0xeeeeff },
+      { type: 'moon_crab', name: '달 게', count: 4, speed: 1.6, coins: 7000, score: 70000, color: 0xaaaacc },
+      { type: 'meteor_bug', name: '운석충', count: 3, speed: 4.0, coins: 9000, score: 90000, color: 0xcc9966 },
+      { type: 'moon_spirit', name: '달 정령', count: 3, speed: 2.5, coins: 10000, score: 100000, color: 0xbbddff },
     ],
     requiredTool: 'em_catcher',
-    miniBoss: { type: 'ufo', name: '👾 UFO 본체', speed: 3.5, coins: 50000, score: 500000, color: 0x44ffff, phases: 3 },
+    miniBoss: { type: 'moon_guardian', name: '🌙 달의 수호자', speed: 2.8, coins: 50000, score: 500000, color: 0xffffff },
   },
 ];
 

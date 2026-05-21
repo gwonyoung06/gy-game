@@ -1446,8 +1446,8 @@ export class Game {
       document.body.appendChild(el);
 
     } else if (mode === 'lowgrav') {
-      // 저중력(우주): 별빛 가장자리 글로우
-      el.style.background = 'radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(20,10,60,0.30) 100%)';
+      // 저중력(달): 은빛 가장자리 글로우
+      el.style.background = 'radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(30,30,60,0.28) 100%)';
       document.body.appendChild(el);
     }
   }
@@ -2797,7 +2797,7 @@ export class Game {
     gorilla:'🦍',cobra:'🐍',jaguar:'🐆',elephant:'🐘',rhino:'🦏',
     pteranodon:'🦕',stegosaurus:'🦕',triceratops:'🦕',brachiosaurus:'🦕',raptor:'🦖',
     t_rex:'🦖',spinosaurus:'🦖',ankylosaurus:'🦕',parasaurolophus:'🦕',giganotosaurus:'🦖',
-    drone:'🤖',alien:'👽',debris:'🛸',ufo:'👾',
+    jade_rabbit:'🐇',moon_crab:'🦀',meteor_bug:'☄️',moon_spirit:'🌟',moon_guardian:'🌙',
   };
 
   // 타입별 설명
@@ -2816,7 +2816,7 @@ export class Game {
     gorilla:'정글의 왕 고릴라',cobra:'목을 펼쳐 위협하는 코브라',jaguar:'빠르고 강한 정글의 포식자 재규어',elephant:'기억력이 뛰어난 거대한 코끼리',rhino:'두꺼운 피부와 강력한 뿔의 코뿔소',
     pteranodon:'하늘을 지배했던 익룡 프테라노돈',stegosaurus:'등에 판이 솟은 스테고사우루스',triceratops:'세 개의 뿔로 방어하는 트리케라톱스',brachiosaurus:'긴 목으로 나무 꼭대기를 먹는 브라키오사우루스',raptor:'무리 지어 사냥하는 영리한 랩터',
     t_rex:'공룡의 제왕 티라노사우루스',spinosaurus:'척추 지느러미를 가진 거대 포식자 스피노사우루스',ankylosaurus:'꼬리 철퇴로 방어하는 안킬로사우루스',parasaurolophus:'독특한 볏을 가진 초식공룡',giganotosaurus:'T-Rex보다 큰 기가노토사우루스',
-    drone:'미지의 행성을 탐사하는 드론',alien:'우주에서 온 신비로운 외계 생명체',debris:'우주선이 충돌하며 만들어진 파편',ufo:'우주를 떠돌며 지구를 관찰하는 UFO',
+    jade_rabbit:'달 표면에 사는 전설의 옥토끼. 방아를 찧는 모습이 목격된다',moon_crab:'크레이터 안을 누비는 달 게. 회색 껍데기가 월면과 완벽히 동화된다',meteor_bug:'운석과 함께 달에 떨어진 외계 곤충. 엄청난 속도로 지면을 달린다',moon_spirit:'달빛을 먹고 자라는 신비로운 정령. 포획하면 은은한 빛을 발한다',moon_guardian:'달을 수호하는 고대 수호자. 옥토끼의 방아 소리에 이끌려 나타난다',
   };
 
   // 등급 계산 (coins 기반)

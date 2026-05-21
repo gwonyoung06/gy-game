@@ -1596,25 +1596,20 @@ export class World {
     }
   }
 
-  // ── 우주 (15) ─────────────────────────────────────────────────
+  // ── 달 표면 (15) ───────────────────────────────────────────────
   _buildSpace() {
-    this.scene.background = new THREE.Color(0x000011);
+    this.scene.background = new THREE.Color(0x000008);
     this.scene.fog = null;
     this._spawnDistantSilhouettes('space');
     this._buildStarField();
-    this._spawnPlanets();
-    this._spawnCraters(35);
-    this._spawnAlienStructures(14);
-    this._spawnSpaceDebris(40);
-    this._spawnSpaceStation();
-    this._spawnCrashedSpaceship(3);
-    this._spawnMoonRover(2);
-    this._spawnSatelliteDishes(8);
-    this._spawnAlienCropCircles(6);
-    this._spawnSpaceCrates(20);
-    this._spawnCommunicationTower(4);
-    this._spawnMeteorField(15);
-    this._spawnNebulaClouds(8);
+    this._spawnEarth();           // 달 하늘에서 보이는 지구
+    this._spawnCraters(55);       // 달 크레이터 (더 많이)
+    this._spawnMoonRocks(80);     // 월면 암석
+    this._spawnMoonRover(3);      // 달 탐사 로버
+    this._spawnSatelliteDishes(6); // 연구 안테나
+    this._spawnMeteorField(20);   // 운석 파편
+    this._spawnMoonBase(2);       // 소형 달 기지
+    this._spawnMoonDust();        // 달 먼지 파티클
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -2555,43 +2550,168 @@ export class World {
     this.objects.push(stars);
   }
 
-  _spawnPlanets() {
-    const defs = [
-      { color: 0xff6622, r: 80, pos: [400, 150, -200], ring: false },
-      { color: 0x4488ff, r: 60, pos: [-350, 100, 300],  ring: false },
-      { color: 0xcc44ff, r: 100, pos: [0, 200, -450],   ring: true  },
-    ];
-    defs.forEach(d => {
-      const planet = new THREE.Mesh(new THREE.SphereGeometry(d.r, 18, 14), new THREE.MeshLambertMaterial({ color: d.color, flatShading: true }));
-      planet.position.set(...d.pos);
-      this.scene.add(planet);
-      this.objects.push(planet);
-      if (d.ring) {
-        const ring = new THREE.Mesh(
-          new THREE.TorusGeometry(d.r * 1.5, d.r * 0.15, 4, 40),
-          new THREE.MeshLambertMaterial({ color: 0xddbbaa, transparent: true, opacity: 0.6 })
-        );
-        ring.position.set(...d.pos);
-        ring.rotation.x = 0.5;
-        this.scene.add(ring);
-        this.objects.push(ring);
-      }
+  // 달에서 바라본 지구 — 파랗고 흰 구름이 감싼 큰 구체
+  _spawnEarth() {
+    const rng = this._rng;
+    // 지구 본체 (파란 바다)
+    const earthGeo = new THREE.SphereGeometry(110, 24, 18);
+    const earthMat = new THREE.MeshLambertMaterial({ color: 0x1a4a8a, flatShading: true });
+    const earth = new THREE.Mesh(earthGeo, earthMat);
+    earth.position.set(-180, 320, -600);
+    this.scene.add(earth);
+    this.objects.push(earth);
+
+    // 대륙 레이어 (위에 살짝 겹쳐 표현)
+    const landGeo = new THREE.SphereGeometry(112, 16, 12);
+    const landMat = new THREE.MeshLambertMaterial({
+      color: 0x2d6a2d, flatShading: true, transparent: true, opacity: 0.55, wireframe: false
     });
+    // 대륙은 불규칙한 옥타헤드론으로 암시
+    const landPositions = landGeo.attributes.position;
+    for (let i = 0; i < landPositions.count; i++) {
+      if (rng() > 0.38) {
+        landPositions.setXYZ(i,
+          landPositions.getX(i) * (1 + (rng() - 0.5) * 0.04),
+          landPositions.getY(i) * (1 + (rng() - 0.5) * 0.04),
+          landPositions.getZ(i) * (1 + (rng() - 0.5) * 0.04)
+        );
+      }
+    }
+    landGeo.computeVertexNormals();
+    const land = new THREE.Mesh(landGeo, landMat);
+    land.position.copy(earth.position);
+    land.rotation.y = 0.8;
+    this.scene.add(land);
+    this.objects.push(land);
+
+    // 흰 구름 레이어
+    const cloudGeo = new THREE.SphereGeometry(116, 18, 14);
+    const cloudMat = new THREE.MeshLambertMaterial({
+      color: 0xffffff, transparent: true, opacity: 0.28, flatShading: true
+    });
+    const cloud = new THREE.Mesh(cloudGeo, cloudMat);
+    cloud.position.copy(earth.position);
+    this.scene.add(cloud);
+    this.objects.push(cloud);
+
+    // 대기 글로우 (얇은 파란 후광)
+    const atmoGeo = new THREE.SphereGeometry(122, 18, 14);
+    const atmoMat = new THREE.MeshLambertMaterial({
+      color: 0x3377cc, transparent: true, opacity: 0.12, side: THREE.BackSide
+    });
+    const atmo = new THREE.Mesh(atmoGeo, atmoMat);
+    atmo.position.copy(earth.position);
+    this.scene.add(atmo);
+    this.objects.push(atmo);
   }
 
   _spawnCraters(count) {
-    const mat = new THREE.MeshLambertMaterial({ color: 0x334433, flatShading: true });
+    // 달 크레이터: 회색 계열
+    const mat = new THREE.MeshLambertMaterial({ color: 0x888888, flatShading: true });
+    const innerMat = new THREE.MeshLambertMaterial({ color: 0x666666, flatShading: true });
     for (let i = 0; i < count; i++) {
       const x = (this._rng() - 0.5) * 900;
       const z = (this._rng() - 0.5) * 900;
       const y = this.getHeight(x, z);
-      const r = 4 + this._rng() * 12;
-      const rim = new THREE.Mesh(new THREE.TorusGeometry(r, r * 0.18, 5, 18), mat.clone());
+      const r = 3 + this._rng() * 14;
+      // 외벽 림
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(r, r * 0.15, 5, 20), mat.clone());
       rim.rotation.x = -Math.PI / 2;
-      rim.position.set(x, y + 0.3, z);
+      rim.position.set(x, y + 0.25, z);
       this.scene.add(rim);
       this.objects.push(rim);
+      // 내부 바닥 (약간 어두운 디스크)
+      if (r > 6) {
+        const floor = new THREE.Mesh(new THREE.CircleGeometry(r * 0.85, 10), innerMat.clone());
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(x, y + 0.05, z);
+        this.scene.add(floor);
+        this.objects.push(floor);
+      }
     }
+  }
+
+  // 달 표면 암석 군집
+  _spawnMoonRocks(count) {
+    const rng = this._rng;
+    const mats = [
+      new THREE.MeshLambertMaterial({ color: 0x909090, flatShading: true }),
+      new THREE.MeshLambertMaterial({ color: 0xaaaaaa, flatShading: true }),
+      new THREE.MeshLambertMaterial({ color: 0x787878, flatShading: true }),
+    ];
+    for (let i = 0; i < count; i++) {
+      const x = (rng() - 0.5) * 900;
+      const z = (rng() - 0.5) * 900;
+      const y = this.getHeight(x, z);
+      const s = 0.4 + rng() * 2.2;
+      const geo = new THREE.DodecahedronGeometry(s, 0);
+      // 버텍스 살짝 변형으로 자연스러운 돌 모양
+      const pos = geo.attributes.position;
+      for (let j = 0; j < pos.count; j++) {
+        pos.setXYZ(j,
+          pos.getX(j) * (0.85 + rng() * 0.3),
+          pos.getY(j) * (0.7 + rng() * 0.4),
+          pos.getZ(j) * (0.85 + rng() * 0.3)
+        );
+      }
+      geo.computeVertexNormals();
+      const mesh = new THREE.Mesh(geo, mats[i % mats.length]);
+      mesh.position.set(x, y + s * 0.4, z);
+      mesh.rotation.set(rng() * Math.PI, rng() * Math.PI, rng() * Math.PI);
+      this.scene.add(mesh);
+      this.objects.push(mesh);
+    }
+  }
+
+  // 소형 달 기지 (연구 돔)
+  _spawnMoonBase(count) {
+    const rng = this._rng;
+    const matDome = new THREE.MeshLambertMaterial({ color: 0xddddee, transparent: true, opacity: 0.85 });
+    const matBase = new THREE.MeshLambertMaterial({ color: 0x888899, flatShading: true });
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + rng() * 0.5;
+      const dist  = 150 + rng() * 80;
+      const x = Math.cos(angle) * dist;
+      const z = Math.sin(angle) * dist;
+      const y = this.getHeight(x, z);
+      const g = new THREE.Group();
+      // 원형 베이스
+      g.add(this._cyl(8, 8, 1.2, 10, matBase.clone(), 0, 0.6, 0));
+      // 돔
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(6, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), matDome.clone());
+      dome.position.y = 1.2;
+      g.add(dome);
+      // 안테나
+      g.add(this._cyl(0.1, 0.1, 6, 4, matBase.clone(), 2, 4, 0));
+      // 연결 통로
+      const corridor = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 14, 7), matBase.clone());
+      corridor.rotation.z = Math.PI / 2;
+      corridor.position.set(7, 1.8, 0);
+      g.add(corridor);
+      g.position.set(x, y, z);
+      g.rotation.y = rng() * Math.PI * 2;
+      this.scene.add(g);
+      this.objects.push(g);
+      this._structures.push({ x, z, r: 10 });
+    }
+  }
+
+  // 달 먼지 파티클 (연회색 미세 입자)
+  _spawnMoonDust() {
+    const count = 1200;
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3]     = (Math.random() - 0.5) * 800;
+      pos[i * 3 + 1] = Math.random() * 6;   // 지표 근처 낮게
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 800;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const mat = new THREE.PointsMaterial({ color: 0xbbbbcc, size: 0.18, transparent: true, opacity: 0.5, depthWrite: false });
+    const dust = new THREE.Points(geo, mat);
+    this.scene.add(dust);
+    this.objects.push(dust);
+    this._moonDust = { pts: dust, pos, geo };
   }
 
   _spawnAlienStructures(count) {
@@ -4331,6 +4451,20 @@ export class World {
         if (x < -110) x = 110; if (x > 110) x = -110;
         if (z < -110) z = 110; if (z > 110) z = -110;
         pos.setXY(i, x, z);
+      }
+      pos.needsUpdate = true;
+    }
+    // ── 달 먼지 (달 표면) ────────────────────────────────
+    if (this._moonDust) {
+      const pos = this._moonDust.geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i) + Math.sin(i * 1.3 + delta * 0.4) * 0.012;
+        let y = pos.getY(i) + Math.sin(i * 0.7 + delta * 0.2) * 0.004;
+        let z = pos.getZ(i) + Math.cos(i * 1.1 + delta * 0.3) * 0.012;
+        if (x < -400) x = 400; if (x > 400) x = -400;
+        if (y < 0.1)  y = 5.5; if (y > 6)   y = 0.1;
+        if (z < -400) z = 400; if (z > 400) z = -400;
+        pos.setXYZ(i, x, y, z);
       }
       pos.needsUpdate = true;
     }
