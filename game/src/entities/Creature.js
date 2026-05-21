@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { DETAILED_BUILDERS, DETAILED_SHAPE_MAP } from './CreatureModels.js';
 import { DETAILED_BUILDERS2, DETAILED_SHAPE_MAP2 } from './CreatureModels2.js';
+import { DETAILED_BUILDERS3, DETAILED_SHAPE_MAP3 } from './CreatureModels3.js';
 
 // ══════════════════════════════════════════════════════════════════
 // 재질 캐시 — 동일 (color+opts) 조합은 하나의 material 인스턴스 공유
@@ -1365,6 +1366,8 @@ Object.assign(BUILDERS, DETAILED_BUILDERS);
 Object.assign(SHAPE_MAP, DETAILED_SHAPE_MAP);
 Object.assign(BUILDERS, DETAILED_BUILDERS2);
 Object.assign(SHAPE_MAP, DETAILED_SHAPE_MAP2);
+Object.assign(BUILDERS, DETAILED_BUILDERS3);
+Object.assign(SHAPE_MAP, DETAILED_SHAPE_MAP3);
 
 // ── 이동 스타일 분류 ─────────────────────────────────────────────
 const FLYING_STYLES  = new Set(['erratic_hover','flap_drift','buzz_hover','soar_circle','ufo_hover','pulse_drift']);
