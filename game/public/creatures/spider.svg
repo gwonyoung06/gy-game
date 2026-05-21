@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 거미줄 -->
+  <line x1="32" y1="4" x2="32" y2="16" stroke="#aaccff" stroke-width="0.8" opacity="0.5"/>
+  <!-- 다리 (왼쪽 4개) -->
+  <path d="M22 30 C16 24 10 22 6 18" fill="none" stroke="#1a4488" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M22 32 C14 30 8 28 4 26" fill="none" stroke="#1a4488" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M22 34 C14 36 8 38 4 40" fill="none" stroke="#1a4488" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M22 36 C16 42 12 46 8 48" fill="none" stroke="#1a4488" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- 다리 (오른쪽 4개) -->
+  <path d="M42 30 C48 24 54 22 58 18" fill="none" stroke="#1a4488" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M42 32 C50 30 56 28 60 26" fill="none" stroke="#1a4488" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M42 34 C50 36 56 38 60 40" fill="none" stroke="#1a4488" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M42 36 C48 42 52 46 56 48" fill="none" stroke="#1a4488" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- 복부 (큰 타원) -->
+  <ellipse cx="32" cy="40" rx="14" ry="16" fill="#2255aa" stroke="#0a1a55" stroke-width="2"/>
+  <!-- 복부 무늬 -->
+  <path d="M26 34 C28 38 30 42 28 48" fill="none" stroke="#3377cc" stroke-width="1" opacity="0.5"/>
+  <path d="M38 34 C36 38 34 42 36 48" fill="none" stroke="#3377cc" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="32" cy="40" rx="7" ry="8" fill="#1a3377" opacity="0.4"/>
+  <!-- 두흉부 -->
+  <ellipse cx="32" cy="26" rx="10" ry="8" fill="#2a66bb" stroke="#0a1a55" stroke-width="2"/>
+  <!-- 눈 8개 -->
+  <circle cx="26" cy="22" r="2" fill="#aaddff" stroke="#0a1a55" stroke-width="1"/>
+  <circle cx="30" cy="20" r="2" fill="#aaddff" stroke="#0a1a55" stroke-width="1"/>
+  <circle cx="34" cy="20" r="2" fill="#aaddff" stroke="#0a1a55" stroke-width="1"/>
+  <circle cx="38" cy="22" r="2" fill="#aaddff" stroke="#0a1a55" stroke-width="1"/>
+  <circle cx="26" cy="22" r="1" fill="#1a1a1a"/>
+  <circle cx="30" cy="20" r="1" fill="#1a1a1a"/>
+  <circle cx="34" cy="20" r="1" fill="#1a1a1a"/>
+  <circle cx="38" cy="22" r="1" fill="#1a1a1a"/>
+  <!-- 독니 -->
+  <path d="M28 30 C26 34 24 36 26 38" fill="none" stroke="#0a1a55" stroke-width="2" stroke-linecap="round"/>
+  <path d="M36 30 C38 34 40 36 38 38" fill="none" stroke="#0a1a55" stroke-width="2" stroke-linecap="round"/>
+</svg>

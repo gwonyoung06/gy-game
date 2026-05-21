@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- C자 형태 굼벵이 몸통 -->
+  <path d="M44 14 C56 16 58 30 50 40 C42 50 28 54 18 48 C10 43 10 34 16 28" fill="none" stroke="#c8aa66" stroke-width="14" stroke-linecap="round"/>
+  <!-- 안쪽 색 -->
+  <path d="M44 14 C56 16 58 30 50 40 C42 50 28 54 18 48 C10 43 10 34 16 28" fill="none" stroke="#f0d090" stroke-width="10" stroke-linecap="round"/>
+  <!-- 마디 줄 -->
+  <path d="M44 14 C56 16 58 30 50 40 C42 50 28 54 18 48 C10 43 10 34 16 28" fill="none" stroke="#a88840" stroke-width="1.5" stroke-dasharray="5,7" stroke-linecap="round"/>
+  <!-- 작은 다리들 -->
+  <line x1="52" y1="22" x2="58" y2="20" stroke="#a88840" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="56" y1="30" x2="62" y2="30" stroke="#a88840" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="54" y1="38" x2="60" y2="40" stroke="#a88840" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="46" y1="48" x2="50" y2="54" stroke="#a88840" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 머리 (갈색) -->
+  <circle cx="44" cy="14" r="8" fill="#885522" stroke="#5a3310" stroke-width="2"/>
+  <!-- 큰 턱 -->
+  <path d="M48 18 C52 20 52 24 48 22" fill="#5a3310" stroke="#5a3310" stroke-width="1"/>
+  <!-- 눈 -->
+  <circle cx="40" cy="12" r="2.5" fill="#cc8844"/>
+  <circle cx="40" cy="12" r="1.2" fill="#1a1a0a"/>
+  <!-- 더듬이 -->
+  <line x1="42" y1="7" x2="38" y2="4" stroke="#5a3310" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="46" y1="7" x2="50" y2="3" stroke="#5a3310" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

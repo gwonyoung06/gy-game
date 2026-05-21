@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 날개 (등에 접혀 있음) -->
+  <ellipse cx="30" cy="33" rx="14" ry="6" fill="#aad855" stroke="#2a6010" stroke-width="1.5" opacity="0.8" transform="rotate(-5 30 33)"/>
+  <!-- 몸통 (기울어진 긴 타원) -->
+  <ellipse cx="28" cy="36" rx="7" ry="18" fill="#7ac840" stroke="#2a6010" stroke-width="2" transform="rotate(-15 28 36)"/>
+  <!-- 몸통 마디 -->
+  <line x1="21" y1="32" x2="36" y2="28" stroke="#2a6010" stroke-width="0.9" opacity="0.5"/>
+  <line x1="20" y1="37" x2="36" y2="33" stroke="#2a6010" stroke-width="0.9" opacity="0.5"/>
+  <line x1="19" y1="42" x2="35" y2="38" stroke="#2a6010" stroke-width="0.9" opacity="0.5"/>
+  <!-- 머리 -->
+  <ellipse cx="38" cy="22" rx="8" ry="7" fill="#5cb32b" stroke="#2a6010" stroke-width="2"/>
+  <!-- 눈 -->
+  <circle cx="43" cy="20" r="3.5" fill="#ccff66" stroke="#2a6010" stroke-width="1.2"/>
+  <circle cx="44" cy="20" r="1.5" fill="#1a4009"/>
+  <!-- 더듬이 (매우 길게) -->
+  <line x1="40" y1="16" x2="52" y2="6" stroke="#2a6010" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="36" y1="16" x2="46" y2="5" stroke="#2a6010" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- 앞다리 -->
+  <line x1="36" y1="26" x2="44" y2="34" stroke="#2a6010" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="32" y1="26" x2="40" y2="34" stroke="#2a6010" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 뒷다리 (크고 구부러진) -->
+  <path d="M20 38 C10 30 6 44 14 50" fill="none" stroke="#2a6010" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M22 42 C12 35 8 50 16 54" fill="none" stroke="#2a6010" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

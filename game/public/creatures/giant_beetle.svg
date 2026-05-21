@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 왕관 -->
+  <polygon points="32,2 28,10 22,6 24,14 32,12 40,14 42,6 36,10" fill="#ffcc00" stroke="#cc8800" stroke-width="1.5"/>
+  <!-- 거대한 뿔(뿔집게) 좌 -->
+  <path d="M18 20 C6 14 2 4 8 2 C12 0 16 4 14 10 C16 6 22 6 22 14Z" fill="#1a1a0a" stroke="#0a0a00" stroke-width="1.5"/>
+  <!-- 뿔 안쪽 가시 -->
+  <path d="M14 8 C10 10 8 14 12 14" fill="none" stroke="#3a3a1a" stroke-width="1.2"/>
+  <!-- 거대한 뿔 우 -->
+  <path d="M46 20 C58 14 62 4 56 2 C52 0 48 4 50 10 C48 6 42 6 42 14Z" fill="#1a1a0a" stroke="#0a0a00" stroke-width="1.5"/>
+  <path d="M50 8 C54 10 56 14 52 14" fill="none" stroke="#3a3a1a" stroke-width="1.2"/>
+  <!-- 등딱지 -->
+  <ellipse cx="32" cy="40" rx="18" ry="20" fill="#2a5a0a" stroke="#0a2a00" stroke-width="2.5"/>
+  <!-- 하이라이트 -->
+  <ellipse cx="25" cy="30" rx="8" ry="5" fill="rgba(255,255,255,0.18)" transform="rotate(-20 25 30)"/>
+  <!-- 등딱지 가운데 선 -->
+  <line x1="32" y1="22" x2="32" y2="58" stroke="#0a2a00" stroke-width="2"/>
+  <!-- 가슴판 -->
+  <ellipse cx="32" cy="24" rx="13" ry="8" fill="#1a4a05" stroke="#0a2a00" stroke-width="2.5"/>
+  <!-- 머리 -->
+  <ellipse cx="32" cy="14" rx="10" ry="8" fill="#0a2a00" stroke="#000" stroke-width="2"/>
+  <!-- 눈 (빛나게) -->
+  <circle cx="24" cy="12" r="3.5" fill="#ffcc00"/>
+  <circle cx="40" cy="12" r="3.5" fill="#ffcc00"/>
+  <circle cx="24" cy="12" r="2" fill="#1a1a0a"/>
+  <circle cx="40" cy="12" r="2" fill="#1a1a0a"/>
+  <circle cx="23.5" cy="11.5" r="0.8" fill="white"/>
+  <circle cx="39.5" cy="11.5" r="0.8" fill="white"/>
+  <!-- 다리 6개 (굵게) -->
+  <line x1="17" y1="32" x2="6" y2="26" stroke="#0a2a00" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="15" y1="40" x2="4" y2="40" stroke="#0a2a00" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="17" y1="48" x2="6" y2="54" stroke="#0a2a00" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="47" y1="32" x2="58" y2="26" stroke="#0a2a00" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="49" y1="40" x2="60" y2="40" stroke="#0a2a00" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="47" y1="48" x2="58" y2="54" stroke="#0a2a00" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 발광 이펙트 -->
+  <circle cx="32" cy="40" r="20" fill="none" stroke="#88ff44" stroke-width="1" opacity="0.3"/>
+</svg>

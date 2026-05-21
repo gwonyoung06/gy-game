@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 다리 4개 -->
+  <ellipse cx="16" cy="22" rx="7" ry="4" fill="#5a8a44" stroke="#2a5a10" stroke-width="1.5" transform="rotate(-30 16 22)"/>
+  <ellipse cx="48" cy="22" rx="7" ry="4" fill="#5a8a44" stroke="#2a5a10" stroke-width="1.5" transform="rotate(30 48 22)"/>
+  <ellipse cx="16" cy="46" rx="7" ry="4" fill="#5a8a44" stroke="#2a5a10" stroke-width="1.5" transform="rotate(30 16 46)"/>
+  <ellipse cx="48" cy="46" rx="7" ry="4" fill="#5a8a44" stroke="#2a5a10" stroke-width="1.5" transform="rotate(-30 48 46)"/>
+  <!-- 껍데기 (자라 특유의 부드러운 갑각) -->
+  <ellipse cx="32" cy="34" rx="20" ry="18" fill="#7aaa44" stroke="#2a5a10" stroke-width="2"/>
+  <!-- 등딱지 질감 -->
+  <ellipse cx="32" cy="34" rx="20" ry="18" fill="none" stroke="#4a7a20" stroke-width="1" stroke-dasharray="6,8" opacity="0.4"/>
+  <ellipse cx="32" cy="34" rx="13" ry="11" fill="#6a9a3a" stroke="#4a7a20" stroke-width="1"/>
+  <!-- 가운데 융기 -->
+  <ellipse cx="32" cy="33" rx="7" ry="6" fill="#5a8a30" stroke="#2a5a10" stroke-width="1"/>
+  <!-- 하이라이트 -->
+  <ellipse cx="26" cy="27" rx="7" ry="4" fill="rgba(255,255,255,0.2)" transform="rotate(-20 26 27)"/>
+  <!-- 목 (자라는 목이 길다) -->
+  <ellipse cx="32" cy="16" rx="6" ry="10" fill="#6a9a44" stroke="#2a5a10" stroke-width="2"/>
+  <!-- 머리 -->
+  <ellipse cx="32" cy="8" rx="8" ry="6" fill="#5a8a34" stroke="#2a5a10" stroke-width="2"/>
+  <!-- 뾰족한 주둥이 (자라 특징) -->
+  <ellipse cx="32" cy="5" rx="4" ry="2.5" fill="#4a7a24" stroke="#2a5a10" stroke-width="1.5"/>
+  <path d="M28 5 C30 3 34 3 36 5" fill="none" stroke="#2a5a10" stroke-width="1"/>
+  <!-- 눈 -->
+  <circle cx="26" cy="7" r="3" fill="#2266aa"/>
+  <circle cx="38" cy="7" r="3" fill="#2266aa"/>
+  <circle cx="26" cy="7" r="1.5" fill="#0a1a44"/>
+  <circle cx="38" cy="7" r="1.5" fill="#0a1a44"/>
+  <circle cx="25.4" cy="6.4" r="0.6" fill="white"/>
+  <circle cx="37.4" cy="6.4" r="0.6" fill="white"/>
+  <!-- 꼬리 -->
+  <path d="M32 52 C32 58 30 60 32 62" fill="none" stroke="#2a5a10" stroke-width="2" stroke-linecap="round"/>
+</svg>

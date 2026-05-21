@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리지느러미 -->
+  <path d="M52 32 C58 22 62 18 60 32 C62 46 58 42 52 32Z" fill="#6688aa" stroke="#2a4466" stroke-width="1.5"/>
+  <!-- 몸통 (유선형) -->
+  <ellipse cx="28" cy="32" rx="26" ry="12" fill="#8899bb" stroke="#2a4466" stroke-width="2"/>
+  <!-- 배 (흰색) -->
+  <ellipse cx="26" cy="38" rx="18" ry="7" fill="#ddeeff" stroke="#8899bb" stroke-width="1"/>
+  <!-- 등지느러미 (삼각형) -->
+  <path d="M28 20 L34 6 L40 20Z" fill="#6688aa" stroke="#2a4466" stroke-width="1.5"/>
+  <!-- 가슴지느러미 좌우 -->
+  <path d="M20 34 C14 30 8 36 12 42 C14 38 18 38 20 36Z" fill="#6688aa" stroke="#2a4466" stroke-width="1.5"/>
+  <path d="M30 38 C28 44 30 52 36 50 C32 46 30 42 32 40Z" fill="#6688aa" stroke="#2a4466" stroke-width="1.5"/>
+  <!-- 아가미 선 -->
+  <path d="M16 26 C14 30 14 36 16 40" fill="none" stroke="#2a4466" stroke-width="1.5" opacity="0.6"/>
+  <path d="M20 24 C18 28 18 38 20 42" fill="none" stroke="#2a4466" stroke-width="1.2" opacity="0.4"/>
+  <!-- 머리 (뾰족하게) -->
+  <path d="M10 24 C4 28 2 32 4 36 C6 40 10 40 14 36 C16 32 14 26 10 24Z" fill="#778899" stroke="#2a4466" stroke-width="2"/>
+  <!-- 입 (날카로운 이빨) -->
+  <path d="M2 32 Q8 38 14 34" fill="#cc2222" stroke="#2a4466" stroke-width="1"/>
+  <path d="M4 32 L5 36 L7 32 L9 36 L11 32 L13 36" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- 눈 (검은 무감각) -->
+  <circle cx="8" cy="26" r="4" fill="#1a1a2a" stroke="#2a4466" stroke-width="1.5"/>
+  <circle cx="8" cy="26" r="2" fill="#0a0a12"/>
+</svg>

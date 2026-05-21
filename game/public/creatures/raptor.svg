@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 (수평, 균형) -->
+  <path d="M48 32 C54 28 60 26 62 30" fill="none" stroke="#cc8800" stroke-width="4" stroke-linecap="round"/>
+  <!-- 몸통 (날렵한) -->
+  <ellipse cx="32" cy="36" rx="16" ry="9" fill="#ddaa22" stroke="#886600" stroke-width="2"/>
+  <!-- 배 (연한) -->
+  <ellipse cx="32" cy="40" rx="12" ry="6" fill="#ffe088" stroke="#cc9922" stroke-width="1"/>
+  <!-- 앞발 (짧고 날카로운) -->
+  <path d="M22 32 C18 28 16 24 18 22" fill="none" stroke="#886600" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="18" y1="22" x2="14" y2="20" stroke="#886600" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="18" y1="22" x2="16" y2="18" stroke="#886600" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 뒷다리 (강하고 큰) -->
+  <path d="M26 42 C22 46 20 52 22 58" fill="none" stroke="#cc8800" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M22 58 C18 60 16 62 18 64" fill="none" stroke="#aa6600" stroke-width="3" stroke-linecap="round"/>
+  <!-- 낫 발톱 (시클 클로) -->
+  <path d="M22 58 C26 60 28 64 24 64" fill="none" stroke="#886600" stroke-width="2" stroke-linecap="round"/>
+  <!-- 다른 뒷다리 -->
+  <path d="M36 42 C40 46 42 50 40 56" fill="none" stroke="#cc8800" stroke-width="3" stroke-linecap="round"/>
+  <line x1="40" y1="56" x2="36" y2="60" stroke="#aa6600" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="40" y1="56" x2="44" y2="60" stroke="#aa6600" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 목 (앞으로 숙인) -->
+  <path d="M18 32 C14 26 12 20 14 14 C16 10 20 10 22 14 C22 20 20 26 20 32Z" fill="#ddaa22" stroke="#886600" stroke-width="2"/>
+  <!-- 머리 (긴 주둥이) -->
+  <path d="M10 18 C8 12 10 8 14 8 C18 8 22 12 20 18 C18 22 14 22 10 18Z" fill="#ffcc44" stroke="#886600" stroke-width="1.8"/>
+  <!-- 눈 (크고 날카로운) -->
+  <circle cx="11" cy="14" r="3.5" fill="#ffe066" stroke="#886600" stroke-width="1.2"/>
+  <circle cx="11" cy="14" r="1.8" fill="#1a1a1a"/>
+  <circle cx="10.4" cy="13.4" r="0.7" fill="white"/>
+  <!-- 이빨 -->
+  <line x1="12" y1="20" x2="12" y2="23" stroke="white" stroke-width="1.5"/>
+  <line x1="14" y1="21" x2="14" y2="24" stroke="white" stroke-width="1.5"/>
+  <line x1="16" y1="21" x2="16" y2="23" stroke="white" stroke-width="1.5"/>
+  <!-- 비늘 무늬 -->
+  <path d="M24 34 C26 32 28 34 26 36" fill="none" stroke="#cc8800" stroke-width="0.8" opacity="0.5"/>
+  <path d="M30 32 C32 30 34 32 32 34" fill="none" stroke="#cc8800" stroke-width="0.8" opacity="0.5"/>
+</svg>

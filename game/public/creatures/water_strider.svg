@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 물 표면 반영 (타원 물결) -->
+  <ellipse cx="32" cy="42" rx="28" ry="4" fill="none" stroke="#4499cc" stroke-width="1" opacity="0.4"/>
+  <!-- 다리 끝 물 움푹 (표면 장력) -->
+  <ellipse cx="8" cy="40" rx="4" ry="1.5" fill="none" stroke="#4499cc" stroke-width="1.2" opacity="0.6"/>
+  <ellipse cx="56" cy="40" rx="4" ry="1.5" fill="none" stroke="#4499cc" stroke-width="1.2" opacity="0.6"/>
+  <ellipse cx="8" cy="46" rx="4" ry="1.5" fill="none" stroke="#4499cc" stroke-width="1.2" opacity="0.6"/>
+  <ellipse cx="56" cy="46" rx="4" ry="1.5" fill="none" stroke="#4499cc" stroke-width="1.2" opacity="0.6"/>
+  <ellipse cx="16" cy="50" rx="4" ry="1.5" fill="none" stroke="#4499cc" stroke-width="1.2" opacity="0.6"/>
+  <ellipse cx="48" cy="50" rx="4" ry="1.5" fill="none" stroke="#4499cc" stroke-width="1.2" opacity="0.6"/>
+  <!-- 앞다리 (짧게) -->
+  <line x1="28" y1="30" x2="20" y2="22" stroke="#2a5a10" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="36" y1="30" x2="44" y2="22" stroke="#2a5a10" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 가운데 다리 (매우 길게) -->
+  <line x1="27" y1="32" x2="8" y2="40" stroke="#2a5a10" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="37" y1="32" x2="56" y2="40" stroke="#2a5a10" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 뒷다리 (긴 대각선) -->
+  <line x1="26" y1="36" x2="8" y2="46" stroke="#2a5a10" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="38" y1="36" x2="56" y2="46" stroke="#2a5a10" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 몸통 (가늘고 긴) -->
+  <ellipse cx="32" cy="32" rx="5" ry="14" fill="#445522" stroke="#2a5a10" stroke-width="2"/>
+  <!-- 몸통 마디 -->
+  <line x1="27" y1="28" x2="37" y2="28" stroke="#2a5a10" stroke-width="0.8" opacity="0.6"/>
+  <line x1="27" y1="34" x2="37" y2="34" stroke="#2a5a10" stroke-width="0.8" opacity="0.6"/>
+  <!-- 머리 -->
+  <ellipse cx="32" cy="18" rx="5" ry="4" fill="#3a5a18" stroke="#2a5a10" stroke-width="1.8"/>
+  <!-- 눈 -->
+  <circle cx="29" cy="17" r="2" fill="#88cc44"/>
+  <circle cx="35" cy="17" r="2" fill="#88cc44"/>
+  <circle cx="29" cy="17" r="1" fill="#1a4009"/>
+  <circle cx="35" cy="17" r="1" fill="#1a4009"/>
+  <!-- 더듬이 -->
+  <line x1="30" y1="14" x2="26" y2="9" stroke="#2a5a10" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="34" y1="14" x2="38" y2="9" stroke="#2a5a10" stroke-width="1.2" stroke-linecap="round"/>
+</svg>

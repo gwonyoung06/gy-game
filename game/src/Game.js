@@ -2781,7 +2781,26 @@ export class Game {
 
   // ── 크리처 도감 렌더링 ────────────────────────────────────────
 
-  // 타입별 이모지
+  // 타입별 SVG 아이콘 경로
+  static _DEX_SVG = {
+    dragonfly:'dragonfly',butterfly:'butterfly',bee:'bee',ladybug:'ladybug',cicada:'cicada',
+    beetle:'beetle',grasshopper:'grasshopper',mantis:'mantis',cricket:'cricket',stag:'stag',
+    worm:'worm',mole:'mole',snail:'snail',pill_bug:'pill_bug',centipede:'centipede',
+    frog:'frog',tadpole:'tadpole',water_strider:'water_strider',water_beetle:'water_beetle',larvae:'larvae',
+    firefly:'firefly',leech:'leech',crayfish:'crayfish',salamander:'salamander',giant_beetle:'giant_beetle',
+    crucian:'crucian',loach:'loach',catfish:'catfish',soft_turtle:'soft_turtle',heron:'heron',
+    crab:'crab',conch:'conch',abalone:'abalone',octopus:'octopus',starfish:'starfish',
+    shark:'shark',puffer:'puffer',jellyfish:'jellyfish',ray:'ray',whale:'whale',giant_shark:'giant_shark',
+    parrot:'parrot',chameleon:'chameleon',sloth:'sloth',iguana:'iguana',spider:'spider',
+    zebra:'zebra',ostrich:'ostrich',hyena:'hyena',croc:'croc',cheetah:'cheetah',
+    snow_leopard:'snow_leopard',polar_bear:'polar_bear',penguin:'penguin',reindeer:'reindeer',mammoth:'mammoth',
+    gorilla:'gorilla',cobra:'cobra',jaguar:'jaguar',elephant:'elephant',rhino:'rhino',
+    pteranodon:'pteranodon',stegosaurus:'stegosaurus',triceratops:'triceratops',brachiosaurus:'brachiosaurus',raptor:'raptor',
+    t_rex:'t_rex',spinosaurus:'spinosaurus',ankylosaurus:'ankylosaurus',parasaurolophus:'parasaurolophus',giganotosaurus:'giganotosaurus',
+    jade_rabbit:'jade_rabbit',moon_crab:'moon_crab',meteor_bug:'meteor_bug',moon_spirit:'moon_spirit',moon_guardian:'moon_guardian',
+  };
+
+  // 타입별 이모지 (폴백용)
   static _DEX_EMOJI = {
     dragonfly:'🦗',butterfly:'🦋',bee:'🐝',ladybug:'🐞',cicada:'🦟',
     beetle:'🪲',grasshopper:'🦗',mantis:'🦗',cricket:'🦗',stag:'🪲',
@@ -2839,6 +2858,7 @@ export class Game {
     const save     = loadSave();
     const captured = save.capturedTypes || {};
     const EMOJI    = Game._DEX_EMOJI;
+    const SVG      = Game._DEX_SVG;
     const DESC     = Game._DEX_DESC;
 
     // ── 전체 크리처 목록 빌드 (type 중복 제거) ───────────────
@@ -2941,16 +2961,28 @@ export class Game {
       card.style.background = found ? rarity.bg : 'rgba(255,255,255,0.03)';
       card.style.borderColor = found ? rarity.color + '60' : 'rgba(255,255,255,0.08)';
 
-      // 이모지 아바타
+      // SVG 아바타
       const avatar = document.createElement('div');
       avatar.className = 'dex-avatar';
       avatar.style.borderColor = found ? rarity.color : 'rgba(255,255,255,0.10)';
       if (found) {
         avatar.style.boxShadow  = `0 0 12px ${rarity.color}44`;
         avatar.style.background = `radial-gradient(circle, ${rarity.color}18 0%, transparent 70%)`;
+        const svgKey = SVG[c.type];
+        if (svgKey) {
+          const img = document.createElement('img');
+          img.className = 'dex-avatar-img';
+          img.src = `/creatures/${svgKey}.svg`;
+          img.alt = c.name;
+          img.draggable = false;
+          avatar.appendChild(img);
+        } else {
+          avatar.textContent = emoji;
+        }
+      } else {
+        avatar.textContent = '?';
+        avatar.style.cssText += ';color:rgba(255,255,255,0.2);font-size:1.2rem;';
       }
-      avatar.textContent = found ? emoji : '?';
-      if (!found) avatar.style.cssText += ';color:rgba(255,255,255,0.2);font-size:1.2rem;';
 
       // 포획 수 배지
       if (found && cnt > 1) {
@@ -3018,9 +3050,17 @@ export class Game {
       position:relative;text-align:center;
     `;
 
+    // 모달 아바타: SVG 있으면 img, 없으면 이모지
+    const svgKey = Game._DEX_SVG[c.type];
+    const avatarHtml = svgKey
+      ? `<div style="width:80px;height:80px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 16px ${clr}88);">
+           <img src="/creatures/${svgKey}.svg" alt="${c.name}" style="width:80px;height:80px;object-fit:contain;" draggable="false">
+         </div>`
+      : `<div style="font-size:4rem;line-height:1;margin-bottom:10px;filter:drop-shadow(0 0 16px ${clr}88);">${emoji}</div>`;
+
     card.innerHTML = `
       <button style="position:absolute;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.3rem;cursor:pointer;line-height:1;" onclick="this.closest('#_dexModal').remove()">✕</button>
-      <div style="font-size:4rem;line-height:1;margin-bottom:10px;filter:drop-shadow(0 0 16px ${clr}88);">${emoji}</div>
+      ${avatarHtml}
       <div style="font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:4px;">${c.name}</div>
       <div style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:10px;">${c.stageIcon} ${c.stageName} (ST.${c.stageId})${c.isBoss ? ' &nbsp;👑 BOSS' : ''}</div>
       <div style="font-size:1.1rem;color:${rarity.color};font-weight:700;margin-bottom:14px;letter-spacing:0.05em;">${rarity.stars} ${rarity.label}</div>

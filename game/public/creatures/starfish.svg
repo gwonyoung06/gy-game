@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 별모양 5팔 -->
+  <polygon points="32,6 38,22 56,22 42,34 48,52 32,42 16,52 22,34 8,22 26,22" fill="#ee6633" stroke="#aa3311" stroke-width="2"/>
+  <!-- 팔 질감선 -->
+  <line x1="32" y1="8" x2="32" y2="28" stroke="#aa3311" stroke-width="1" opacity="0.5"/>
+  <line x1="52" y1="24" x2="38" y2="34" stroke="#aa3311" stroke-width="1" opacity="0.5"/>
+  <line x1="46" y1="50" x2="36" y2="38" stroke="#aa3311" stroke-width="1" opacity="0.5"/>
+  <line x1="18" y1="50" x2="28" y2="38" stroke="#aa3311" stroke-width="1" opacity="0.5"/>
+  <line x1="12" y1="24" x2="26" y2="34" stroke="#aa3311" stroke-width="1" opacity="0.5"/>
+  <!-- 중앙 원 -->
+  <circle cx="32" cy="32" r="10" fill="#dd4422" stroke="#aa3311" stroke-width="1.5"/>
+  <!-- 중앙 하이라이트 -->
+  <circle cx="32" cy="32" r="6" fill="#ee7744"/>
+  <!-- 흡반 점들 -->
+  <circle cx="32" cy="14" r="2" fill="#cc2200" stroke="#aa3311" stroke-width="0.8"/>
+  <circle cx="49" cy="27" r="2" fill="#cc2200" stroke="#aa3311" stroke-width="0.8"/>
+  <circle cx="43" cy="47" r="2" fill="#cc2200" stroke="#aa3311" stroke-width="0.8"/>
+  <circle cx="21" cy="47" r="2" fill="#cc2200" stroke="#aa3311" stroke-width="0.8"/>
+  <circle cx="15" cy="27" r="2" fill="#cc2200" stroke="#aa3311" stroke-width="0.8"/>
+  <!-- 중앙 눈 (작게) -->
+  <circle cx="30" cy="30" r="2" fill="#1a1a1a"/>
+  <circle cx="34" cy="30" r="2" fill="#1a1a1a"/>
+  <!-- 빛나는 전체 후광 -->
+  <circle cx="32" cy="32" r="10" fill="none" stroke="#ff8855" stroke-width="1" opacity="0.4"/>
+</svg>

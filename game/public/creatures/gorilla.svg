@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 몸통 (크고 근육질) -->
+  <ellipse cx="32" cy="40" rx="18" ry="16" fill="#6633aa" stroke="#3a1a66" stroke-width="2.5"/>
+  <!-- 배 (연한) -->
+  <ellipse cx="32" cy="44" rx="12" ry="10" fill="#9966cc" stroke="#5522aa" stroke-width="1"/>
+  <!-- 긴 팔 (땅에 닿는) -->
+  <path d="M14 36 C8 38 4 44 6 52" fill="none" stroke="#3a1a66" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="6" cy="52" rx="5" ry="4" fill="#4422aa" stroke="#3a1a66" stroke-width="1.5"/>
+  <path d="M50 36 C56 38 60 44 58 52" fill="none" stroke="#3a1a66" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="58" cy="52" rx="5" ry="4" fill="#4422aa" stroke="#3a1a66" stroke-width="1.5"/>
+  <!-- 다리 (짧은) -->
+  <path d="M22 52 C20 56 20 62 24 62" fill="none" stroke="#3a1a66" stroke-width="5" stroke-linecap="round"/>
+  <path d="M42 52 C44 56 44 62 40 62" fill="none" stroke="#3a1a66" stroke-width="5" stroke-linecap="round"/>
+  <!-- 목 (없다시피한) -->
+  <ellipse cx="32" cy="26" rx="12" ry="8" fill="#6633aa" stroke="#3a1a66" stroke-width="2"/>
+  <!-- 머리 (크고 납작한) -->
+  <ellipse cx="32" cy="16" rx="14" ry="12" fill="#5522aa" stroke="#3a1a66" stroke-width="2.5"/>
+  <!-- 머리 위 볏 (수컷) -->
+  <path d="M26 6 C28 2 32 2 36 4 C34 8 30 8 26 6Z" fill="#4422aa" stroke="#3a1a66" stroke-width="1.5"/>
+  <!-- 눈두덩 (두꺼운) -->
+  <path d="M20 14 C22 10 28 10 30 14" fill="#3a1a66" stroke="#1a0a33" stroke-width="1"/>
+  <path d="M34 14 C36 10 42 10 44 14" fill="#3a1a66" stroke="#1a0a33" stroke-width="1"/>
+  <!-- 눈 -->
+  <circle cx="25" cy="16" r="3" fill="#cc99ff" stroke="#1a0a33" stroke-width="1.2"/>
+  <circle cx="39" cy="16" r="3" fill="#cc99ff" stroke="#1a0a33" stroke-width="1.2"/>
+  <circle cx="25" cy="16" r="1.5" fill="#1a1a1a"/>
+  <circle cx="39" cy="16" r="1.5" fill="#1a1a1a"/>
+  <circle cx="24.4" cy="15.4" r="0.6" fill="white"/>
+  <circle cx="38.4" cy="15.4" r="0.6" fill="white"/>
+  <!-- 코 (넓은) -->
+  <ellipse cx="32" cy="22" rx="5" ry="3.5" fill="#2a0a44"/>
+  <circle cx="29" cy="21" r="1.8" fill="#1a0a33"/>
+  <circle cx="35" cy="21" r="1.8" fill="#1a0a33"/>
+  <!-- 입 (넓은) -->
+  <path d="M26 26 Q32 30 38 26" fill="none" stroke="#1a0a33" stroke-width="2" stroke-linecap="round"/>
+  <!-- 귀 (둥근) -->
+  <circle cx="18" cy="14" r="5" fill="#5522aa" stroke="#3a1a66" stroke-width="1.5"/>
+  <circle cx="46" cy="14" r="5" fill="#5522aa" stroke="#3a1a66" stroke-width="1.5"/>
+</svg>

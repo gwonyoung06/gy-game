@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 유선형 몸통 -->
+  <ellipse cx="32" cy="36" rx="14" ry="20" fill="#226688" stroke="#0a3a55" stroke-width="2"/>
+  <!-- 등딱지 하이라이트 -->
+  <ellipse cx="27" cy="27" rx="6" ry="4" fill="rgba(255,255,255,0.2)" transform="rotate(-15 27 27)"/>
+  <!-- 등딱지 가운데 선 -->
+  <line x1="32" y1="18" x2="32" y2="54" stroke="#0a3a55" stroke-width="1.5"/>
+  <!-- 가슴판 -->
+  <ellipse cx="32" cy="22" rx="10" ry="7" fill="#1a4a66" stroke="#0a3a55" stroke-width="2"/>
+  <!-- 수영 다리 (넓적한 노 모양) -->
+  <ellipse cx="14" cy="38" rx="7" ry="4" fill="#1a4a66" stroke="#0a3a55" stroke-width="1.5" transform="rotate(-30 14 38)"/>
+  <ellipse cx="50" cy="38" rx="7" ry="4" fill="#1a4a66" stroke="#0a3a55" stroke-width="1.5" transform="rotate(30 50 38)"/>
+  <!-- 앞다리 -->
+  <line x1="22" y1="24" x2="12" y2="20" stroke="#0a3a55" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="42" y1="24" x2="52" y2="20" stroke="#0a3a55" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 중간 다리 -->
+  <line x1="20" y1="32" x2="10" y2="28" stroke="#0a3a55" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="44" y1="32" x2="54" y2="28" stroke="#0a3a55" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 머리 -->
+  <ellipse cx="32" cy="14" rx="9" ry="6" fill="#1a4a66" stroke="#0a3a55" stroke-width="2"/>
+  <!-- 눈 -->
+  <circle cx="25" cy="13" r="3" fill="#44bbdd"/>
+  <circle cx="39" cy="13" r="3" fill="#44bbdd"/>
+  <circle cx="25" cy="13" r="1.5" fill="#0a1a2a"/>
+  <circle cx="39" cy="13" r="1.5" fill="#0a1a2a"/>
+  <!-- 더듬이 -->
+  <line x1="28" y1="9" x2="24" y2="5" stroke="#0a3a55" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="36" y1="9" x2="40" y2="5" stroke="#0a3a55" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- 공기 방울 -->
+  <circle cx="18" cy="46" r="2" fill="none" stroke="#44aacc" stroke-width="1" opacity="0.6"/>
+  <circle cx="46" cy="44" r="1.5" fill="none" stroke="#44aacc" stroke-width="1" opacity="0.6"/>
+</svg>

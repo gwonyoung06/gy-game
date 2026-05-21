@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 날개 (접힌 상태) -->
+  <ellipse cx="32" cy="42" rx="12" ry="7" fill="#aad855" stroke="#1a6010" stroke-width="1.5" opacity="0.75"/>
+  <!-- 배 (긴 타원) -->
+  <ellipse cx="32" cy="46" rx="5" ry="14" fill="#6db535" stroke="#1a6010" stroke-width="2"/>
+  <!-- 가슴 (목처럼 길게) -->
+  <rect x="29" y="28" width="6" height="16" rx="3" fill="#5cb32b" stroke="#1a6010" stroke-width="1.8"/>
+  <!-- 앞다리(낫 모양) 좌 -->
+  <path d="M30 32 C18 24 12 30 16 36" fill="none" stroke="#2a6010" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M16 36 C14 34 12 36 14 38" fill="none" stroke="#2a6010" stroke-width="2" stroke-linecap="round"/>
+  <!-- 앞다리(낫 모양) 우 -->
+  <path d="M34 32 C46 24 52 30 48 36" fill="none" stroke="#2a6010" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M48 36 C50 34 52 36 50 38" fill="none" stroke="#2a6010" stroke-width="2" stroke-linecap="round"/>
+  <!-- 중간다리 -->
+  <line x1="29" y1="38" x2="18" y2="44" stroke="#1a6010" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="35" y1="38" x2="46" y2="44" stroke="#1a6010" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 뒷다리 -->
+  <line x1="29" y1="44" x2="16" y2="52" stroke="#1a6010" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="35" y1="44" x2="48" y2="52" stroke="#1a6010" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 머리 (삼각형 느낌) -->
+  <polygon points="32,10 23,22 41,22" fill="#3a8a1a" stroke="#1a6010" stroke-width="2"/>
+  <!-- 눈 (튀어나온 겹눈) -->
+  <circle cx="24" cy="20" r="4" fill="#88ff44" stroke="#1a6010" stroke-width="1.5"/>
+  <circle cx="40" cy="20" r="4" fill="#88ff44" stroke="#1a6010" stroke-width="1.5"/>
+  <circle cx="24" cy="20" r="2" fill="#1a4009"/>
+  <circle cx="40" cy="20" r="2" fill="#1a4009"/>
+  <!-- 더듬이 -->
+  <line x1="29" y1="10" x2="24" y2="4" stroke="#1a6010" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="35" y1="10" x2="40" y2="4" stroke="#1a6010" stroke-width="1.2" stroke-linecap="round"/>
+</svg>

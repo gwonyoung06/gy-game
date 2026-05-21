@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 긴 다리 -->
+  <line x1="26" y1="50" x2="22" y2="64" stroke="#2255aa" stroke-width="4" stroke-linecap="round"/>
+  <line x1="34" y1="50" x2="38" y2="64" stroke="#2255aa" stroke-width="4" stroke-linecap="round"/>
+  <!-- 발 -->
+  <line x1="22" y1="64" x2="16" y2="64" stroke="#2255aa" stroke-width="3" stroke-linecap="round"/>
+  <line x1="22" y1="64" x2="22" y2="68" stroke="#2255aa" stroke-width="3" stroke-linecap="round"/>
+  <line x1="38" y1="64" x2="44" y2="64" stroke="#2255aa" stroke-width="3" stroke-linecap="round"/>
+  <line x1="38" y1="64" x2="38" y2="68" stroke="#2255aa" stroke-width="3" stroke-linecap="round"/>
+  <!-- 몸통 (크고 둥근) -->
+  <ellipse cx="30" cy="40" rx="18" ry="14" fill="#2255aa" stroke="#0a1a55" stroke-width="2"/>
+  <!-- 날개 흔적 -->
+  <path d="M14 36 C10 32 10 28 14 30" fill="none" stroke="#1a3377" stroke-width="3" stroke-linecap="round"/>
+  <path d="M46 36 C50 32 50 28 46 30" fill="none" stroke="#1a3377" stroke-width="3" stroke-linecap="round"/>
+  <!-- 흰색 꼬리깃 -->
+  <path d="M46 42 C52 44 56 48 52 52 C50 54 46 50 46 46" fill="#aaccff" stroke="#2255aa" stroke-width="1.5"/>
+  <path d="M44 46 C50 50 52 56 48 58 C46 58 44 54 44 50" fill="#aaccff" stroke="#2255aa" stroke-width="1.5"/>
+  <!-- 긴 목 -->
+  <path d="M22 30 C20 22 22 14 26 10 C28 8 30 10 28 16 C26 22 24 26 24 32Z" fill="#3377cc" stroke="#0a1a55" stroke-width="2"/>
+  <!-- 작은 머리 -->
+  <ellipse cx="28" cy="8" rx="6" ry="5" fill="#3377cc" stroke="#0a1a55" stroke-width="2"/>
+  <!-- 눈 (크고 동그란) -->
+  <circle cx="24" cy="6" r="3" fill="white" stroke="#0a1a55" stroke-width="1.5"/>
+  <circle cx="24" cy="6" r="1.8" fill="#aaccff"/>
+  <circle cx="24" cy="6" r="1" fill="#1a1a1a"/>
+  <circle cx="23.4" cy="5.4" r="0.5" fill="white"/>
+  <!-- 부리 -->
+  <path d="M22 9 C18 10 16 12 18 13 C20 14 22 12 22 9Z" fill="#ffdd88" stroke="#cc9900" stroke-width="1"/>
+  <!-- 눈 주위 분홍 -->
+  <circle cx="24" cy="6" r="4" fill="none" stroke="#ff88aa" stroke-width="0.8" opacity="0.5"/>
+</svg>

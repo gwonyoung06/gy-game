@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 달빛 오라 (보스) -->
+  <circle cx="32" cy="32" r="30" fill="none" stroke="#ddeeff" stroke-width="2" opacity="0.3"/>
+  <circle cx="32" cy="32" r="26" fill="none" stroke="#ccddff" stroke-width="1.5" opacity="0.4"/>
+  <!-- 갑옷 어깨 장식 (왼) -->
+  <path d="M10 28 C6 24 4 18 8 16 C12 14 14 20 14 26Z" fill="#ccddff" stroke="#7788bb" stroke-width="2"/>
+  <path d="M8 16 L6 10 L10 14" fill="#aabbdd" stroke="#7788bb" stroke-width="1.2"/>
+  <!-- 갑옷 어깨 장식 (오른) -->
+  <path d="M54 28 C58 24 60 18 56 16 C52 14 50 20 50 26Z" fill="#ccddff" stroke="#7788bb" stroke-width="2"/>
+  <path d="M56 16 L58 10 L54 14" fill="#aabbdd" stroke="#7788bb" stroke-width="1.2"/>
+  <!-- 망토 (달빛) -->
+  <path d="M14 36 C10 44 10 56 16 60 C20 56 18 48 20 44Z" fill="#9999cc" stroke="#6677aa" stroke-width="1.5" opacity="0.8"/>
+  <path d="M50 36 C54 44 54 56 48 60 C44 56 46 48 44 44Z" fill="#9999cc" stroke="#6677aa" stroke-width="1.5" opacity="0.8"/>
+  <!-- 몸통 (갑옷) -->
+  <ellipse cx="32" cy="40" rx="16" ry="14" fill="#bbccee" stroke="#7788bb" stroke-width="2.5"/>
+  <!-- 갑옷 문양 (초승달) -->
+  <path d="M24 36 C26 30 34 30 38 36 C34 32 28 32 24 36Z" fill="#eeeeff" stroke="#9999cc" stroke-width="1" opacity="0.7"/>
+  <!-- 갑옷 별 문양 -->
+  <path d="M32 38 L33 35 L34 38 L37 38 L35 40 L36 43 L32 41 L28 43 L29 40 L27 38Z" fill="#ddeeff" stroke="#9999cc" stroke-width="0.8"/>
+  <!-- 다리 (갑옷) -->
+  <rect x="22" y="52" width="8" height="12" rx="4" fill="#aabbdd" stroke="#7788bb" stroke-width="2"/>
+  <rect x="34" y="52" width="8" height="12" rx="4" fill="#aabbdd" stroke="#7788bb" stroke-width="2"/>
+  <!-- 투구 -->
+  <path d="M18 24 C18 14 24 8 32 8 C40 8 46 14 46 24 C46 26 44 28 40 28 C36 26 32 26 28 28 C24 28 18 26 18 24Z" fill="#bbccee" stroke="#7788bb" stroke-width="2.5"/>
+  <!-- 투구 뿔/장식 -->
+  <path d="M26 8 C24 2 28 0 32 2 C36 0 40 2 38 8" fill="none" stroke="#ddeeff" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="32" cy="2" r="3" fill="#eeeeff" stroke="#9999cc" stroke-width="1.5"/>
+  <!-- 얼굴 가림막 위 초승달 장식 -->
+  <path d="M24 14 C26 10 32 8 36 12 C32 10 26 12 24 14Z" fill="#ddeeff" opacity="0.6"/>
+  <!-- 눈 (달빛 빛남, 보스) -->
+  <ellipse cx="25" cy="20" rx="4" ry="4.5" fill="#aabbff" stroke="#7788bb" stroke-width="1.5"/>
+  <ellipse cx="39" cy="20" rx="4" ry="4.5" fill="#aabbff" stroke="#7788bb" stroke-width="1.5"/>
+  <circle cx="25" cy="20" r="2.5" fill="#eeeeff"/>
+  <circle cx="39" cy="20" r="2.5" fill="#eeeeff"/>
+  <circle cx="25" cy="20" r="1.5" fill="#2233aa"/>
+  <circle cx="39" cy="20" r="1.5" fill="#2233aa"/>
+  <circle cx="24.4" cy="19.4" r="0.7" fill="white"/>
+  <circle cx="38.4" cy="19.4" r="0.7" fill="white"/>
+  <!-- 눈 보스 광채 -->
+  <circle cx="25" cy="20" r="5" fill="none" stroke="#ddeeff" stroke-width="1" opacity="0.7"/>
+  <circle cx="39" cy="20" r="5" fill="none" stroke="#ddeeff" stroke-width="1" opacity="0.7"/>
+  <!-- 창 (무기) -->
+  <line x1="58" y1="8" x2="48" y2="40" stroke="#ccddff" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M58 8 C60 4 62 6 60 10 C58 12 56 10 58 8Z" fill="#eeeeff" stroke="#9999cc" stroke-width="1.5"/>
+  <!-- 달빛 입자 -->
+  <circle cx="8" cy="14" r="1.5" fill="#ddeeff" opacity="0.8"/>
+  <circle cx="56" cy="12" r="1.5" fill="#ddeeff" opacity="0.8"/>
+  <circle cx="6" cy="50" r="1.2" fill="#ddeeff" opacity="0.6"/>
+  <circle cx="58" cy="52" r="1.2" fill="#ddeeff" opacity="0.6"/>
+  <circle cx="32" cy="4" r="1" fill="#ddeeff" opacity="0.7"/>
+</svg>

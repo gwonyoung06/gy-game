@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 몸통 (달걀형) -->
+  <ellipse cx="32" cy="38" rx="14" ry="18" fill="#4422aa" stroke="#1a0a55" stroke-width="2"/>
+  <!-- 배 (흰색 패치) -->
+  <ellipse cx="32" cy="42" rx="9" ry="13" fill="#eeddff" stroke="#9966cc" stroke-width="1"/>
+  <!-- 날개 (납작) -->
+  <path d="M18 32 C12 30 8 36 10 44 C12 50 18 50 20 44 C18 40 18 36 20 32Z" fill="#4422aa" stroke="#1a0a55" stroke-width="1.8"/>
+  <path d="M46 32 C52 30 56 36 54 44 C52 50 46 50 44 44 C46 40 46 36 44 32Z" fill="#4422aa" stroke="#1a0a55" stroke-width="1.8"/>
+  <!-- 발 (오렌지) -->
+  <path d="M26 56 C24 58 20 60 22 62 C24 62 26 60 28 60 C28 62 30 62 30 60 C30 62 32 62 32 60 C34 62 34 58 28 56Z" fill="#ff9922" stroke="#cc6600" stroke-width="1.2"/>
+  <path d="M36 56 C34 58 38 62 38 60 C38 62 40 62 40 60 C40 62 42 62 42 60 C44 58 40 56 36 56Z" fill="#ff9922" stroke="#cc6600" stroke-width="1.2"/>
+  <!-- 목 -->
+  <ellipse cx="32" cy="22" rx="9" ry="7" fill="#4422aa" stroke="#1a0a55" stroke-width="1.5"/>
+  <!-- 머리 -->
+  <circle cx="32" cy="14" r="10" fill="#4422aa" stroke="#1a0a55" stroke-width="2"/>
+  <!-- 뺨 (흰색) -->
+  <ellipse cx="26" cy="16" rx="4" ry="5" fill="#eeddff" opacity="0.7"/>
+  <ellipse cx="38" cy="16" rx="4" ry="5" fill="#eeddff" opacity="0.7"/>
+  <!-- 눈 -->
+  <circle cx="27" cy="11" r="3.5" fill="white" stroke="#1a0a55" stroke-width="1.2"/>
+  <circle cx="37" cy="11" r="3.5" fill="white" stroke="#1a0a55" stroke-width="1.2"/>
+  <circle cx="27" cy="11" r="2" fill="#cc99ff"/>
+  <circle cx="37" cy="11" r="2" fill="#cc99ff"/>
+  <circle cx="27" cy="11" r="1" fill="#1a1a1a"/>
+  <circle cx="37" cy="11" r="1" fill="#1a1a1a"/>
+  <circle cx="26.5" cy="10.5" r="0.5" fill="white"/>
+  <circle cx="36.5" cy="10.5" r="0.5" fill="white"/>
+  <!-- 부리 (삼각형) -->
+  <path d="M30 16 L32 20 L34 16Z" fill="#ff9922" stroke="#cc6600" stroke-width="1"/>
+</svg>

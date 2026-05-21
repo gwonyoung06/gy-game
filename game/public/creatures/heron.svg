@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 다리 (두 개 길고 가늘게) -->
+  <line x1="28" y1="52" x2="24" y2="62" stroke="#ccbbaa" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="36" y1="52" x2="40" y2="62" stroke="#ccbbaa" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 발가락 -->
+  <line x1="24" y1="62" x2="18" y2="63" stroke="#ccbbaa" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="24" y1="62" x2="24" y2="65" stroke="#ccbbaa" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="24" y1="62" x2="30" y2="64" stroke="#ccbbaa" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="40" y1="62" x2="34" y2="63" stroke="#ccbbaa" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="40" y1="62" x2="40" y2="65" stroke="#ccbbaa" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="40" y1="62" x2="46" y2="64" stroke="#ccbbaa" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- 몸통 -->
+  <ellipse cx="32" cy="44" rx="14" ry="10" fill="#ddeeff" stroke="#8899aa" stroke-width="2"/>
+  <!-- 날개 -->
+  <ellipse cx="20" cy="38" rx="12" ry="18" fill="#aabbcc" stroke="#8899aa" stroke-width="1.8" transform="rotate(10 20 38)"/>
+  <ellipse cx="44" cy="38" rx="12" ry="18" fill="#aabbcc" stroke="#8899aa" stroke-width="1.8" transform="rotate(-10 44 38)"/>
+  <!-- 날개 깃털 선 -->
+  <line x1="14" y1="30" x2="12" y2="50" stroke="#8899aa" stroke-width="0.8" opacity="0.5"/>
+  <line x1="18" y1="27" x2="16" y2="52" stroke="#8899aa" stroke-width="0.8" opacity="0.5"/>
+  <line x1="50" y1="30" x2="52" y2="50" stroke="#8899aa" stroke-width="0.8" opacity="0.5"/>
+  <line x1="46" y1="27" x2="48" y2="52" stroke="#8899aa" stroke-width="0.8" opacity="0.5"/>
+  <!-- 가슴 흰색 -->
+  <ellipse cx="32" cy="42" rx="9" ry="8" fill="#eeeeff" stroke="#aabbcc" stroke-width="1"/>
+  <!-- 목 (S자) -->
+  <path d="M32 34 C34 28 30 22 32 16" fill="none" stroke="#ddeeff" stroke-width="8" stroke-linecap="round"/>
+  <path d="M32 34 C34 28 30 22 32 16" fill="none" stroke="#aabbcc" stroke-width="5" stroke-linecap="round"/>
+  <!-- 머리 -->
+  <ellipse cx="32" cy="12" rx="7" ry="6" fill="#1a1a2a" stroke="#0a0a1a" stroke-width="1.5"/>
+  <!-- 흰 눈 줄 -->
+  <line x1="25" y1="12" x2="38" y2="12" stroke="white" stroke-width="1.5"/>
+  <!-- 뾰족한 긴 부리 -->
+  <path d="M38 10 L60 12 L38 14Z" fill="#f0cc44" stroke="#cc9910" stroke-width="1"/>
+  <!-- 눈 -->
+  <circle cx="30" cy="10" r="2.5" fill="#f0cc44"/>
+  <circle cx="30" cy="10" r="1.2" fill="#1a1a0a"/>
+  <!-- 댕기깃 (머리 뒤) -->
+  <path d="M26 10 C20 8 16 10 18 14" fill="none" stroke="#1a1a2a" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

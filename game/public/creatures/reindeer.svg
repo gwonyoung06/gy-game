@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 뿔 (가지진) -->
+  <path d="M12 10 C10 4 6 2 4 6" fill="none" stroke="#5522aa" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M12 10 C14 4 12 0 10 2" fill="none" stroke="#5522aa" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 10 C8 8 6 6 6 4" fill="none" stroke="#5522aa" stroke-width="2" stroke-linecap="round"/>
+  <path d="M18 10 C20 4 24 2 26 6" fill="none" stroke="#5522aa" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M18 10 C16 4 18 0 20 2" fill="none" stroke="#5522aa" stroke-width="2" stroke-linecap="round"/>
+  <path d="M18 10 C22 8 24 6 24 4" fill="none" stroke="#5522aa" stroke-width="2" stroke-linecap="round"/>
+  <!-- 꼬리 -->
+  <ellipse cx="54" cy="30" rx="4" ry="5" fill="#eeddff" stroke="#7744bb" stroke-width="1.5"/>
+  <!-- 몸통 -->
+  <ellipse cx="34" cy="34" rx="20" ry="11" fill="#9966cc" stroke="#5522aa" stroke-width="2"/>
+  <!-- 배 (연한) -->
+  <ellipse cx="34" cy="40" rx="14" ry="6" fill="#cc99ff" stroke="#7744bb" stroke-width="1"/>
+  <!-- 다리 4개 -->
+  <rect x="20" y="42" width="5" height="15" rx="2.5" fill="#7744bb" stroke="#5522aa" stroke-width="1.5"/>
+  <rect x="28" y="42" width="5" height="15" rx="2.5" fill="#7744bb" stroke="#5522aa" stroke-width="1.5"/>
+  <rect x="40" y="42" width="5" height="15" rx="2.5" fill="#7744bb" stroke="#5522aa" stroke-width="1.5"/>
+  <rect x="48" y="42" width="5" height="15" rx="2.5" fill="#7744bb" stroke="#5522aa" stroke-width="1.5"/>
+  <!-- 발굽 -->
+  <ellipse cx="22" cy="57" rx="3.5" ry="2" fill="#3a1a66"/>
+  <ellipse cx="30" cy="57" rx="3.5" ry="2" fill="#3a1a66"/>
+  <ellipse cx="42" cy="57" rx="3.5" ry="2" fill="#3a1a66"/>
+  <ellipse cx="50" cy="57" rx="3.5" ry="2" fill="#3a1a66"/>
+  <!-- 목 -->
+  <path d="M16 28 C14 20 16 14 20 12 C24 10 24 16 20 24Z" fill="#9966cc" stroke="#5522aa" stroke-width="2"/>
+  <!-- 머리 -->
+  <ellipse cx="14" cy="14" rx="9" ry="8" fill="#9966cc" stroke="#5522aa" stroke-width="2"/>
+  <!-- 눈 -->
+  <circle cx="9" cy="12" r="2.5" fill="#3a1a66" stroke="#1a0a33" stroke-width="1"/>
+  <circle cx="9" cy="12" r="1.2" fill="#1a1a1a"/>
+  <circle cx="8.4" cy="11.4" r="0.5" fill="white"/>
+  <!-- 코 (빨간, 루돌프 느낌) -->
+  <circle cx="7" cy="18" r="3" fill="#ff4444" stroke="#cc1111" stroke-width="1"/>
+  <circle cx="7" cy="18" r="1.5" fill="#ff6666"/>
+  <!-- 귀 -->
+  <path d="M8 8 C6 4 10 2 12 6" fill="#9966cc" stroke="#5522aa" stroke-width="1.5"/>
+  <path d="M16 7 C16 3 20 4 18 8" fill="#9966cc" stroke="#5522aa" stroke-width="1.5"/>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 상아 (굽은) -->
+  <path d="M8 36 C2 38 -2 44 0 50 C2 54 6 52 8 46" fill="none" stroke="#eeddff" stroke-width="3" stroke-linecap="round"/>
+  <path d="M14 36 C10 40 8 46 10 50" fill="none" stroke="#eeddff" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 몸통 (크고 털북숭이) -->
+  <ellipse cx="36" cy="36" rx="22" ry="16" fill="#7744bb" stroke="#3a1a66" stroke-width="2.5"/>
+  <!-- 털 질감 -->
+  <ellipse cx="36" cy="36" rx="22" ry="16" fill="none" stroke="#5522aa" stroke-width="1.5" stroke-dasharray="2,5" opacity="0.6"/>
+  <!-- 배 털 -->
+  <path d="M18 44 C20 50 30 54 40 52 C50 50 56 44 56 40" fill="none" stroke="#9966cc" stroke-width="1" stroke-dasharray="2,4" opacity="0.5"/>
+  <!-- 다리 (두꺼운) -->
+  <rect x="18" y="48" width="8" height="14" rx="4" fill="#6633aa" stroke="#3a1a66" stroke-width="1.8"/>
+  <rect x="28" y="48" width="8" height="14" rx="4" fill="#6633aa" stroke="#3a1a66" stroke-width="1.8"/>
+  <rect x="40" y="48" width="8" height="14" rx="4" fill="#6633aa" stroke="#3a1a66" stroke-width="1.8"/>
+  <rect x="50" y="48" width="8" height="14" rx="4" fill="#6633aa" stroke="#3a1a66" stroke-width="1.8"/>
+  <!-- 꼬리 (짧고 뭉툭) -->
+  <path d="M58 38 C62 36 62 42 58 42" fill="none" stroke="#7744bb" stroke-width="3" stroke-linecap="round"/>
+  <!-- 머리 (크고 높은) -->
+  <path d="M8 24 C8 14 14 10 20 10 C26 10 28 16 24 24 C22 30 18 34 14 34 C10 34 8 30 8 24Z" fill="#7744bb" stroke="#3a1a66" stroke-width="2"/>
+  <!-- 귀 (크고 납작) -->
+  <ellipse cx="16" cy="14" rx="8" ry="6" fill="#6633aa" stroke="#3a1a66" stroke-width="1.5" transform="rotate(-20 16 14)"/>
+  <!-- 눈 -->
+  <circle cx="12" cy="20" r="3.5" fill="#3a1a66" stroke="#1a0a33" stroke-width="1.5"/>
+  <circle cx="12" cy="20" r="1.8" fill="#1a1a1a"/>
+  <circle cx="11.4" cy="19.4" r="0.7" fill="white"/>
+  <!-- 코 (길고 굽은) -->
+  <path d="M10 28 C6 32 4 38 6 44 C8 48 12 46 10 42" fill="none" stroke="#5522aa" stroke-width="5" stroke-linecap="round"/>
+  <!-- 머리 위 혹 (매머드 특징) -->
+  <ellipse cx="18" cy="10" rx="6" ry="4" fill="#8855cc" stroke="#3a1a66" stroke-width="1.5"/>
+</svg>

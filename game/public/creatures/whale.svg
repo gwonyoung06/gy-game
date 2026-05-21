@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 수평지느러미 -->
+  <path d="M52 28 C58 22 64 24 62 30 C64 36 58 38 52 36" fill="#1a3355" stroke="#0a1a33" stroke-width="1.5"/>
+  <!-- 꼬리 줄기 -->
+  <ellipse cx="52" cy="32" rx="6" ry="5" fill="#223366" stroke="#0a1a33" stroke-width="1.5"/>
+  <!-- 몸통 (크고 유선형) -->
+  <ellipse cx="28" cy="32" rx="26" ry="16" fill="#2255aa" stroke="#0a1a33" stroke-width="2.5"/>
+  <!-- 배 (흰색 패치) -->
+  <path d="M8 36 C12 42 24 46 36 44 C44 42 48 38 48 34" fill="#aaccff" stroke="#2255aa" stroke-width="1"/>
+  <!-- 등지느러미 -->
+  <path d="M36 16 C40 8 44 8 46 16" fill="#1a3355" stroke="#0a1a33" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- 가슴지느러미 (길고 넓게) -->
+  <path d="M18 36 C12 40 6 46 10 50 C14 54 20 50 22 44 C20 42 18 40 18 36Z" fill="#1a4488" stroke="#0a1a33" stroke-width="1.5"/>
+  <!-- 물 분수 -->
+  <path d="M14 14 C14 8 12 4 14 2" fill="none" stroke="#aaddff" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M16 12 C18 6 16 2 20 0" fill="none" stroke="#aaddff" stroke-width="2" stroke-linecap="round"/>
+  <path d="M18 14 C22 10 22 6 24 4" fill="none" stroke="#aaddff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- 머리 -->
+  <ellipse cx="8" cy="30" rx="10" ry="14" fill="#2255aa" stroke="#0a1a33" stroke-width="2"/>
+  <!-- 입 선 -->
+  <path d="M2 34 C4 38 8 40 14 38" fill="none" stroke="#0a1a33" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- 눈 -->
+  <circle cx="10" cy="24" r="4" fill="#1a1a2a" stroke="#0a1a33" stroke-width="1.5"/>
+  <circle cx="10" cy="24" r="2" fill="#0a0a12"/>
+  <circle cx="9" cy="23" r="1" fill="white"/>
+</svg>

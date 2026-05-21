@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 몸통 (S자 여러 마디) -->
+  <path d="M10 20 C18 14 26 22 22 30 C18 38 26 46 34 44 C42 42 50 50 54 44" fill="none" stroke="#cc4422" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 몸통 색상 (밝은 안쪽) -->
+  <path d="M10 20 C18 14 26 22 22 30 C18 38 26 46 34 44 C42 42 50 50 54 44" fill="none" stroke="#ee6644" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 마디 구분 -->
+  <path d="M10 20 C18 14 26 22 22 30 C18 38 26 46 34 44 C42 42 50 50 54 44" fill="none" stroke="#aa3322" stroke-width="1.5" stroke-dasharray="4,6" stroke-linecap="round"/>
+  <!-- 각 마디의 다리 (좌우) -->
+  <line x1="12" y1="19" x2="6" y2="14" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="12" y1="21" x2="6" y2="26" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="18" y1="16" x2="14" y2="9" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="20" y1="18" x2="16" y2="24" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="25" y1="18" x2="22" y2="11" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="23" y1="25" x2="17" y2="29" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="21" y1="32" x2="13" y2="33" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="22" y1="36" x2="15" y2="40" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="28" y1="43" x2="24" y2="50" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="34" y1="46" x2="32" y2="54" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="42" y1="44" x2="44" y2="52" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="48" y1="49" x2="52" y2="56" stroke="#aa3322" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- 머리 -->
+  <circle cx="10" cy="20" r="7" fill="#aa3322" stroke="#7a1a10" stroke-width="2"/>
+  <!-- 더듬이 (매우 길게) -->
+  <line x1="6" y1="15" x2="2" y2="6" stroke="#7a1a10" stroke-width="2" stroke-linecap="round"/>
+  <line x1="9" y1="13" x2="6" y2="4" stroke="#7a1a10" stroke-width="2" stroke-linecap="round"/>
+  <!-- 눈 -->
+  <circle cx="7" cy="19" r="2.5" fill="#ffaa44"/>
+  <circle cx="7" cy="19" r="1.2" fill="#1a0a00"/>
+  <!-- 큰 턱 -->
+  <path d="M4 23 C2 26 6 28 8 25" fill="#7a1a10" stroke="#7a1a10" stroke-width="1"/>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 -->
+  <path d="M56 36 C60 32 64 34 62 40" fill="none" stroke="#cc8800" stroke-width="4" stroke-linecap="round"/>
+  <!-- 몸통 (크고 두꺼운) -->
+  <ellipse cx="34" cy="38" rx="22" ry="14" fill="#ddaa22" stroke="#886600" stroke-width="2.5"/>
+  <!-- 다리 (4개) -->
+  <rect x="16" y="48" width="8" height="13" rx="4" fill="#cc8800" stroke="#886600" stroke-width="1.8"/>
+  <rect x="26" y="48" width="8" height="13" rx="4" fill="#cc8800" stroke="#886600" stroke-width="1.8"/>
+  <rect x="38" y="48" width="8" height="13" rx="4" fill="#cc8800" stroke="#886600" stroke-width="1.8"/>
+  <rect x="48" y="48" width="8" height="13" rx="4" fill="#cc8800" stroke="#886600" stroke-width="1.8"/>
+  <!-- 목 -->
+  <path d="M14 32 C12 24 14 18 18 16 C22 14 22 20 18 28Z" fill="#ddaa22" stroke="#886600" stroke-width="2"/>
+  <!-- 목 방패 (프릴) -->
+  <path d="M6 24 C2 16 6 8 14 8 C20 8 22 14 18 18 C14 22 8 22 6 24Z" fill="#ffcc44" stroke="#886600" stroke-width="2"/>
+  <!-- 프릴 무늬 -->
+  <path d="M8 22 C6 18 8 12 12 12" fill="none" stroke="#cc8800" stroke-width="1" opacity="0.6"/>
+  <path d="M12 20 C10 16 12 10 16 12" fill="none" stroke="#cc8800" stroke-width="1" opacity="0.6"/>
+  <!-- 머리 -->
+  <path d="M4 26 C4 20 8 16 14 16 C20 16 24 20 22 28 C20 34 14 36 8 34 C4 32 4 30 4 26Z" fill="#cc9922" stroke="#886600" stroke-width="2"/>
+  <!-- 코뿔 (긴) -->
+  <path d="M4 24 C0 20 -2 16 0 14 C2 14 4 18 4 24Z" fill="#ffaa00" stroke="#886600" stroke-width="1.5"/>
+  <!-- 눈썹뿔 (두 개) -->
+  <path d="M8 20 C6 16 8 12 10 14 C10 17 8 20 8 20Z" fill="#ffaa00" stroke="#886600" stroke-width="1.2"/>
+  <path d="M16 20 C14 16 16 12 18 14 C18 17 16 20 16 20Z" fill="#ffaa00" stroke="#886600" stroke-width="1.2"/>
+  <!-- 눈 -->
+  <circle cx="8" cy="24" r="3" fill="#ffe066" stroke="#886600" stroke-width="1.2"/>
+  <circle cx="8" cy="24" r="1.5" fill="#1a1a1a"/>
+  <circle cx="7.4" cy="23.4" r="0.6" fill="white"/>
+  <!-- 입 -->
+  <path d="M4 30 C6 32 10 34 14 32" fill="none" stroke="#886600" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

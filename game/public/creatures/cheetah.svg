@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 (길고 끝에 고리) -->
+  <path d="M54 30 C58 26 62 22 60 16 C58 12 54 14 54 20 C54 24 58 24 58 20" fill="none" stroke="#1a4488" stroke-width="3" stroke-linecap="round"/>
+  <!-- 몸통 (유선형, 길쭉한) -->
+  <ellipse cx="30" cy="34" rx="22" ry="10" fill="#4488cc" stroke="#1a3366" stroke-width="2"/>
+  <!-- 점박이 무늬 -->
+  <circle cx="18" cy="30" r="2" fill="#1a3366"/>
+  <circle cx="24" cy="26" r="2" fill="#1a3366"/>
+  <circle cx="30" cy="28" r="2" fill="#1a3366"/>
+  <circle cx="36" cy="26" r="2" fill="#1a3366"/>
+  <circle cx="42" cy="30" r="2" fill="#1a3366"/>
+  <circle cx="22" cy="36" r="1.5" fill="#1a3366"/>
+  <circle cx="32" cy="38" r="1.5" fill="#1a3366"/>
+  <circle cx="42" cy="36" r="1.5" fill="#1a3366"/>
+  <!-- 배 (연한) -->
+  <ellipse cx="30" cy="40" rx="16" ry="6" fill="#88bbff" stroke="#2255aa" stroke-width="1"/>
+  <!-- 앞다리 (빠르게 달리는 자세) -->
+  <path d="M16 38 C10 40 6 44 8 50" fill="none" stroke="#1a3366" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="8" y1="50" x2="4" y2="52" stroke="#1a3366" stroke-width="1.8"/>
+  <line x1="8" y1="50" x2="6" y2="54" stroke="#1a3366" stroke-width="1.8"/>
+  <line x1="8" y1="50" x2="10" y2="54" stroke="#1a3366" stroke-width="1.8"/>
+  <!-- 뒷다리 (뻗은) -->
+  <path d="M44 38 C50 38 54 42 52 48" fill="none" stroke="#1a3366" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="52" y1="48" x2="48" y2="50" stroke="#1a3366" stroke-width="1.8"/>
+  <line x1="52" y1="48" x2="50" y2="54" stroke="#1a3366" stroke-width="1.8"/>
+  <line x1="52" y1="48" x2="54" y2="54" stroke="#1a3366" stroke-width="1.8"/>
+  <!-- 목 -->
+  <ellipse cx="12" cy="28" rx="6" ry="8" fill="#3377bb" stroke="#1a3366" stroke-width="2"/>
+  <!-- 머리 (작고 둥근) -->
+  <circle cx="8" cy="20" r="8" fill="#3377bb" stroke="#1a3366" stroke-width="2"/>
+  <!-- 눈물 무늬 (치타 특징) -->
+  <path d="M5 23 C4 25 4 27 5 28" fill="none" stroke="#1a1a2a" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- 귀 (뾰족) -->
+  <path d="M4 14 C4 10 8 10 8 14" fill="#3377bb" stroke="#1a3366" stroke-width="1.5"/>
+  <path d="M10 13 C12 9 14 10 12 14" fill="#3377bb" stroke="#1a3366" stroke-width="1.5"/>
+  <!-- 눈 -->
+  <circle cx="5" cy="19" r="2.5" fill="#ffdd44" stroke="#1a3366" stroke-width="1.2"/>
+  <circle cx="5" cy="19" r="1.2" fill="#1a1a1a"/>
+  <circle cx="4.4" cy="18.4" r="0.5" fill="white"/>
+  <!-- 코 -->
+  <ellipse cx="3" cy="23" rx="1.5" ry="1" fill="#1a1a2a"/>
+  <!-- 점박이 (머리) -->
+  <circle cx="8" cy="17" r="1" fill="#1a3366"/>
+  <circle cx="12" cy="20" r="1" fill="#1a3366"/>
+</svg>

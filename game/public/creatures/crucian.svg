@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리지느러미 -->
+  <path d="M50 32 C58 24 62 20 60 32 C62 44 58 40 50 32Z" fill="#cc8822" stroke="#885500" stroke-width="1.5"/>
+  <!-- 몸통 -->
+  <ellipse cx="30" cy="32" rx="22" ry="14" fill="#e8a030" stroke="#885500" stroke-width="2"/>
+  <!-- 비늘 패턴 -->
+  <path d="M20 24 A8 8 0 0 1 28 24" fill="none" stroke="#cc7a10" stroke-width="1" opacity="0.6"/>
+  <path d="M28 24 A8 8 0 0 1 36 24" fill="none" stroke="#cc7a10" stroke-width="1" opacity="0.6"/>
+  <path d="M16 30 A8 8 0 0 1 24 30" fill="none" stroke="#cc7a10" stroke-width="1" opacity="0.6"/>
+  <path d="M24 30 A8 8 0 0 1 32 30" fill="none" stroke="#cc7a10" stroke-width="1" opacity="0.6"/>
+  <path d="M32 30 A8 8 0 0 1 40 30" fill="none" stroke="#cc7a10" stroke-width="1" opacity="0.6"/>
+  <path d="M20 36 A8 8 0 0 1 28 36" fill="none" stroke="#cc7a10" stroke-width="1" opacity="0.6"/>
+  <path d="M28 36 A8 8 0 0 1 36 36" fill="none" stroke="#cc7a10" stroke-width="1" opacity="0.6"/>
+  <!-- 배 (흰색) -->
+  <ellipse cx="28" cy="38" rx="16" ry="7" fill="#f8e8c0" stroke="#cc8822" stroke-width="1"/>
+  <!-- 등지느러미 -->
+  <path d="M22 18 C28 10 36 10 42 18" fill="#cc8822" stroke="#885500" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- 가슴지느러미 -->
+  <ellipse cx="18" cy="34" rx="6" ry="3" fill="#e8a030" stroke="#885500" stroke-width="1.2" transform="rotate(20 18 34)"/>
+  <!-- 배지느러미 -->
+  <ellipse cx="26" cy="44" rx="5" ry="3" fill="#cc8822" stroke="#885500" stroke-width="1.2" transform="rotate(-10 26 44)"/>
+  <!-- 머리 -->
+  <ellipse cx="12" cy="32" rx="9" ry="10" fill="#d49020" stroke="#885500" stroke-width="2"/>
+  <!-- 눈 -->
+  <circle cx="10" cy="28" r="4" fill="#2266aa"/>
+  <circle cx="10" cy="28" r="2.5" fill="#0a2244"/>
+  <circle cx="9.2" cy="27.2" r="1" fill="white"/>
+  <!-- 입 -->
+  <path d="M4 34 Q8 36 10 34" fill="none" stroke="#885500" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 등딱지 (타원형) -->
+  <ellipse cx="32" cy="38" rx="16" ry="18" fill="#5cb32b" stroke="#1a4009" stroke-width="2"/>
+  <!-- 하이라이트 -->
+  <ellipse cx="27" cy="30" rx="6" ry="4" fill="rgba(255,255,255,0.25)" transform="rotate(-15 27 30)"/>
+  <!-- 등딱지 가운데 선 -->
+  <line x1="32" y1="22" x2="32" y2="54" stroke="#1a4009" stroke-width="2"/>
+  <!-- 가슴판 -->
+  <ellipse cx="32" cy="25" rx="11" ry="7" fill="#3a8a1a" stroke="#1a4009" stroke-width="2"/>
+  <!-- 하이라이트 가슴 -->
+  <ellipse cx="29" cy="22" rx="4" ry="2.5" fill="rgba(255,255,255,0.2)" transform="rotate(-10 29 22)"/>
+  <!-- 머리 -->
+  <ellipse cx="32" cy="16" rx="8" ry="6" fill="#2a6010" stroke="#1a4009" stroke-width="2"/>
+  <!-- 눈 -->
+  <circle cx="26" cy="15" r="2.5" fill="#88ee44"/>
+  <circle cx="38" cy="15" r="2.5" fill="#88ee44"/>
+  <circle cx="26" cy="15" r="1.2" fill="#1a4009"/>
+  <circle cx="38" cy="15" r="1.2" fill="#1a4009"/>
+  <!-- 더듬이 -->
+  <path d="M28 11 C26 8 22 6 20 8" fill="none" stroke="#1a4009" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M36 11 C38 8 42 6 44 8" fill="none" stroke="#1a4009" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- 다리 6개 -->
+  <line x1="19" y1="32" x2="10" y2="28" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="18" y1="39" x2="8" y2="38" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="20" y1="46" x2="11" y2="49" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="45" y1="32" x2="54" y2="28" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="46" y1="39" x2="56" y2="38" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="44" y1="46" x2="53" y2="49" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

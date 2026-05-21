@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 -->
+  <path d="M52 32 C58 24 62 20 60 32 C62 44 58 40 52 32Z" fill="#556677" stroke="#2a3a44" stroke-width="1.5"/>
+  <!-- 몸통 -->
+  <ellipse cx="30" cy="32" rx="24" ry="13" fill="#667788" stroke="#2a3a44" stroke-width="2"/>
+  <!-- 배 -->
+  <ellipse cx="28" cy="38" rx="18" ry="8" fill="#aabbcc" stroke="#667788" stroke-width="1"/>
+  <!-- 등지느러미 -->
+  <path d="M24 20 L28 12 L34 20" fill="#556677" stroke="#2a3a44" stroke-width="1.5"/>
+  <!-- 가슴지느러미 -->
+  <ellipse cx="14" cy="36" rx="6" ry="3" fill="#556677" stroke="#2a3a44" stroke-width="1.2" transform="rotate(25 14 36)"/>
+  <ellipse cx="14" cy="30" rx="6" ry="3" fill="#556677" stroke="#2a3a44" stroke-width="1.2" transform="rotate(-25 14 30)"/>
+  <!-- 머리 (납작하고 넓음) -->
+  <ellipse cx="10" cy="32" rx="12" ry="14" fill="#556677" stroke="#2a3a44" stroke-width="2"/>
+  <!-- 큰 입 -->
+  <path d="M2 34 Q10 40 18 34" fill="#3a4a55" stroke="#2a3a44" stroke-width="1.5"/>
+  <!-- 긴 수염 -->
+  <path d="M4 28 C0 22 2 16 8 18" fill="none" stroke="#2a3a44" stroke-width="2" stroke-linecap="round"/>
+  <path d="M8 27 C4 22 4 16 10 17" fill="none" stroke="#2a3a44" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 27 C10 22 10 16 14 17" fill="none" stroke="#2a3a44" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M4 36 C0 42 2 48 8 46" fill="none" stroke="#2a3a44" stroke-width="2" stroke-linecap="round"/>
+  <path d="M8 37 C4 42 4 48 10 47" fill="none" stroke="#2a3a44" stroke-width="2" stroke-linecap="round"/>
+  <!-- 눈 -->
+  <circle cx="6" cy="26" r="4" fill="#4488cc"/>
+  <circle cx="6" cy="26" r="2.5" fill="#0a1a44"/>
+  <circle cx="5" cy="25" r="1" fill="white"/>
+</svg>

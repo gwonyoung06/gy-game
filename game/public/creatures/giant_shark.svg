@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 수직지느러미 -->
+  <path d="M56 24 C62 16 64 10 60 8 C58 8 56 14 56 20" fill="#0a2255" stroke="#040e2a" stroke-width="1.5"/>
+  <path d="M56 28 C62 36 64 42 60 44 C58 44 56 38 56 32" fill="#0a2255" stroke="#040e2a" stroke-width="1.5"/>
+  <!-- 꼬리 줄기 -->
+  <ellipse cx="56" cy="26" rx="5" ry="7" fill="#0d2a66" stroke="#040e2a" stroke-width="1.5"/>
+  <!-- 몸통 (거대하고 유선형) -->
+  <path d="M8 26 C8 14 20 10 34 10 C48 10 58 18 58 26 C58 34 48 42 34 42 C20 42 8 38 8 26Z" fill="#1a3d88" stroke="#040e2a" stroke-width="2.5"/>
+  <!-- 배 (흰색) -->
+  <path d="M10 28 C12 36 22 42 34 40 C46 38 54 32 54 28" fill="#aaccff" stroke="#2255aa" stroke-width="1"/>
+  <!-- 등지느러미 (크고 날카로운) -->
+  <path d="M32 10 C36 2 42 0 44 8 C46 14 44 12 40 12" fill="#0a1a55" stroke="#040e2a" stroke-width="2" stroke-linejoin="round"/>
+  <!-- 작은 등지느러미 -->
+  <path d="M48 14 C50 10 54 10 52 16" fill="#0a1a55" stroke="#040e2a" stroke-width="1.5"/>
+  <!-- 가슴지느러미 (길고 날카로운) -->
+  <path d="M20 28 C14 32 6 40 8 46 C10 50 18 46 20 40 C18 36 18 32 20 28Z" fill="#0d2a66" stroke="#040e2a" stroke-width="1.5"/>
+  <!-- 두번째 가슴지느러미 (뒤쪽) -->
+  <path d="M42 32 C40 38 40 44 44 44 C46 42 46 36 44 32Z" fill="#0d2a66" stroke="#040e2a" stroke-width="1.5"/>
+  <!-- 아가미 줄 -->
+  <path d="M16 18 C14 22 14 30 16 34" fill="none" stroke="#040e2a" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M20 16 C18 20 18 30 20 34" fill="none" stroke="#040e2a" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M24 14 C22 18 22 30 24 36" fill="none" stroke="#040e2a" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- 머리 (뾰족) -->
+  <path d="M2 24 C2 18 8 14 16 14 C12 18 10 22 10 26 C10 30 12 34 16 36 C8 36 2 32 2 24Z" fill="#1a3d88" stroke="#040e2a" stroke-width="2"/>
+  <!-- 콧구멍 -->
+  <ellipse cx="4" cy="22" rx="1.5" ry="1" fill="#040e2a"/>
+  <ellipse cx="4" cy="26" rx="1.5" ry="1" fill="#040e2a"/>
+  <!-- 눈 (검고 날카로운) -->
+  <circle cx="10" cy="18" r="4.5" fill="#040e2a" stroke="#0a1a44" stroke-width="1.5"/>
+  <circle cx="10" cy="18" r="2" fill="#0a0a1a"/>
+  <circle cx="9" cy="17" r="1" fill="white" opacity="0.6"/>
+  <!-- 입 (크게 벌린, 이빨 가득) -->
+  <path d="M2 26 C4 32 10 36 16 36" fill="none" stroke="#040e2a" stroke-width="2" stroke-linecap="round"/>
+  <line x1="4" y1="28" x2="3" y2="33" stroke="white" stroke-width="1.5"/>
+  <line x1="6" y1="30" x2="5" y2="35" stroke="white" stroke-width="1.5"/>
+  <line x1="8" y1="32" x2="8" y2="37" stroke="white" stroke-width="1.5"/>
+  <line x1="10" y1="33" x2="10" y2="38" stroke="white" stroke-width="1.5"/>
+  <line x1="12" y1="34" x2="12" y2="38" stroke="white" stroke-width="1.5"/>
+  <line x1="14" y1="34" x2="14" y2="38" stroke="white" stroke-width="1.5"/>
+  <!-- 보스 표시 - 빛나는 눈 -->
+  <circle cx="10" cy="18" r="5.5" fill="none" stroke="#4488ff" stroke-width="1" opacity="0.6"/>
+  <!-- 상처 흉터 -->
+  <line x1="24" y1="18" x2="28" y2="24" stroke="#0a1a44" stroke-width="1.2" opacity="0.5"/>
+  <line x1="26" y1="17" x2="30" y2="23" stroke="#0a1a44" stroke-width="1" opacity="0.3"/>
+</svg>

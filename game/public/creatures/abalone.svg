@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 껍데기 (납작 타원형) -->
+  <ellipse cx="32" cy="34" rx="24" ry="18" fill="#3a8844" stroke="#1a5522" stroke-width="2"/>
+  <!-- 진주빛 내부 -->
+  <ellipse cx="32" cy="34" rx="20" ry="14" fill="#66aaaa" stroke="#3a8844" stroke-width="1.5"/>
+  <!-- 껍데기 구멍들 (전복 특징) -->
+  <circle cx="44" cy="24" r="2.5" fill="#2a6633" stroke="#1a5522" stroke-width="1"/>
+  <circle cx="40" cy="20" r="2.5" fill="#2a6633" stroke="#1a5522" stroke-width="1"/>
+  <circle cx="35" cy="18" r="2.5" fill="#2a6633" stroke="#1a5522" stroke-width="1"/>
+  <circle cx="30" cy="17" r="2.5" fill="#2a6633" stroke="#1a5522" stroke-width="1"/>
+  <circle cx="25" cy="18" r="2" fill="#2a6633" stroke="#1a5522" stroke-width="1"/>
+  <!-- 진주빛 반짝임 -->
+  <ellipse cx="24" cy="28" rx="8" ry="5" fill="rgba(255,255,255,0.25)" transform="rotate(-20 24 28)"/>
+  <ellipse cx="38" cy="36" rx="6" ry="4" fill="rgba(200,240,255,0.3)" transform="rotate(15 38 36)"/>
+  <!-- 무지개빛 패턴 -->
+  <path d="M14 36 C18 28 26 24 34 26 C42 28 48 34 46 42" fill="none" stroke="rgba(120,200,220,0.4)" stroke-width="2"/>
+  <path d="M16 40 C20 32 28 28 36 30 C44 32 48 38 46 44" fill="none" stroke="rgba(180,140,220,0.35)" stroke-width="1.5"/>
+  <!-- 껍데기 가장자리 거칠게 -->
+  <ellipse cx="32" cy="34" rx="24" ry="18" fill="none" stroke="#2a6633" stroke-width="1" stroke-dasharray="3,4" opacity="0.5"/>
+  <!-- 발 (몸통이 껍데기 밖으로) -->
+  <ellipse cx="32" cy="48" rx="20" ry="6" fill="#88bb44" stroke="#446622" stroke-width="1.5"/>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 몸통 (통통하고 둥글게) -->
+  <ellipse cx="32" cy="38" rx="18" ry="16" fill="#7a5a3c" stroke="#3a2a10" stroke-width="2"/>
+  <!-- 배 (연한 부분) -->
+  <ellipse cx="32" cy="42" rx="11" ry="11" fill="#b89070" stroke="#7a5a3c" stroke-width="1"/>
+  <!-- 큰 앞발(삽 모양) 좌 -->
+  <ellipse cx="14" cy="40" rx="8" ry="5" fill="#9a7050" stroke="#3a2a10" stroke-width="2" transform="rotate(-20 14 40)"/>
+  <line x1="8" y1="37" x2="5" y2="33" stroke="#3a2a10" stroke-width="2" stroke-linecap="round"/>
+  <line x1="10" y1="36" x2="8" y2="31" stroke="#3a2a10" stroke-width="2" stroke-linecap="round"/>
+  <line x1="12" y1="35" x2="11" y2="30" stroke="#3a2a10" stroke-width="2" stroke-linecap="round"/>
+  <!-- 큰 앞발 우 -->
+  <ellipse cx="50" cy="40" rx="8" ry="5" fill="#9a7050" stroke="#3a2a10" stroke-width="2" transform="rotate(20 50 40)"/>
+  <line x1="56" y1="37" x2="59" y2="33" stroke="#3a2a10" stroke-width="2" stroke-linecap="round"/>
+  <line x1="54" y1="36" x2="56" y2="31" stroke="#3a2a10" stroke-width="2" stroke-linecap="round"/>
+  <line x1="52" y1="35" x2="53" y2="30" stroke="#3a2a10" stroke-width="2" stroke-linecap="round"/>
+  <!-- 머리 -->
+  <ellipse cx="32" cy="22" rx="14" ry="12" fill="#7a5a3c" stroke="#3a2a10" stroke-width="2"/>
+  <!-- 주둥이 -->
+  <ellipse cx="32" cy="27" rx="7" ry="5" fill="#b89070" stroke="#3a2a10" stroke-width="1.5"/>
+  <ellipse cx="32" cy="28" rx="4" ry="3" fill="#3a2a10"/>
+  <!-- 작은 눈 -->
+  <circle cx="23" cy="19" r="2.5" fill="#1a1a1a" stroke="#3a2a10" stroke-width="1"/>
+  <circle cx="41" cy="19" r="2.5" fill="#1a1a1a" stroke="#3a2a10" stroke-width="1"/>
+  <!-- 귀 -->
+  <ellipse cx="21" cy="14" rx="4" ry="5" fill="#7a5a3c" stroke="#3a2a10" stroke-width="1.5"/>
+  <ellipse cx="43" cy="14" rx="4" ry="5" fill="#7a5a3c" stroke="#3a2a10" stroke-width="1.5"/>
+</svg>

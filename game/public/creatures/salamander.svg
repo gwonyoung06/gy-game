@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 -->
+  <path d="M44 40 C52 38 60 42 60 50 C60 56 54 58 50 54" fill="none" stroke="#6aaa2a" stroke-width="8" stroke-linecap="round"/>
+  <path d="M44 40 C52 38 60 42 60 50 C60 56 54 58 50 54" fill="none" stroke="#88cc44" stroke-width="5" stroke-linecap="round"/>
+  <!-- 몸통 -->
+  <ellipse cx="30" cy="36" rx="18" ry="10" fill="#6aaa2a" stroke="#2a6010" stroke-width="2"/>
+  <!-- 등 점무늬 (도롱뇽 특징) -->
+  <circle cx="20" cy="32" r="2.5" fill="#ffaa22" opacity="0.9"/>
+  <circle cx="28" cy="30" r="2.5" fill="#ffaa22" opacity="0.9"/>
+  <circle cx="36" cy="30" r="2.5" fill="#ffaa22" opacity="0.9"/>
+  <circle cx="44" cy="32" r="2" fill="#ffaa22" opacity="0.9"/>
+  <!-- 배 (연한색) -->
+  <ellipse cx="30" cy="40" rx="14" ry="7" fill="#aad844" stroke="#2a6010" stroke-width="1"/>
+  <!-- 앞다리 좌 -->
+  <path d="M18 34 C12 32 8 36 10 40" fill="none" stroke="#2a6010" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="10" y1="40" x2="6" y2="42" stroke="#2a6010" stroke-width="2" stroke-linecap="round"/>
+  <line x1="10" y1="40" x2="8" y2="44" stroke="#2a6010" stroke-width="2" stroke-linecap="round"/>
+  <line x1="10" y1="40" x2="12" y2="44" stroke="#2a6010" stroke-width="2" stroke-linecap="round"/>
+  <!-- 앞다리 우 -->
+  <path d="M16 42 C10 46 8 52 12 54" fill="none" stroke="#2a6010" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="12" y1="54" x2="8" y2="56" stroke="#2a6010" stroke-width="2" stroke-linecap="round"/>
+  <line x1="12" y1="54" x2="10" y2="58" stroke="#2a6010" stroke-width="2" stroke-linecap="round"/>
+  <!-- 뒷다리 -->
+  <path d="M38 38 C44 36 50 38 50 42" fill="none" stroke="#2a6010" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M36 44 C42 48 48 50 48 54" fill="none" stroke="#2a6010" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 머리 -->
+  <ellipse cx="14" cy="30" rx="11" ry="8" fill="#5a9a1a" stroke="#2a6010" stroke-width="2"/>
+  <!-- 눈 (돌출) -->
+  <circle cx="9" cy="26" r="4" fill="#5a9a1a" stroke="#2a6010" stroke-width="1.5"/>
+  <circle cx="9" cy="26" r="2.8" fill="#88ff44"/>
+  <circle cx="9" cy="26" r="1.5" fill="#1a4009"/>
+  <circle cx="8.4" cy="25.4" r="0.6" fill="white"/>
+  <!-- 입 -->
+  <path d="M5 32 Q14 36 22 32" fill="none" stroke="#2a6010" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- 콧구멍 -->
+  <circle cx="5" cy="29" r="1" fill="#1a4009"/>
+</svg>

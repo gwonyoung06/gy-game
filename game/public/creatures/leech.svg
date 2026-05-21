@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 몸통 (굵은 타원) -->
+  <path d="M16 28 C10 22 10 14 18 12 C26 10 36 16 42 24 C50 34 52 44 46 50 C40 56 30 54 24 48 C16 40 14 36 16 28Z" fill="#5a3344" stroke="#3a1a28" stroke-width="2"/>
+  <!-- 마디 라인들 -->
+  <path d="M16 28 C10 22 10 14 18 12 C26 10 36 16 42 24 C50 34 52 44 46 50 C40 56 30 54 24 48 C16 40 14 36 16 28Z" fill="none" stroke="#3a1a28" stroke-width="1" stroke-dasharray="4,8" opacity="0.6"/>
+  <!-- 하이라이트 -->
+  <ellipse cx="24" cy="24" rx="8" ry="5" fill="rgba(255,255,255,0.12)" transform="rotate(-40 24 24)"/>
+  <!-- 앞쪽 빨판 -->
+  <circle cx="18" cy="13" r="6" fill="#3a1a28" stroke="#2a0a18" stroke-width="1.5"/>
+  <circle cx="18" cy="13" r="3.5" fill="#5a2a38"/>
+  <circle cx="18" cy="13" r="1.5" fill="#2a0a18"/>
+  <!-- 뒤쪽 빨판 -->
+  <circle cx="46" cy="50" r="6" fill="#3a1a28" stroke="#2a0a18" stroke-width="1.5"/>
+  <circle cx="46" cy="50" r="3.5" fill="#5a2a38"/>
+  <circle cx="46" cy="50" r="1.5" fill="#2a0a18"/>
+  <!-- 눈 (작게) -->
+  <circle cx="14" cy="16" r="2" fill="#ffaa44"/>
+  <circle cx="22" cy="10" r="2" fill="#ffaa44"/>
+  <circle cx="14" cy="16" r="1" fill="#1a0a00"/>
+  <circle cx="22" cy="10" r="1" fill="#1a0a00"/>
+</svg>

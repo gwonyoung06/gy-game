@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 (짧고 들린) -->
+  <path d="M52 34 C56 28 58 24 56 20" fill="none" stroke="#1a3377" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- 몸통 (앞이 높고 뒤가 낮은) -->
+  <path d="M14 32 C14 24 20 20 30 20 C44 20 52 26 52 34 C52 42 44 46 30 46 C18 46 14 40 14 32Z" fill="#3366aa" stroke="#0a1a55" stroke-width="2"/>
+  <!-- 등 갈기 (털 느낌) -->
+  <path d="M18 20 L16 14 L20 20 L20 12 L24 20 L24 10 L28 20 L28 12 L32 20 L32 14 L36 20" fill="none" stroke="#0a1a55" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- 반점 무늬 -->
+  <circle cx="24" cy="30" r="3" fill="#1a3377" opacity="0.5"/>
+  <circle cx="34" cy="26" r="2.5" fill="#1a3377" opacity="0.5"/>
+  <circle cx="42" cy="32" r="2.5" fill="#1a3377" opacity="0.5"/>
+  <circle cx="30" cy="38" r="2" fill="#1a3377" opacity="0.5"/>
+  <!-- 앞다리 (굵고 짧은) -->
+  <rect x="16" y="42" width="6" height="14" rx="3" fill="#3366aa" stroke="#0a1a55" stroke-width="1.5"/>
+  <rect x="26" y="42" width="6" height="14" rx="3" fill="#3366aa" stroke="#0a1a55" stroke-width="1.5"/>
+  <!-- 뒷다리 (낮은) -->
+  <rect x="38" y="44" width="6" height="12" rx="3" fill="#2255aa" stroke="#0a1a55" stroke-width="1.5"/>
+  <rect x="46" y="44" width="6" height="12" rx="3" fill="#2255aa" stroke="#0a1a55" stroke-width="1.5"/>
+  <!-- 머리 (크고 둔한) -->
+  <ellipse cx="10" cy="28" rx="10" ry="9" fill="#2a5599" stroke="#0a1a55" stroke-width="2"/>
+  <!-- 귀 (둥근) -->
+  <ellipse cx="6" cy="18" rx="4" ry="5" fill="#3366aa" stroke="#0a1a55" stroke-width="1.5"/>
+  <ellipse cx="14" cy="18" rx="4" ry="5" fill="#3366aa" stroke="#0a1a55" stroke-width="1.5"/>
+  <ellipse cx="6" cy="18" rx="2" ry="3" fill="#aaccff" opacity="0.5"/>
+  <ellipse cx="14" cy="18" rx="2" ry="3" fill="#aaccff" opacity="0.5"/>
+  <!-- 눈 -->
+  <circle cx="6" cy="26" r="3" fill="#aaddff" stroke="#0a1a55" stroke-width="1.5"/>
+  <circle cx="6" cy="26" r="1.5" fill="#1a1a1a"/>
+  <circle cx="5.4" cy="25.4" r="0.6" fill="white"/>
+  <!-- 코 (크고 검은) -->
+  <ellipse cx="2" cy="32" rx="3" ry="2" fill="#0a0a1a"/>
+  <!-- 이빨 (웃는 입) -->
+  <path d="M4 34 C6 36 10 36 14 34" fill="none" stroke="#0a1a55" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="6" y1="34" x2="6" y2="37" stroke="white" stroke-width="1.5"/>
+  <line x1="9" y1="35" x2="9" y2="38" stroke="white" stroke-width="1.5"/>
+</svg>

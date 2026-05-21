@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 위쪽 날개 좌 -->
+  <path d="M32 32 C22 20 8 18 10 28 C12 36 24 36 32 32Z" fill="#8de04a" stroke="#2a6010" stroke-width="1.8"/>
+  <!-- 위쪽 날개 우 -->
+  <path d="M32 32 C42 20 56 18 54 28 C52 36 40 36 32 32Z" fill="#8de04a" stroke="#2a6010" stroke-width="1.8"/>
+  <!-- 아래쪽 날개 좌 -->
+  <path d="M32 34 C20 38 10 46 14 52 C18 57 28 50 32 34Z" fill="#6db535" stroke="#2a6010" stroke-width="1.8"/>
+  <!-- 아래쪽 날개 우 -->
+  <path d="M32 34 C44 38 54 46 50 52 C46 57 36 50 32 34Z" fill="#6db535" stroke="#2a6010" stroke-width="1.8"/>
+  <!-- 날개 무늬 좌 -->
+  <circle cx="20" cy="27" r="4" fill="#c8f068" opacity="0.7"/>
+  <circle cx="20" cy="27" r="2" fill="#2a6010" opacity="0.4"/>
+  <!-- 날개 무늬 우 -->
+  <circle cx="44" cy="27" r="4" fill="#c8f068" opacity="0.7"/>
+  <circle cx="44" cy="27" r="2" fill="#2a6010" opacity="0.4"/>
+  <!-- 몸통 -->
+  <ellipse cx="32" cy="33" rx="2.5" ry="11" fill="#2a6010" stroke="#1a4009" stroke-width="1.2"/>
+  <!-- 더듬이 좌 -->
+  <line x1="30" y1="23" x2="23" y2="13" stroke="#2a6010" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="22" cy="12" r="2.2" fill="#6db535" stroke="#2a6010" stroke-width="1"/>
+  <!-- 더듬이 우 -->
+  <line x1="34" y1="23" x2="41" y2="13" stroke="#2a6010" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="42" cy="12" r="2.2" fill="#6db535" stroke="#2a6010" stroke-width="1"/>
+  <!-- 머리 -->
+  <circle cx="32" cy="22" r="4" fill="#2a6010" stroke="#1a4009" stroke-width="1.2"/>
+</svg>

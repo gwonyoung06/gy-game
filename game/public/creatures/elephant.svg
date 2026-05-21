@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 -->
+  <path d="M56 36 C60 34 62 38 60 42" fill="none" stroke="#5522aa" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M60 42 C58 44 60 46 58 48" fill="none" stroke="#3a1a66" stroke-width="3" stroke-linecap="round"/>
+  <!-- 몸통 (크고 둥근) -->
+  <ellipse cx="34" cy="36" rx="22" ry="16" fill="#7744bb" stroke="#3a1a66" stroke-width="2.5"/>
+  <!-- 다리 (두꺼운 4개) -->
+  <rect x="16" y="48" width="9" height="14" rx="4.5" fill="#6633aa" stroke="#3a1a66" stroke-width="2"/>
+  <rect x="28" y="48" width="9" height="14" rx="4.5" fill="#6633aa" stroke="#3a1a66" stroke-width="2"/>
+  <rect x="40" y="48" width="9" height="14" rx="4.5" fill="#6633aa" stroke="#3a1a66" stroke-width="2"/>
+  <rect x="50" y="46" width="9" height="14" rx="4.5" fill="#6633aa" stroke="#3a1a66" stroke-width="2"/>
+  <!-- 상아 -->
+  <path d="M10 34 C4 38 2 44 4 50 C6 54 10 50 10 44" fill="none" stroke="#eeddff" stroke-width="3" stroke-linecap="round"/>
+  <!-- 머리 (크고 높은) -->
+  <ellipse cx="14" cy="26" rx="14" ry="14" fill="#7744bb" stroke="#3a1a66" stroke-width="2.5"/>
+  <!-- 귀 (크고 넓은, 아프리카 코끼리) -->
+  <path d="M4 18 C-4 12 -4 28 4 32 C8 34 10 28 8 22Z" fill="#6633aa" stroke="#3a1a66" stroke-width="1.8"/>
+  <!-- 눈 -->
+  <circle cx="8" cy="22" r="3.5" fill="#3a1a66" stroke="#1a0a33" stroke-width="1.5"/>
+  <circle cx="8" cy="22" r="1.8" fill="#1a1a1a"/>
+  <circle cx="7.4" cy="21.4" r="0.7" fill="white"/>
+  <!-- 코 (긴, 들어올린) -->
+  <path d="M6 32 C4 36 2 44 4 52 C6 56 10 54 8 48 C6 44 8 38 10 34" fill="none" stroke="#5522aa" stroke-width="6" stroke-linecap="round"/>
+  <!-- 코 주름 -->
+  <line x1="4" y1="38" x2="8" y2="40" stroke="#3a1a66" stroke-width="1" opacity="0.5"/>
+  <line x1="4" y1="43" x2="8" y2="45" stroke="#3a1a66" stroke-width="1" opacity="0.5"/>
+  <line x1="5" y1="48" x2="9" y2="49" stroke="#3a1a66" stroke-width="1" opacity="0.5"/>
+</svg>

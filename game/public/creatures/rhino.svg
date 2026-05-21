@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 (짧고 뻣뻣) -->
+  <path d="M56 34 C60 30 62 32 60 36" fill="none" stroke="#4422aa" stroke-width="3" stroke-linecap="round"/>
+  <!-- 몸통 (거대하고 두꺼운) -->
+  <path d="M10 30 C10 20 18 16 32 16 C48 16 58 22 58 34 C58 44 48 50 32 50 C16 50 10 42 10 30Z" fill="#6633aa" stroke="#3a1a66" stroke-width="2.5"/>
+  <!-- 피부 주름 -->
+  <path d="M18 18 C16 24 16 34 18 44" fill="none" stroke="#3a1a66" stroke-width="1.2" opacity="0.5"/>
+  <path d="M28 16 C26 22 26 36 28 48" fill="none" stroke="#3a1a66" stroke-width="1.2" opacity="0.4"/>
+  <path d="M40 16 C38 22 38 36 40 48" fill="none" stroke="#3a1a66" stroke-width="1.2" opacity="0.4"/>
+  <!-- 다리 (짧고 두꺼운) -->
+  <rect x="14" y="46" width="10" height="14" rx="5" fill="#5522aa" stroke="#3a1a66" stroke-width="2"/>
+  <rect x="26" y="46" width="10" height="14" rx="5" fill="#5522aa" stroke="#3a1a66" stroke-width="2"/>
+  <rect x="38" y="46" width="10" height="14" rx="5" fill="#5522aa" stroke="#3a1a66" stroke-width="2"/>
+  <rect x="50" y="46" width="8" height="14" rx="4" fill="#5522aa" stroke="#3a1a66" stroke-width="2"/>
+  <!-- 머리 (크고 낮은) -->
+  <path d="M2 26 C2 18 8 14 16 14 C22 14 26 18 26 26 C26 34 22 38 14 38 C6 38 2 34 2 26Z" fill="#6633aa" stroke="#3a1a66" stroke-width="2.5"/>
+  <!-- 귀 (작은) -->
+  <path d="M10 14 C8 10 12 8 14 12" fill="#6633aa" stroke="#3a1a66" stroke-width="1.5"/>
+  <path d="M16 13 C16 9 20 10 18 14" fill="#6633aa" stroke="#3a1a66" stroke-width="1.5"/>
+  <!-- 뿔 (크고 뾰족) -->
+  <path d="M4 20 C6 12 10 8 12 14 C10 18 6 18 4 20Z" fill="#4422aa" stroke="#1a0a33" stroke-width="1.5"/>
+  <!-- 눈 (작은) -->
+  <circle cx="8" cy="24" r="3" fill="#cc99ff" stroke="#1a0a33" stroke-width="1.2"/>
+  <circle cx="8" cy="24" r="1.5" fill="#1a1a1a"/>
+  <circle cx="7.4" cy="23.4" r="0.6" fill="white"/>
+  <!-- 콧구멍 -->
+  <ellipse cx="4" cy="30" rx="2" ry="1.5" fill="#1a0a33"/>
+  <ellipse cx="8" cy="31" rx="2" ry="1.5" fill="#1a0a33"/>
+  <!-- 입 -->
+  <path d="M4 34 C8 36 14 36 18 34" fill="none" stroke="#1a0a33" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

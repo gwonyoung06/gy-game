@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 -->
+  <path d="M52 40 C58 36 64 32 64 38" fill="none" stroke="#cc8800" stroke-width="5" stroke-linecap="round"/>
+  <!-- 등 돛 (스피노사우루스 특징) -->
+  <path d="M18 30 C16 18 18 10 22 8 C24 8 24 16 22 26" fill="#ffaa00" stroke="#886600" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M24 28 C22 14 26 6 30 6 C32 6 32 14 30 24" fill="#ffcc44" stroke="#886600" stroke-width="1.5"/>
+  <path d="M30 26 C28 12 32 4 36 6 C38 8 38 16 36 24" fill="#ffaa00" stroke="#886600" stroke-width="1.5"/>
+  <path d="M36 26 C34 14 38 8 42 10 C44 12 42 20 40 28" fill="#ffcc44" stroke="#886600" stroke-width="1.5"/>
+  <path d="M42 30 C40 20 44 14 46 18 C46 22 44 28 44 32" fill="#ffaa00" stroke="#886600" stroke-width="1.5"/>
+  <!-- 몸통 -->
+  <ellipse cx="32" cy="42" rx="20" ry="12" fill="#ddaa22" stroke="#886600" stroke-width="2.5"/>
+  <!-- 배 (연한) -->
+  <path d="M14 46 C18 52 26 56 36 54 C46 52 52 46 52 42" fill="#ffe088" stroke="#cc9922" stroke-width="1"/>
+  <!-- 앞발 (긴 편) -->
+  <path d="M20 38 C14 36 10 32 12 28" fill="none" stroke="#aa6600" stroke-width="3" stroke-linecap="round"/>
+  <line x1="12" y1="28" x2="8" y2="26" stroke="#aa6600" stroke-width="2"/>
+  <line x1="12" y1="28" x2="10" y2="24" stroke="#aa6600" stroke-width="2"/>
+  <line x1="12" y1="28" x2="14" y2="24" stroke="#aa6600" stroke-width="2"/>
+  <!-- 뒷다리 -->
+  <path d="M26 52 C22 56 22 62 24 64" fill="none" stroke="#cc8800" stroke-width="4" stroke-linecap="round"/>
+  <line x1="24" y1="64" x2="20" y2="66" stroke="#aa6600" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="24" y1="64" x2="28" y2="66" stroke="#aa6600" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M42 52 C46 56 46 60 44 64" fill="none" stroke="#cc8800" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="44" y1="64" x2="40" y2="66" stroke="#aa6600" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="44" y1="64" x2="48" y2="66" stroke="#aa6600" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 목 (긴 편) -->
+  <path d="M14 36 C10 28 10 20 14 14 C16 10 20 12 20 18 C20 26 16 32 16 38Z" fill="#ddaa22" stroke="#886600" stroke-width="2"/>
+  <!-- 머리 (긴 악어형) -->
+  <path d="M2 22 C2 14 8 10 16 10 C22 10 24 14 22 22 C20 28 14 30 8 28 C4 26 2 26 2 22Z" fill="#ffcc44" stroke="#886600" stroke-width="2"/>
+  <!-- 눈 -->
+  <circle cx="6" cy="18" r="3.5" fill="#ff8800" stroke="#886600" stroke-width="1.2"/>
+  <circle cx="6" cy="18" r="1.8" fill="#1a1a1a"/>
+  <circle cx="5.4" cy="17.4" r="0.7" fill="white"/>
+  <!-- 이빨 (물고기 잡는) -->
+  <line x1="6" y1="24" x2="5" y2="28" stroke="white" stroke-width="1.5"/>
+  <line x1="9" y1="25" x2="8" y2="29" stroke="white" stroke-width="1.5"/>
+  <line x1="12" y1="26" x2="12" y2="30" stroke="white" stroke-width="1.5"/>
+  <line x1="15" y1="26" x2="15" y2="29" stroke="white" stroke-width="1.5"/>
+</svg>

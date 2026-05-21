@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 발광 후광 -->
+  <circle cx="32" cy="46" r="12" fill="#aaff44" opacity="0.15"/>
+  <circle cx="32" cy="46" r="8" fill="#ccff66" opacity="0.2"/>
+  <!-- 날개 좌 -->
+  <ellipse cx="22" cy="30" rx="12" ry="6" fill="#aaddaa" stroke="#2a6010" stroke-width="1.5" opacity="0.75" transform="rotate(-20 22 30)"/>
+  <!-- 날개 우 -->
+  <ellipse cx="42" cy="30" rx="12" ry="6" fill="#aaddaa" stroke="#2a6010" stroke-width="1.5" opacity="0.75" transform="rotate(20 42 30)"/>
+  <!-- 등딱지 -->
+  <ellipse cx="32" cy="32" rx="9" ry="11" fill="#3a6a1a" stroke="#1a4009" stroke-width="2"/>
+  <!-- 등딱지 중앙선 -->
+  <line x1="32" y1="22" x2="32" y2="42" stroke="#1a4009" stroke-width="1.5"/>
+  <!-- 발광 기관 (꼬리) -->
+  <ellipse cx="32" cy="46" rx="7" ry="5" fill="#aaff44" stroke="#44aa00" stroke-width="2"/>
+  <!-- 발광 효과 내부 -->
+  <ellipse cx="32" cy="46" rx="4" ry="3" fill="#ffffff" opacity="0.5"/>
+  <!-- 발광 빛줄기 -->
+  <line x1="32" y1="52" x2="32" y2="58" stroke="#aaff44" stroke-width="2" opacity="0.6" stroke-linecap="round"/>
+  <line x1="26" y1="50" x2="22" y2="55" stroke="#aaff44" stroke-width="1.5" opacity="0.4" stroke-linecap="round"/>
+  <line x1="38" y1="50" x2="42" y2="55" stroke="#aaff44" stroke-width="1.5" opacity="0.4" stroke-linecap="round"/>
+  <!-- 가슴 -->
+  <ellipse cx="32" cy="22" rx="8" ry="6" fill="#4a8a1a" stroke="#1a4009" stroke-width="2"/>
+  <!-- 머리 -->
+  <circle cx="32" cy="14" r="6" fill="#2a6010" stroke="#1a4009" stroke-width="2"/>
+  <!-- 눈 -->
+  <circle cx="27" cy="13" r="2.5" fill="#88ff44"/>
+  <circle cx="37" cy="13" r="2.5" fill="#88ff44"/>
+  <circle cx="27" cy="13" r="1.2" fill="#1a4009"/>
+  <circle cx="37" cy="13" r="1.2" fill="#1a4009"/>
+  <!-- 더듬이 -->
+  <line x1="29" y1="9" x2="25" y2="4" stroke="#1a4009" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="35" y1="9" x2="39" y2="4" stroke="#1a4009" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

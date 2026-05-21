@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 껍데기 (나선형) -->
+  <circle cx="36" cy="28" r="18" fill="#8abb4a" stroke="#3a6a10" stroke-width="2"/>
+  <circle cx="36" cy="28" r="13" fill="#6daa30" stroke="#3a6a10" stroke-width="1.5"/>
+  <circle cx="36" cy="28" r="8" fill="#5a9520" stroke="#3a6a10" stroke-width="1.2"/>
+  <circle cx="36" cy="28" r="4" fill="#3a7a10" stroke="#3a6a10" stroke-width="1"/>
+  <!-- 껍데기 하이라이트 -->
+  <ellipse cx="30" cy="22" rx="6" ry="4" fill="rgba(255,255,255,0.25)" transform="rotate(-30 30 22)"/>
+  <!-- 껍데기 나선 표시 -->
+  <path d="M36 14 A14 14 0 1 1 22 28" fill="none" stroke="#3a6a10" stroke-width="1.5" opacity="0.5"/>
+  <!-- 몸통 -->
+  <path d="M10 46 C12 38 20 34 30 36 C38 37 44 42 46 48" fill="#a0c860" stroke="#3a6a10" stroke-width="2" stroke-linecap="round"/>
+  <!-- 배 -->
+  <path d="M10 46 C20 52 36 54 46 48" fill="#c8e880" stroke="#3a6a10" stroke-width="1.5"/>
+  <!-- 머리 -->
+  <ellipse cx="14" cy="40" rx="8" ry="6" fill="#a0c860" stroke="#3a6a10" stroke-width="2"/>
+  <!-- 눈 자루 좌 -->
+  <line x1="11" y1="36" x2="8" y2="28" stroke="#3a6a10" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="8" cy="27" r="3" fill="#3a6a10"/>
+  <circle cx="8" cy="27" r="1.5" fill="#88ff44"/>
+  <!-- 눈 자루 우 -->
+  <line x1="16" y1="35" x2="16" y2="27" stroke="#3a6a10" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="16" cy="26" r="3" fill="#3a6a10"/>
+  <circle cx="16" cy="26" r="1.5" fill="#88ff44"/>
+  <!-- 입 -->
+  <path d="M11 42 Q14 44 17 42" fill="none" stroke="#3a6a10" stroke-width="1.2" stroke-linecap="round"/>
+</svg>

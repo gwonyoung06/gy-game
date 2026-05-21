@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 유성 꼬리 (불꽃) -->
+  <path d="M42 22 C50 16 58 8 62 4" fill="none" stroke="#ffaa44" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+  <path d="M44 26 C54 20 60 12 62 8" fill="none" stroke="#ffcc66" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M42 28 C52 24 58 18 60 14" fill="none" stroke="#ffeeaa" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <!-- 더듬이 (불꽃 끝) -->
+  <path d="M24 22 C20 16 18 10 20 6" fill="none" stroke="#aaaacc" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="20" cy="6" r="3" fill="#ffcc44" stroke="#cc8800" stroke-width="1"/>
+  <path d="M32 20 C30 14 30 8 32 4" fill="none" stroke="#aaaacc" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="32" cy="4" r="3" fill="#ffcc44" stroke="#cc8800" stroke-width="1"/>
+  <!-- 다리 (6개) -->
+  <path d="M20 40 C14 38 8 40 6 44" fill="none" stroke="#8888aa" stroke-width="2" stroke-linecap="round"/>
+  <path d="M20 44 C12 44 8 48 6 52" fill="none" stroke="#8888aa" stroke-width="2" stroke-linecap="round"/>
+  <path d="M20 48 C14 50 10 54 10 58" fill="none" stroke="#8888aa" stroke-width="2" stroke-linecap="round"/>
+  <path d="M40 40 C46 38 52 40 54 44" fill="none" stroke="#8888aa" stroke-width="2" stroke-linecap="round"/>
+  <path d="M40 44 C48 44 52 48 54 52" fill="none" stroke="#8888aa" stroke-width="2" stroke-linecap="round"/>
+  <path d="M40 48 C46 50 50 54 50 58" fill="none" stroke="#8888aa" stroke-width="2" stroke-linecap="round"/>
+  <!-- 날개 (불꽃 날개) -->
+  <path d="M22 32 C16 26 14 20 18 18 C22 18 24 24 26 30Z" fill="#ffaa44" stroke="#cc6600" stroke-width="1.2" opacity="0.7"/>
+  <path d="M38 32 C44 26 46 20 42 18 C38 18 36 24 34 30Z" fill="#ffaa44" stroke="#cc6600" stroke-width="1.2" opacity="0.7"/>
+  <!-- 몸통 (갑충류) -->
+  <ellipse cx="30" cy="44" rx="12" ry="10" fill="#ccccee" stroke="#7777aa" stroke-width="2"/>
+  <!-- 등딱지 균열 (유성 충격) -->
+  <path d="M24 40 L30 36 L36 40" fill="none" stroke="#9999bb" stroke-width="1.2"/>
+  <path d="M28 44 L30 36" fill="none" stroke="#9999bb" stroke-width="1"/>
+  <!-- 빛나는 중심 -->
+  <ellipse cx="30" cy="44" rx="6" ry="5" fill="#ffe066" opacity="0.3"/>
+  <!-- 머리 -->
+  <ellipse cx="30" cy="32" rx="9" ry="8" fill="#bbbbdd" stroke="#7777aa" stroke-width="2"/>
+  <!-- 눈 (불꽃빛) -->
+  <circle cx="24" cy="30" r="3.5" fill="#ffcc44" stroke="#886600" stroke-width="1.2"/>
+  <circle cx="36" cy="30" r="3.5" fill="#ffcc44" stroke="#886600" stroke-width="1.2"/>
+  <circle cx="24" cy="30" r="1.8" fill="#1a1a1a"/>
+  <circle cx="36" cy="30" r="1.8" fill="#1a1a1a"/>
+  <circle cx="23.4" cy="29.4" r="0.7" fill="white"/>
+  <circle cx="35.4" cy="29.4" r="0.7" fill="white"/>
+</svg>

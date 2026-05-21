@@ -2384,7 +2384,17 @@ body {
   font-size: 0.68rem; color: rgba(255,255,255,0.45);
 }
 
+/* SVG 아바타 이미지 */
+.dex-avatar-img {
+  width: 38px; height: 38px;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  image-rendering: crisp-edges;
+}
+
 @media (max-width: 480px) {
   .dex-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
   .dex-avatar { width: 44px; height: 44px; font-size: 1.4rem; }
+  .dex-avatar-img { width: 32px; height: 32px; }
 }

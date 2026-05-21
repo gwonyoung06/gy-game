@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 몸통 (크고 둥근) -->
+  <ellipse cx="32" cy="38" rx="20" ry="16" fill="#ddc8ff" stroke="#7744bb" stroke-width="2"/>
+  <!-- 배 (연한) -->
+  <ellipse cx="32" cy="42" rx="14" ry="10" fill="#eeddff" stroke="#9966cc" stroke-width="1"/>
+  <!-- 앞다리 (두꺼운) -->
+  <ellipse cx="14" cy="48" rx="6" ry="10" fill="#ddc8ff" stroke="#7744bb" stroke-width="1.8"/>
+  <ellipse cx="50" cy="48" rx="6" ry="10" fill="#ddc8ff" stroke="#7744bb" stroke-width="1.8"/>
+  <!-- 발톱 -->
+  <line x1="10" y1="56" x2="8" y2="60" stroke="#5522aa" stroke-width="1.5"/>
+  <line x1="13" y1="57" x2="12" y2="61" stroke="#5522aa" stroke-width="1.5"/>
+  <line x1="16" y1="57" x2="16" y2="61" stroke="#5522aa" stroke-width="1.5"/>
+  <line x1="46" y1="56" x2="44" y2="60" stroke="#5522aa" stroke-width="1.5"/>
+  <line x1="49" y1="57" x2="48" y2="61" stroke="#5522aa" stroke-width="1.5"/>
+  <line x1="52" y1="57" x2="52" y2="61" stroke="#5522aa" stroke-width="1.5"/>
+  <!-- 뒷다리 -->
+  <ellipse cx="22" cy="52" rx="5" ry="8" fill="#cc99ff" stroke="#7744bb" stroke-width="1.5"/>
+  <ellipse cx="42" cy="52" rx="5" ry="8" fill="#cc99ff" stroke="#7744bb" stroke-width="1.5"/>
+  <!-- 목 -->
+  <ellipse cx="32" cy="24" rx="10" ry="8" fill="#ddc8ff" stroke="#7744bb" stroke-width="2"/>
+  <!-- 머리 (크고 둥근) -->
+  <circle cx="32" cy="14" r="12" fill="#ddc8ff" stroke="#7744bb" stroke-width="2"/>
+  <!-- 귀 (작고 둥근) -->
+  <circle cx="22" cy="4" r="5" fill="#ddc8ff" stroke="#7744bb" stroke-width="1.8"/>
+  <circle cx="42" cy="4" r="5" fill="#ddc8ff" stroke="#7744bb" stroke-width="1.8"/>
+  <circle cx="22" cy="4" r="2.5" fill="#cc99ff" opacity="0.5"/>
+  <circle cx="42" cy="4" r="2.5" fill="#cc99ff" opacity="0.5"/>
+  <!-- 눈 (작고 검은) -->
+  <circle cx="26" cy="12" r="3" fill="#3a1a66" stroke="#1a0a33" stroke-width="1"/>
+  <circle cx="38" cy="12" r="3" fill="#3a1a66" stroke="#1a0a33" stroke-width="1"/>
+  <circle cx="26" cy="12" r="1.5" fill="#1a1a1a"/>
+  <circle cx="38" cy="12" r="1.5" fill="#1a1a1a"/>
+  <circle cx="25.4" cy="11.4" r="0.6" fill="white"/>
+  <circle cx="37.4" cy="11.4" r="0.6" fill="white"/>
+  <!-- 코 (검은) -->
+  <ellipse cx="32" cy="18" rx="3.5" ry="2.5" fill="#1a0a33"/>
+  <!-- 입 -->
+  <path d="M28 21 Q32 25 36 21" fill="none" stroke="#5522aa" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 나뭇가지 -->
+  <rect x="4" y="8" width="56" height="6" rx="3" fill="#6a4a2a" stroke="#3a2a1a" stroke-width="1.5"/>
+  <!-- 긴 발톱들 (매달린) -->
+  <path d="M20 14 C18 22 16 28 14 32" fill="none" stroke="#8a6a4a" stroke-width="3" stroke-linecap="round"/>
+  <path d="M26 14 C26 22 26 30 24 36" fill="none" stroke="#8a6a4a" stroke-width="3" stroke-linecap="round"/>
+  <path d="M38 14 C38 22 38 30 40 36" fill="none" stroke="#8a6a4a" stroke-width="3" stroke-linecap="round"/>
+  <path d="M44 14 C46 22 48 28 50 32" fill="none" stroke="#8a6a4a" stroke-width="3" stroke-linecap="round"/>
+  <!-- 발톱 끝 -->
+  <path d="M14 32 C12 34 12 38 14 36" fill="none" stroke="#4a3a2a" stroke-width="2" stroke-linecap="round"/>
+  <path d="M24 36 C22 38 22 42 24 40" fill="none" stroke="#4a3a2a" stroke-width="2" stroke-linecap="round"/>
+  <path d="M40 36 C42 38 42 42 40 40" fill="none" stroke="#4a3a2a" stroke-width="2" stroke-linecap="round"/>
+  <path d="M50 32 C52 34 52 38 50 36" fill="none" stroke="#4a3a2a" stroke-width="2" stroke-linecap="round"/>
+  <!-- 몸통 (털북숭이 타원) -->
+  <ellipse cx="32" cy="36" rx="18" ry="14" fill="#aa8855" stroke="#6a5533" stroke-width="2"/>
+  <!-- 털 질감 -->
+  <ellipse cx="32" cy="36" rx="18" ry="14" fill="none" stroke="#886633" stroke-width="1" stroke-dasharray="2,4" opacity="0.5"/>
+  <!-- 눈 주위 어두운 원 (나무늘보 특징) -->
+  <circle cx="24" cy="30" r="7" fill="#5a4a33" stroke="#3a2a1a" stroke-width="1.5"/>
+  <circle cx="40" cy="30" r="7" fill="#5a4a33" stroke="#3a2a1a" stroke-width="1.5"/>
+  <!-- 눈 (반쯤 감긴 졸린 표정) -->
+  <circle cx="24" cy="30" r="4" fill="#dda055"/>
+  <circle cx="40" cy="30" r="4" fill="#dda055"/>
+  <!-- 졸린 눈꺼풀 -->
+  <path d="M20 28 C22 26 26 26 28 28" fill="#5a4a33" stroke="#3a2a1a" stroke-width="1"/>
+  <path d="M36 28 C38 26 42 26 44 28" fill="#5a4a33" stroke="#3a2a1a" stroke-width="1"/>
+  <circle cx="24" cy="31" r="2" fill="#1a1a1a"/>
+  <circle cx="40" cy="31" r="2" fill="#1a1a1a"/>
+  <!-- 코/입 -->
+  <ellipse cx="32" cy="38" rx="5" ry="3.5" fill="#c49060"/>
+  <circle cx="30" cy="37" r="1.5" fill="#5a3a2a"/>
+  <circle cx="34" cy="37" r="1.5" fill="#5a3a2a"/>
+  <!-- 느긋한 미소 -->
+  <path d="M28 42 Q32 46 36 42" fill="none" stroke="#5a3a2a" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

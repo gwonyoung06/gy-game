@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 투명 날개 좌 -->
+  <path d="M32 30 C20 22 6 24 8 34 C10 42 26 40 32 34Z" fill="#cceecc" stroke="#2a6010" stroke-width="1.5" opacity="0.75"/>
+  <!-- 투명 날개 우 -->
+  <path d="M32 30 C44 22 58 24 56 34 C54 42 38 40 32 34Z" fill="#cceecc" stroke="#2a6010" stroke-width="1.5" opacity="0.75"/>
+  <!-- 날개 맥 좌 -->
+  <line x1="32" y1="30" x2="12" y2="28" stroke="#2a6010" stroke-width="0.8" opacity="0.5"/>
+  <line x1="32" y1="32" x2="10" y2="34" stroke="#2a6010" stroke-width="0.8" opacity="0.5"/>
+  <!-- 날개 맥 우 -->
+  <line x1="32" y1="30" x2="52" y2="28" stroke="#2a6010" stroke-width="0.8" opacity="0.5"/>
+  <line x1="32" y1="32" x2="54" y2="34" stroke="#2a6010" stroke-width="0.8" opacity="0.5"/>
+  <!-- 몸통 -->
+  <ellipse cx="32" cy="40" rx="9" ry="14" fill="#7ac840" stroke="#2a6010" stroke-width="2"/>
+  <!-- 몸통 마디 줄 -->
+  <line x1="24" y1="38" x2="40" y2="38" stroke="#2a6010" stroke-width="1" opacity="0.6"/>
+  <line x1="24" y1="43" x2="40" y2="43" stroke="#2a6010" stroke-width="1" opacity="0.6"/>
+  <line x1="25" y1="48" x2="39" y2="48" stroke="#2a6010" stroke-width="1" opacity="0.6"/>
+  <!-- 가슴 -->
+  <ellipse cx="32" cy="28" rx="10" ry="7" fill="#5cb32b" stroke="#2a6010" stroke-width="2"/>
+  <!-- 머리 -->
+  <ellipse cx="32" cy="19" rx="9" ry="7" fill="#3a8a1a" stroke="#2a6010" stroke-width="2"/>
+  <!-- 겹눈 -->
+  <ellipse cx="24" cy="18" rx="4" ry="4" fill="#88ee55" stroke="#1a4009" stroke-width="1.2"/>
+  <ellipse cx="40" cy="18" rx="4" ry="4" fill="#88ee55" stroke="#1a4009" stroke-width="1.2"/>
+  <circle cx="24" cy="18" r="2" fill="#1a4009"/>
+  <circle cx="40" cy="18" r="2" fill="#1a4009"/>
+  <!-- 짧은 더듬이 -->
+  <line x1="27" y1="13" x2="24" y2="9" stroke="#2a6010" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="37" y1="13" x2="40" y2="9" stroke="#2a6010" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

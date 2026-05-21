@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 꼬리 -->
+  <path d="M54 32 C60 26 64 22 62 32 C64 42 60 38 54 32Z" fill="#886633" stroke="#553311" stroke-width="1.5"/>
+  <!-- 몸통 (가늘고 긴) -->
+  <ellipse cx="30" cy="32" rx="26" ry="8" fill="#aa8844" stroke="#553311" stroke-width="2"/>
+  <!-- 몸통 줄무늬 -->
+  <line x1="14" y1="26" x2="14" y2="38" stroke="#553311" stroke-width="0.8" opacity="0.4"/>
+  <line x1="22" y1="25" x2="22" y2="39" stroke="#553311" stroke-width="0.8" opacity="0.4"/>
+  <line x1="30" y1="24" x2="30" y2="40" stroke="#553311" stroke-width="0.8" opacity="0.4"/>
+  <line x1="38" y1="25" x2="38" y2="39" stroke="#553311" stroke-width="0.8" opacity="0.4"/>
+  <line x1="46" y1="26" x2="46" y2="38" stroke="#553311" stroke-width="0.8" opacity="0.4"/>
+  <!-- 등지느러미 -->
+  <path d="M18 24 C26 16 38 16 46 24" fill="#886633" stroke="#553311" stroke-width="1.5"/>
+  <!-- 배 -->
+  <ellipse cx="28" cy="37" rx="20" ry="5" fill="#ccaa66" stroke="#886633" stroke-width="1"/>
+  <!-- 가슴지느러미 -->
+  <ellipse cx="12" cy="34" rx="5" ry="3" fill="#aa8844" stroke="#553311" stroke-width="1.2" transform="rotate(15 12 34)"/>
+  <!-- 머리 (납작) -->
+  <ellipse cx="8" cy="32" rx="8" ry="9" fill="#997744" stroke="#553311" stroke-width="2"/>
+  <!-- 수염 (6개) -->
+  <line x1="4" y1="29" x2="2" y2="24" stroke="#553311" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="4" y1="31" x2="0" y2="30" stroke="#553311" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="4" y1="33" x2="2" y2="38" stroke="#553311" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="10" y1="27" x2="8" y2="22" stroke="#553311" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="12" y1="26" x2="12" y2="21" stroke="#553311" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="14" y1="26" x2="16" y2="22" stroke="#553311" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- 눈 -->
+  <circle cx="6" cy="28" r="3" fill="#4488cc"/>
+  <circle cx="6" cy="28" r="1.5" fill="#0a1a2a"/>
+  <circle cx="5.4" cy="27.4" r="0.7" fill="white"/>
+</svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 큰 뿔(큰 턱) 좌 -->
+  <path d="M20 22 C10 18 6 10 10 6 C13 3 16 6 14 12 C16 8 20 8 20 14Z" fill="#3a2a10" stroke="#1a1a05" stroke-width="1.5"/>
+  <!-- 큰 뿔 우 -->
+  <path d="M44 22 C54 18 58 10 54 6 C51 3 48 6 50 12 C48 8 44 8 44 14Z" fill="#3a2a10" stroke="#1a1a05" stroke-width="1.5"/>
+  <!-- 등딱지 -->
+  <ellipse cx="32" cy="40" rx="16" ry="18" fill="#4a8a1a" stroke="#1a4009" stroke-width="2"/>
+  <!-- 등딱지 가운데 선 -->
+  <line x1="32" y1="24" x2="32" y2="56" stroke="#1a4009" stroke-width="2"/>
+  <!-- 하이라이트 -->
+  <ellipse cx="26" cy="32" rx="6" ry="4" fill="rgba(255,255,255,0.2)" transform="rotate(-20 26 32)"/>
+  <!-- 가슴판 -->
+  <ellipse cx="32" cy="26" rx="11" ry="7" fill="#3a7a15" stroke="#1a4009" stroke-width="2"/>
+  <!-- 머리 -->
+  <ellipse cx="32" cy="18" rx="9" ry="7" fill="#2a5a10" stroke="#1a4009" stroke-width="2"/>
+  <!-- 눈 -->
+  <circle cx="26" cy="17" r="2.5" fill="#88ee44"/>
+  <circle cx="38" cy="17" r="2.5" fill="#88ee44"/>
+  <circle cx="26" cy="17" r="1.2" fill="#1a4009"/>
+  <circle cx="38" cy="17" r="1.2" fill="#1a4009"/>
+  <!-- 다리 6개 -->
+  <line x1="18" y1="36" x2="9" y2="32" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="17" y1="43" x2="7" y2="44" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="19" y1="50" x2="10" y2="54" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="46" y1="36" x2="55" y2="32" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="47" y1="43" x2="57" y2="44" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="45" y1="50" x2="54" y2="54" stroke="#1a4009" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

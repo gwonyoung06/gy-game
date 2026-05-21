@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 촉수들 (흔들리는) -->
+  <path d="M18 38 C16 46 18 54 16 60" fill="none" stroke="#aaccff" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  <path d="M24 40 C22 48 24 56 22 62" fill="none" stroke="#aaccff" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+  <path d="M30 42 C28 50 30 58 28 64" fill="none" stroke="#aaccff" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  <path d="M36 42 C36 50 34 58 36 64" fill="none" stroke="#aaccff" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+  <path d="M42 40 C44 48 42 56 44 62" fill="none" stroke="#aaccff" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  <path d="M48 36 C50 44 48 52 50 58" fill="none" stroke="#aaccff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M14 34 C12 42 14 48 12 54" fill="none" stroke="#aaccff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- 발광 후광 -->
+  <ellipse cx="32" cy="24" rx="22" ry="18" fill="#4466cc" opacity="0.12"/>
+  <!-- 우산 몸통 -->
+  <path d="M10 28 C10 10 54 10 54 28 C54 38 44 42 32 42 C20 42 10 38 10 28Z" fill="#6688dd" stroke="#3344aa" stroke-width="2"/>
+  <!-- 우산 내부 발광 -->
+  <path d="M14 28 C14 14 50 14 50 28 C50 36 42 38 32 38 C22 38 14 36 14 28Z" fill="#88aaff" opacity="0.4"/>
+  <!-- 우산 무늬 (방사형) -->
+  <line x1="32" y1="12" x2="32" y2="40" stroke="#4455bb" stroke-width="0.8" opacity="0.5"/>
+  <line x1="18" y1="16" x2="24" y2="40" stroke="#4455bb" stroke-width="0.8" opacity="0.5"/>
+  <line x1="46" y1="16" x2="40" y2="40" stroke="#4455bb" stroke-width="0.8" opacity="0.5"/>
+  <!-- 우산 가장자리 주름 -->
+  <path d="M10 28 C12 32 10 36 14 36 C12 32 14 28 18 30 C16 34 18 38 22 38 C20 34 22 30 26 30 C24 34 26 38 30 40 C28 36 30 32 32 32 C34 32 36 36 34 40 C38 38 40 34 38 30 C42 30 44 34 42 38 C46 38 48 34 46 30 C50 28 52 32 50 36 C54 36 52 32 54 28" fill="none" stroke="#3344aa" stroke-width="1" opacity="0.6"/>
+  <!-- 눈 (작게) -->
+  <circle cx="26" cy="24" r="3" fill="white" stroke="#3344aa" stroke-width="1"/>
+  <circle cx="38" cy="24" r="3" fill="white" stroke="#3344aa" stroke-width="1"/>
+  <circle cx="26" cy="24" r="1.5" fill="#2233aa"/>
+  <circle cx="38" cy="24" r="1.5" fill="#2233aa"/>
+</svg>

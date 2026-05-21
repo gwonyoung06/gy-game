@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 몸통 (S자 곡선 지렁이) -->
+  <path d="M32 10 C44 14 48 24 36 28 C24 32 20 42 32 46 C40 49 44 54 38 58" fill="none" stroke="#c47a5a" stroke-width="11" stroke-linecap="round"/>
+  <!-- 몸통 색상 (안쪽) -->
+  <path d="M32 10 C44 14 48 24 36 28 C24 32 20 42 32 46 C40 49 44 54 38 58" fill="none" stroke="#e8a080" stroke-width="8" stroke-linecap="round"/>
+  <!-- 마디 라인 (점선) -->
+  <path d="M32 10 C44 14 48 24 36 28 C24 32 20 42 32 46 C40 49 44 54 38 58" fill="none" stroke="#b06040" stroke-width="1.5" stroke-dasharray="3,5" stroke-linecap="round"/>
+  <!-- 머리 -->
+  <circle cx="32" cy="10" r="7" fill="#e8a080" stroke="#c47a5a" stroke-width="2"/>
+  <!-- 눈 -->
+  <circle cx="29" cy="8" r="2.5" fill="white" stroke="#c47a5a" stroke-width="1"/>
+  <circle cx="35" cy="8" r="2.5" fill="white" stroke="#c47a5a" stroke-width="1"/>
+  <circle cx="29" cy="8" r="1.2" fill="#2a1a0a"/>
+  <circle cx="35" cy="8" r="1.2" fill="#2a1a0a"/>
+  <!-- 입 (작게 미소) -->
+  <path d="M30 12 Q32 14 34 12" fill="none" stroke="#c47a5a" stroke-width="1.2" stroke-linecap="round"/>
+</svg>
