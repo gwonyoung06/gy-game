@@ -10,7 +10,7 @@ import { Inventory } from './ui/Inventory.js';
 import { Minimap } from './ui/Minimap.js';
 import { loadSave, addCoins, markStageCleared, updateSave, recordCapturedType } from './utils/storage.js';
 import { SHOP_ITEMS, CONSUMABLES } from './data/shop.js';
-import { particlePool, _cachedMats, _cachedGeos } from './entities/Creature.js';
+import { particlePool, _cachedMats, _cachedGeos, buildCreaturePreview } from './entities/Creature.js';
 import { audioManager } from './systems/AudioManager.js';
 import { submitScore, fetchGlobalLeaderboard } from './utils/supabase.js';
 import { DebugOverlay } from './utils/DebugOverlay.js';
@@ -3050,17 +3050,9 @@ export class Game {
       position:relative;text-align:center;
     `;
 
-    // 모달 아바타: SVG 있으면 img, 없으면 이모지
-    const svgKey = Game._DEX_SVG[c.type];
-    const avatarHtml = svgKey
-      ? `<div style="width:80px;height:80px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 16px ${clr}88);">
-           <img src="/creatures/${svgKey}.svg" alt="${c.name}" style="width:80px;height:80px;object-fit:contain;" draggable="false">
-         </div>`
-      : `<div style="font-size:4rem;line-height:1;margin-bottom:10px;filter:drop-shadow(0 0 16px ${clr}88);">${emoji}</div>`;
-
     card.innerHTML = `
       <button style="position:absolute;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.3rem;cursor:pointer;line-height:1;" onclick="this.closest('#_dexModal').remove()">✕</button>
-      ${avatarHtml}
+      <canvas id="_dex3d" width="140" height="140" style="display:block;margin:0 auto 6px;border-radius:12px;background:radial-gradient(circle,${clr}22 0%,rgba(0,0,0,0.4) 100%);"></canvas>
       <div style="font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:4px;">${c.name}</div>
       <div style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:10px;">${c.stageIcon} ${c.stageName} (ST.${c.stageId})${c.isBoss ? ' &nbsp;👑 BOSS' : ''}</div>
       <div style="font-size:1.1rem;color:${rarity.color};font-weight:700;margin-bottom:14px;letter-spacing:0.05em;">${rarity.stars} ${rarity.label}</div>
@@ -3074,6 +3066,65 @@ export class Game {
 
     overlay.appendChild(card);
     document.body.appendChild(overlay);
+
+    // ── 3D 프리뷰 렌더러 시작 ────────────────────────────────
+    const cvs = document.getElementById('_dex3d');
+    if (cvs) {
+      try {
+        const renderer = new THREE.WebGLRenderer({ canvas: cvs, antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(140, 140);
+        renderer.setClearColor(0x000000, 0);
+
+        const scene = new THREE.Scene();
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const sun = new THREE.DirectionalLight(0xfff5e0, 1.4);
+        sun.position.set(3, 5, 4);
+        scene.add(sun);
+        const fill = new THREE.DirectionalLight(0xaaccff, 0.4);
+        fill.position.set(-3, 1, -2);
+        scene.add(fill);
+
+        const cam = new THREE.PerspectiveCamera(38, 1, 0.05, 100);
+        // 생물 크기에 따라 카메라 거리 조정
+        cam.position.set(1.8, 1.2, 2.6);
+        cam.lookAt(0, 0.4, 0);
+
+        const mesh = buildCreaturePreview(c.type, c.color || 0x88aaff);
+        scene.add(mesh);
+
+        let raf;
+        const loop = () => {
+          raf = requestAnimationFrame(loop);
+          mesh.rotation.y += 0.012;
+          renderer.render(scene, cam);
+        };
+        loop();
+
+        // 모달이 DOM에서 제거되면 정리
+        const observer = new MutationObserver(() => {
+          if (!document.getElementById('_dexModal')) {
+            cancelAnimationFrame(raf);
+            renderer.dispose();
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.body, { childList: true });
+      } catch(e) {
+        // WebGL 실패 시 폴백: SVG or 이모지
+        const svgKey = Game._DEX_SVG[c.type];
+        cvs.replaceWith(svgKey
+          ? Object.assign(document.createElement('img'), {
+              src:`/creatures/${svgKey}.svg`, alt:c.name,
+              style:`width:100px;height:100px;display:block;margin:0 auto 6px;filter:drop-shadow(0 0 16px ${clr}88);`
+            })
+          : Object.assign(document.createElement('div'), {
+              textContent: emoji,
+              style:`font-size:4rem;text-align:center;line-height:1;margin-bottom:10px;`
+            })
+        );
+      }
+    }
   }
 
   // ── 스마트 조준선 ──────────────────────────────────────────────

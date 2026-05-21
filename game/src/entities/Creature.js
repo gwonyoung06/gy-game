@@ -1375,6 +1375,32 @@ Object.assign(SHAPE_MAP, DETAILED_SHAPE_MAP4);
 Object.assign(BUILDERS, DETAILED_BUILDERS5);
 Object.assign(SHAPE_MAP, DETAILED_SHAPE_MAP5);
 
+// ── 도감 프리뷰용 메시 빌더 (외부 공개) ─────────────────────────
+/**
+ * 생물 타입과 색상으로 Three.js Group을 빌드해 반환.
+ * 도감 3D 프리뷰 등 씬 외부에서 사용.
+ * @param {string} type  — creature type key (예: 't_rex', 'jade_rabbit')
+ * @param {number} color — 0xRRGGBB
+ * @returns {THREE.Group}
+ */
+export function buildCreaturePreview(type, color) {
+  const key = SHAPE_MAP[type] || 'flying';
+  const builder = BUILDERS[key] || BUILDERS.flying;
+  const group = builder(color || 0x88aaff);
+  const _LARGE = new Set([
+    'large','t_rex','pteranodon',
+    'cm4_pteranodon','cm4_stegosaurus','cm4_triceratops','cm4_brachiosaurus',
+    'cm4_raptor','cm4_t_rex','cm4_spinosaurus','cm4_ankylosaurus',
+    'cm4_parasaurolophus','cm4_giganotosaurus',
+    'cm3_polar_bear','cm3_reindeer','cm3_mammoth','cm3_gorilla',
+    'cm3_elephant','cm3_rhino',
+    'cm2_zebra','cm2_ostrich','cm2_hyena','cm2_croc','cm2_whale','cm2_giant_shark',
+  ]);
+  const sc = _LARGE.has(key) ? 0.7 : 1.0; // 프리뷰는 큰 동물 살짝 축소
+  group.scale.setScalar(sc);
+  return group;
+}
+
 // ── 이동 스타일 분류 ─────────────────────────────────────────────
 const FLYING_STYLES  = new Set(['erratic_hover','flap_drift','buzz_hover','soar_circle','ufo_hover','pulse_drift']);
 const WATER_STYLES   = new Set(['swim_curve','pulse_drift']);
@@ -1429,7 +1455,20 @@ export class Creature {
     const builder = BUILDERS[key] || BUILDERS.flying;
     this.mesh = builder(this.config.color || 0x88aaff);
 
-    const scale = this.isBoss ? 3.0 : (['large','t_rex','pteranodon'].includes(key) ? 1.4 : 0.9);
+    // cm4_* = 공룡 전체, 기존 large/t_rex/pteranodon, 대형 cm2/cm3 생물 → 1.4
+    const _LARGE_KEYS = new Set([
+      'large','t_rex','pteranodon',
+      // Grade 4 dinosaurs
+      'cm4_pteranodon','cm4_stegosaurus','cm4_triceratops','cm4_brachiosaurus',
+      'cm4_raptor','cm4_t_rex','cm4_spinosaurus','cm4_ankylosaurus',
+      'cm4_parasaurolophus','cm4_giganotosaurus',
+      // Grade 3 large
+      'cm3_polar_bear','cm3_reindeer','cm3_mammoth','cm3_gorilla',
+      'cm3_elephant','cm3_rhino',
+      // Grade 2 large
+      'cm2_zebra','cm2_ostrich','cm2_hyena','cm2_croc','cm2_whale','cm2_giant_shark',
+    ]);
+    const scale = this.isBoss ? 3.0 : (_LARGE_KEYS.has(key) ? 1.4 : 0.9);
     this.mesh.scale.setScalar(scale);
 
     // ── 지면 그림자 링 — 생물 위치를 바닥에서 직관적으로 표시 ──
